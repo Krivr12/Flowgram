@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Segment } from '@/types';
-import { mockSegments } from '@/data/mock-data';
+import { createClient } from '@/lib/supabase/client';
+import type { Segment, SegmentStatus } from '@/types';
 
 export function useSegments(eventId: string): {
   segments: Segment[];
@@ -11,14 +11,52 @@ export function useSegments(eventId: string): {
 } {
   const [segments, setSegments] = useState<Segment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setSegments(mockSegments.filter((s) => s.eventId === eventId));
+    if (!eventId) return;
+    const supabase = createClient();
+
+    async function fetchSegments() {
+      // Fetch segments with their speaker IDs via the join table
+      const { data, error: sbError } = await supabase
+        .from('segments')
+        .select(`
+          *,
+          segment_speakers (
+            speaker_id
+          )
+        `)
+        .eq('event_id', eventId)
+        .order('date', { ascending: true })
+        .order('start_time', { ascending: true });
+
+      if (sbError) {
+        setError(sbError.message);
+      } else {
+        setSegments(
+          (data ?? []).map((row) => ({
+            id: row.id,
+            eventId: row.event_id,
+            name: row.name,
+            description: row.description,
+            date: row.date,
+            location: row.location,
+            trackId: row.track_id ?? undefined,
+            isConcurrent: row.is_concurrent,
+            startTime: row.start_time.slice(0, 5), // "HH:mm:ss" → "HH:mm"
+            endTime: row.end_time.slice(0, 5),
+            status: row.status as SegmentStatus,
+            speakerIds: (row.segment_speakers ?? []).map(
+              (ss: { speaker_id: string }) => ss.speaker_id
+            ),
+          }))
+        );
+      }
       setLoading(false);
-    }, 350);
-    return () => clearTimeout(timer);
+    }
+
+    fetchSegments();
   }, [eventId]);
 
   return { segments, loading, error };

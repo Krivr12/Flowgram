@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Event } from '@/types';
-import { mockEvents } from '@/data/mock-data';
+import { createClient } from '@/lib/supabase/client';
+import type { Event, EventStatus, Modality } from '@/types';
 
 export function useEvents(): {
   events: Event[];
@@ -11,15 +11,37 @@ export function useEvents(): {
 } {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Phase 1: Simulate async load with mock data
-    const timer = setTimeout(() => {
-      setEvents(mockEvents);
+    const supabase = createClient();
+
+    async function fetchEvents() {
+      const { data, error: sbError } = await supabase
+        .from('events')
+        .select('*')
+        .order('start_date', { ascending: true });
+
+      if (sbError) {
+        setError(sbError.message);
+      } else {
+        setEvents(
+          (data ?? []).map((row) => ({
+            id: row.id,
+            name: row.name,
+            description: row.description,
+            startDate: row.start_date,
+            endDate: row.end_date,
+            venue: row.venue,
+            status: row.status as EventStatus,
+            modality: row.modality as Modality,
+          }))
+        );
+      }
       setLoading(false);
-    }, 400);
-    return () => clearTimeout(timer);
+    }
+
+    fetchEvents();
   }, []);
 
   return { events, loading, error };

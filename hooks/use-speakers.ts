@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import type { Speaker } from '@/types';
-import { mockSpeakers, mockSegments } from '@/data/mock-data';
 
 export function useSpeakers(eventId: string): {
   speakers: Speaker[];
@@ -11,20 +11,51 @@ export function useSpeakers(eventId: string): {
 } {
   const [speakers, setSpeakers] = useState<Speaker[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // Collect all speakerIds referenced in this event's segments
-      const speakerIdSet = new Set<string>();
-      mockSegments
-        .filter((s) => s.eventId === eventId)
-        .forEach((s) => s.speakerIds.forEach((id) => speakerIdSet.add(id)));
+    if (!eventId) return;
+    const supabase = createClient();
 
-      setSpeakers(mockSpeakers.filter((sp) => speakerIdSet.has(sp.id)));
+    async function fetchSpeakers() {
+      // Get all speakers assigned to any segment in this event
+      const { data, error: sbError } = await supabase
+        .from('speakers')
+        .select(`
+          *,
+          segment_speakers!inner (
+            segments!inner (
+              event_id
+            )
+          )
+        `)
+        .eq('segment_speakers.segments.event_id', eventId);
+
+      if (sbError) {
+        setError(sbError.message);
+      } else {
+        // Deduplicate by id (join can produce duplicates)
+        const seen = new Set<string>();
+        const unique = (data ?? []).filter((row) => {
+          if (seen.has(row.id)) return false;
+          seen.add(row.id);
+          return true;
+        });
+
+        setSpeakers(
+          unique.map((row) => ({
+            id: row.id,
+            name: row.name,
+            title: row.title ?? '',
+            bio: row.bio ?? '',
+            avatarUrl: row.avatar_url ?? undefined,
+          }))
+        );
+      }
       setLoading(false);
-    }, 300);
-    return () => clearTimeout(timer);
+    }
+
+    fetchSpeakers();
   }, [eventId]);
 
   return { speakers, loading, error };

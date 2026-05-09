@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Event } from '@/types';
-import { mockEvents } from '@/data/mock-data';
+import { createClient } from '@/lib/supabase/client';
+import type { Event, EventStatus, Modality } from '@/types';
 
 export function useEvent(eventId: string): {
   event: Event | null;
@@ -14,16 +14,34 @@ export function useEvent(eventId: string): {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const found = mockEvents.find((e) => e.id === eventId) ?? null;
-      if (!found) {
-        setError('Event not found.');
-      } else {
-        setEvent(found);
+    if (!eventId) return;
+    const supabase = createClient();
+
+    async function fetchEvent() {
+      const { data, error: sbError } = await supabase
+        .from('events')
+        .select('*')
+        .eq('id', eventId)
+        .single();
+
+      if (sbError) {
+        setError(sbError.message);
+      } else if (data) {
+        setEvent({
+          id: data.id,
+          name: data.name,
+          description: data.description,
+          startDate: data.start_date,
+          endDate: data.end_date,
+          venue: data.venue,
+          status: data.status as EventStatus,
+          modality: data.modality as Modality,
+        });
       }
       setLoading(false);
-    }, 300);
-    return () => clearTimeout(timer);
+    }
+
+    fetchEvent();
   }, [eventId]);
 
   return { event, loading, error };
