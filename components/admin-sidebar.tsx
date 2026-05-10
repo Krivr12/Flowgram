@@ -1,8 +1,10 @@
 'use client';
 
-import { Calendar, Bell, History, LogOut } from 'lucide-react';
+import { useState } from 'react';
+import { Calendar, Bell, History, LogOut, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -13,6 +15,15 @@ const navItems = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.replace('/login');
+  }
 
   return (
     <aside className="w-64 shrink-0 bg-slate-900 border-r border-white/10 flex flex-col min-h-screen sticky top-0">
@@ -49,9 +60,17 @@ export function AdminSidebar() {
 
       {/* Logout */}
       <div className="px-4 pb-6">
-        <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white transition-colors w-full">
-          <LogOut className="h-4 w-4" />
-          Logout
+        <button
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white transition-colors w-full disabled:opacity-50"
+        >
+          {loggingOut ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <LogOut className="h-4 w-4" />
+          )}
+          {loggingOut ? 'Logging out…' : 'Logout'}
         </button>
       </div>
     </aside>

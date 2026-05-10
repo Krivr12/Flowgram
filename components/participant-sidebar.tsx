@@ -1,8 +1,10 @@
 'use client';
 
-import { Calendar, Bell, BookMarked, LogOut } from 'lucide-react';
+import { useState } from 'react';
+import { Calendar, Bell, BookMarked, LogOut, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import {
   Sheet,
   SheetContent,
@@ -25,6 +27,16 @@ const navItems = [
 
 export function ParticipantSidebar({ open, onOpenChange }: ParticipantSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    onOpenChange(false);
+    router.replace('/login');
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -59,9 +71,17 @@ export function ParticipantSidebar({ open, onOpenChange }: ParticipantSidebarPro
         </nav>
 
         <div className="px-4 pb-6">
-          <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white transition-colors w-full">
-            <LogOut className="h-4 w-4" />
-            Logout
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white transition-colors w-full disabled:opacity-50"
+          >
+            {loggingOut ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <LogOut className="h-4 w-4" />
+            )}
+            {loggingOut ? 'Logging out…' : 'Logout'}
           </button>
         </div>
       </SheetContent>

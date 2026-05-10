@@ -41,7 +41,7 @@ export const mockEvents: Event[] = [
 export const mockSpeakers: Speaker[] = [
   {
     id: 'speaker-sarah-chen',
-    name: 'Dr. Sarah Chen',
+    name: 'Dr. Sarah Chen',  
     title: 'Principal Developer Advocate, AWS APAC',
     bio: '15+ years in distributed systems. Author of "Designing for Scale." AWS Hero 2022. Frequent speaker at re:Invent and KubeCon.',
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=SarahChen',
