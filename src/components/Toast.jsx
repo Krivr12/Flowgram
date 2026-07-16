@@ -1,0 +1,209 @@
+import { useEffect } from 'react'
+import { Bell, CheckCircle, AlertCircle, X } from 'lucide-react'
+
+/**
+ * Toast — supports three display modes:
+ *
+ *  1. Notification toast  (type = 'notification')
+ *     Props: title, message
+ *     Used by the realtime listener to show event announcements.
+ *
+ *  2. Success / Error toast  (type = 'success' | 'error')
+ *     Props: message
+ *     Used by existing action feedback (save, update, delete, etc.)
+ */
+export const Toast = ({ type = 'success', title, message, onClose, duration = 5000 }) => {
+  useEffect(() => {
+    if (duration && duration > 0) {
+      const timer = setTimeout(onClose, duration)
+      return () => clearTimeout(timer)
+    }
+  }, [duration, onClose])
+
+  // ── Notification variant ──────────────────────────────────────────────────
+  if (type === 'notification') {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          top: '24px',
+          right: '24px',
+          zIndex: 9999,
+          animation: 'toastSlideIn 0.3s ease-out',
+        }}
+      >
+        <style>{`
+          @keyframes toastSlideIn {
+            from { transform: translateX(420px); opacity: 0; }
+            to   { transform: translateX(0);     opacity: 1; }
+          }
+        `}</style>
+
+        <div
+          style={{
+            backgroundColor: '#fff',
+            border: '1px solid #e2e8f0',
+            borderLeft: '4px solid #f97316',
+            borderRadius: '10px',
+            padding: '16px 18px',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '14px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+            maxWidth: '380px',
+            width: '380px',
+          }}
+        >
+          {/* Icon */}
+          <div
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              backgroundColor: '#fff7ed',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <Bell size={18} color="#f97316" />
+          </div>
+
+          {/* Content */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {title && (
+              <p
+                style={{
+                  fontSize: '14px',
+                  fontWeight: '700',
+                  color: '#0f172a',
+                  margin: '0 0 4px',
+                  lineHeight: '1.3',
+                }}
+              >
+                {title}
+              </p>
+            )}
+            {message && (
+              <p
+                style={{
+                  fontSize: '13px',
+                  color: '#475569',
+                  margin: 0,
+                  lineHeight: '1.5',
+                }}
+              >
+                {message}
+              </p>
+            )}
+            <p
+              style={{
+                fontSize: '11px',
+                color: '#94a3b8',
+                margin: '6px 0 0',
+                fontWeight: '500',
+              }}
+            >
+              New announcement
+            </p>
+          </div>
+
+          {/* Close */}
+          <button
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#94a3b8',
+              padding: '2px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              transition: 'color 0.15s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#475569')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
+            aria-label="Dismiss notification"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Success / Error variant ───────────────────────────────────────────────
+  const isSuccess = type === 'success'
+  const bgColor     = isSuccess ? '#dcfce7' : '#fee2e2'
+  const borderColor = isSuccess ? '#86efac' : '#fca5a5'
+  const textColor   = isSuccess ? '#166534' : '#991b1b'
+  const iconColor   = isSuccess ? '#22c55e' : '#ef4444'
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: '24px',
+        right: '24px',
+        zIndex: 9999,
+        animation: 'toastSlideIn 0.3s ease-out',
+      }}
+    >
+      <style>{`
+        @keyframes toastSlideIn {
+          from { transform: translateX(420px); opacity: 0; }
+          to   { transform: translateX(0);     opacity: 1; }
+        }
+      `}</style>
+
+      <div
+        style={{
+          backgroundColor: bgColor,
+          border: `1px solid ${borderColor}`,
+          color: textColor,
+          padding: '16px 20px',
+          borderRadius: '10px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          maxWidth: '400px',
+        }}
+      >
+        {isSuccess ? (
+          <CheckCircle size={20} color={iconColor} style={{ flexShrink: 0 }} />
+        ) : (
+          <AlertCircle size={20} color={iconColor} style={{ flexShrink: 0 }} />
+        )}
+
+        <div style={{ flex: 1, fontSize: '14px', fontWeight: '500', lineHeight: '1.4' }}>
+          {message}
+        </div>
+
+        <button
+          onClick={onClose}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: textColor,
+            padding: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: 0.6,
+            transition: 'opacity 0.15s',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.6')}
+          aria-label="Dismiss"
+        >
+          <X size={16} />
+        </button>
+      </div>
+    </div>
+  )
+}
