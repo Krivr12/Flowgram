@@ -5,6 +5,7 @@ import { LayoutDashboard, Zap, Mic2, Layers, Bell } from 'lucide-react'
 const COLLAPSED_W = 64
 const EXPANDED_W = 220
 const NAVBAR_H = 64
+const MOBILE_BREAKPOINT = 768
 
 const NAV_ITEMS = [
   { label: 'Overview',      icon: LayoutDashboard, path: ''            },
@@ -19,26 +20,37 @@ export const EventWorkspaceLayout = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarExpanded, setSidebarExpanded] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= MOBILE_BREAKPOINT)
 
   const basePath = `/admin/events/${eventId}`
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const isActive = (itemPath) => {
     const fullPath = basePath + itemPath
     if (itemPath === '') {
-      // Overview: exact match only
       return location.pathname === fullPath || location.pathname === fullPath + '/'
     }
     return location.pathname.startsWith(fullPath)
   }
 
-  const sidebarW = sidebarExpanded ? EXPANDED_W : COLLAPSED_W
+  // On mobile, sidebar width is always 0 (hidden via CSS)
+  // On desktop, sidebar width toggles between collapsed and expanded
+  const sidebarW = isMobile ? 0 : (sidebarExpanded ? EXPANDED_W : COLLAPSED_W)
 
   return (
     <>
-      {/* ── Sidebar ── */}
+      {/* ── Sidebar (hidden on mobile via .workspace-sidebar CSS class) ── */}
       <div
-        onMouseEnter={() => setSidebarExpanded(true)}
-        onMouseLeave={() => setSidebarExpanded(false)}
+        className="workspace-sidebar"
+        onMouseEnter={() => !isMobile && setSidebarExpanded(true)}
+        onMouseLeave={() => !isMobile && setSidebarExpanded(false)}
         style={{
           position: 'fixed',
           left: 0,
@@ -49,7 +61,6 @@ export const EventWorkspaceLayout = () => {
           borderRight: '1px solid #e2e8f0',
           transition: 'width 0.2s ease',
           zIndex: 30,
-          display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
         }}
@@ -112,13 +123,16 @@ export const EventWorkspaceLayout = () => {
       </div>
 
       {/* ── Content Area ── */}
-      {/* margin-left matches sidebar width and transitions with it */}
-      <div style={{
-        marginLeft: `${sidebarW}px`,
-        transition: 'margin-left 0.2s ease',
-        minHeight: `calc(100vh - ${NAVBAR_H}px)`,
-        backgroundColor: '#f8fafc',
-      }}>
+      {/* marginLeft adjusts responsively based on isMobile and sidebar state */}
+      <div
+        className="workspace-content"
+        style={{
+          marginLeft: `${sidebarW}px`,
+          transition: 'margin-left 0.2s ease',
+          minHeight: `calc(100vh - ${NAVBAR_H}px)`,
+          backgroundColor: '#f8fafc',
+        }}
+      >
         <div style={{
           maxWidth: '1100px',
           margin: '0 auto',

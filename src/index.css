@@ -119,3 +119,94 @@ body {
     padding-bottom: 0 !important;
   }
 }
+
+/* ── AdminLayout responsive utilities ── */
+.admin-layout-mobile-header {
+  display: none;
+}
+
+.admin-layout-desktop-header {
+  display: flex;
+}
+
+.admin-layout-sidebar {
+  display: flex;
+}
+
+.admin-layout-mobile-bottom-nav {
+  display: none;
+}
+
+.admin-layout-page-content {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* ── EventWorkspaceLayout responsive utilities ── */
+.workspace-sidebar {
+  display: flex;
+}
+
+.workspace-content {
+  /* desktop: margin-left handled by inline JS (sidebarW) */
+}
+
+@media (max-width: 768px) {
+  .admin-layout-mobile-header {
+    display: flex !important;
+  }
+
+  .admin-layout-desktop-header {
+    display: none !important;
+  }
+
+  .admin-layout-sidebar {
+    display: none !important;
+  }
+
+  .admin-layout-mobile-bottom-nav {
+    display: flex !important;
+  }
+
+  .admin-layout-page-content {
+    padding-top: 5rem !important;
+    padding-bottom: 5rem !important;
+  }
+
+  /* Hide the workspace sidebar completely on mobile */
+  .workspace-sidebar {
+    display: none !important;
+  }
+
+  /* Remove the left margin the sidebar normally pushes */
+  .workspace-content {
+    margin-left: 0 !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .admin-layout-mobile-header {
+    display: none !important;
+  }
+
+  .admin-layout-desktop-header {
+    display: flex !important;
+  }
+
+  .admin-layout-sidebar {
+    display: flex !important;
+  }
+
+  .admin-layout-mobile-bottom-nav {
+    display: none !important;
+  }
+
+  .admin-layout-page-content {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .workspace-sidebar {
+    display: flex !important;
+  }
+}
