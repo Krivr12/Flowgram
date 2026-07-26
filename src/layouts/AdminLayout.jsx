@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Outlet, Link, useNavigate, useMatches, useLocation } from 'react-router-dom'
+import { Outlet, Link, useNavigate, useMatches, useOutletContext } from 'react-router-dom'
 import {
   LogOut,
   ChevronDown,
   ChevronRight,
   MonitorSmartphone,
+  X,
+  Settings,
 } from 'lucide-react'
 import { getCurrentUser, getUserProfile, logout } from '../services/supabase'
 import { getEventById } from '../services/events'
@@ -19,13 +21,19 @@ const getInitials = (name) => {
 export const AdminLayout = () => {
   const [userProfile, setUserProfile]   = useState(null)
   const [eventName, setEventName]       = useState(null)
-  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen]     = useState(false)
+  const [desktopDropdownOpen, setDesktopDropdownOpen] = useState(false)
   const navigate = useNavigate()
   const matches  = useMatches()
-  const location = useLocation()
+  const outletContext = useOutletContext()
 
   const eventMatch = matches.find((m) => m.params?.eventId)
   const eventId    = eventMatch?.params?.eventId ?? null
+
+  // Get nav items from outlet context (passed by EventWorkspaceLayout)
+  const navItems = outletContext?.navItems || []
+  const isActive = outletContext?.isActive || (() => false)
+  const basePath = outletContext?.basePath || ''
 
   useEffect(() => {
     const loadUser = async () => {
@@ -47,14 +55,21 @@ export const AdminLayout = () => {
     loadEvent()
   }, [eventId])
 
+  useEffect(() => {
+    document.body.style.overflow = drawerOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [drawerOpen])
+
   const handleLogout = async () => {
-    setDropdownOpen(false)
+    setDrawerOpen(false)
+    setDesktopDropdownOpen(false)
     await logout()
     navigate('/', { replace: true })
   }
 
   const handleSwitchToUserView = () => {
-    setDropdownOpen(false)
+    setDrawerOpen(false)
+    setDesktopDropdownOpen(false)
     navigate('/app', { replace: true })
   }
 
@@ -110,7 +125,7 @@ export const AdminLayout = () => {
         {/* Right: User dropdown */}
         <div style={{ position: 'relative' }}>
           <button
-            onClick={() => setDropdownOpen(!dropdownOpen)}
+            onClick={() => setDesktopDropdownOpen(!desktopDropdownOpen)}
             style={{
               display: 'flex', alignItems: 'center', gap: '10px',
               padding: '6px 12px 6px 6px', borderRadius: '8px',
@@ -134,13 +149,13 @@ export const AdminLayout = () => {
             </span>
             <ChevronDown
               size={14} color="#94a3b8"
-              style={{ transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}
+              style={{ transform: desktopDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}
             />
           </button>
 
-          {dropdownOpen && (
+          {desktopDropdownOpen && (
             <>
-              <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setDropdownOpen(false)} />
+              <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setDesktopDropdownOpen(false)} />
               <div style={{
                 position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: '240px',
                 backgroundColor: '#fff', borderRadius: '12px',
@@ -210,9 +225,9 @@ export const AdminLayout = () => {
           padding: '0 16px',
         }}
       >
-        {/* Avatar button */}
+        {/* Avatar button — opens drawer */}
         <button
-          onClick={() => setDropdownOpen(!dropdownOpen)}
+          onClick={() => setDrawerOpen(true)}
           style={{
             width: '36px', height: '36px', borderRadius: '50%',
             backgroundColor: '#2563eb', display: 'flex', alignItems: 'center',
@@ -223,58 +238,195 @@ export const AdminLayout = () => {
         >
           {getInitials(userProfile?.full_name)}
         </button>
+      </header>
 
-        {/* Dropdown */}
-        {dropdownOpen && (
-          <>
-            <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setDropdownOpen(false)} />
+      {/* ══════════════════════════════════════
+          MOBILE SLIDING DRAWER (<769px)
+          Backdrop + left-sliding panel with user info and actions
+      ══════════════════════════════════════ */}
+      {drawerOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 40,
+            }}
+            onClick={() => setDrawerOpen(false)}
+            aria-hidden="true"
+          />
+
+          {/* Drawer panel */}
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              height: '100vh',
+              width: '288px',
+              backgroundColor: '#ffffff',
+              zIndex: 50,
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+              transform: drawerOpen ? 'translateX(0)' : 'translateX(-100%)',
+              transition: 'transform 0.3s ease-in-out',
+            }}
+          >
+            {/* Drawer header */}
             <div style={{
-              position: 'fixed', left: '16px', top: `calc(${NAVBAR_H}px + 8px)`,
-              width: '220px', backgroundColor: '#fff', borderRadius: '12px',
-              boxShadow: '0 10px 40px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0',
-              zIndex: 51, overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '16px',
+              borderBottom: '1px solid #f1f5f9',
+              flexShrink: 0,
             }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
-                <p style={{ fontSize: '13px', fontWeight: '600', color: '#0f172a', margin: 0 }}>
-                  {userProfile?.full_name || 'Admin'}
-                </p>
-                <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {userProfile?.email || ''}
-                </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                <div style={{
+                  width: '40px', height: '40px', borderRadius: '50%',
+                  backgroundColor: '#2563eb', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', color: '#fff', fontSize: '14px',
+                  fontWeight: '700', flexShrink: 0,
+                }}>
+                  {getInitials(userProfile?.full_name)}
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <p style={{ fontSize: '14px', fontWeight: '600', color: '#0f172a', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {userProfile?.full_name || 'Admin'}
+                  </p>
+                  <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {userProfile?.email || ''}
+                  </p>
+                </div>
               </div>
+
+              {/* Close button */}
+              <button
+                onClick={() => setDrawerOpen(false)}
+                style={{
+                  padding: '6px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  cursor: 'pointer',
+                  color: '#94a3b8',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f1f5f9'
+                  e.currentTarget.style.color = '#64748b'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                  e.currentTarget.style.color = '#94a3b8'
+                }}
+                aria-label="Close menu"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Drawer body */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              padding: '16px',
+              flex: 1,
+            }}>
+              {/* Settings link */}
+              <button
+                onClick={() => {
+                  setDrawerOpen(false)
+                  navigate('/app/account')
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  color: '#64748b',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'background-color 0.15s',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <Settings size={18} />
+                Settings
+              </button>
+
+              {/* Switch to User View */}
               {isAdmin && (
                 <button
                   onClick={handleSwitchToUserView}
                   style={{
-                    width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
-                    padding: '10px 16px', fontSize: '13px', color: '#334155',
-                    background: 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9',
-                    cursor: 'pointer', textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    color: '#2563eb',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'background-color 0.15s',
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
-                  <MonitorSmartphone size={14} color="#64748b" />
+                  <MonitorSmartphone size={18} />
                   Switch to User View
                 </button>
               )}
+            </div>
+
+            {/* Drawer footer */}
+            <div style={{
+              padding: '16px',
+              borderTop: '1px solid #f1f5f9',
+              flexShrink: 0,
+            }}>
               <button
                 onClick={handleLogout}
                 style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '10px 16px', fontSize: '13px', color: '#dc2626',
-                  background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '13px',
+                  color: '#dc2626',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  width: '100%',
+                  padding: '8px 0',
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#b91c1c'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#dc2626'}
               >
-                <LogOut size={14} />
-                Sign Out
+                <LogOut size={16} />
+                Logout
               </button>
             </div>
-          </>
-        )}
-      </header>
+          </div>
+        </>
+      )}
 
       {/* ══════════════════════════════════════
           PAGE CONTENT
@@ -321,8 +473,45 @@ export const AdminLayout = () => {
         }}
         aria-label="Admin mobile navigation"
       >
-        {/* 5 nav items will be inserted by EventWorkspaceLayout */}
-        {/* This nav is controlled by EventWorkspaceLayout's nav items */}
+        {/* Mobile nav items with Lucide React icons */}
+        {navItems.map((item) => {
+          const Icon = item.icon
+          const active = isActive(item.path)
+          
+          return (
+            <a
+              key={item.label}
+              href={basePath + item.path}
+              onClick={(e) => {
+                e.preventDefault()
+                navigate(basePath + item.path)
+              }}
+              style={{
+                flex: 1,
+                padding: '8px 0',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '2px',
+                textAlign: 'center',
+                fontSize: '11px',
+                fontWeight: '500',
+                color: active ? '#2196F3' : '#4b5563',
+                textDecoration: 'none',
+                cursor: 'pointer',
+                transition: 'color 0.2s',
+              }}
+            >
+              <Icon 
+                size={20} 
+                strokeWidth={active ? 2.25 : 1.75}
+                style={{ color: 'currentColor' }}
+              />
+              <span>{item.label}</span>
+            </a>
+          )
+        })}
       </nav>
 
     </div>
