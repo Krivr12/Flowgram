@@ -12,6 +12,8 @@ import {
   Users,
   Bell,
   Layers,
+  Sun,
+  Moon,
 } from 'lucide-react'
 import { getCurrentUser, getUserProfile, logout } from '../services/supabase'
 import { getEventById } from '../services/events'
@@ -37,6 +39,7 @@ export const AdminLayout = () => {
   const [eventName, setEventName]       = useState(null)
   const [drawerOpen, setDrawerOpen]     = useState(false)
   const [desktopDropdownOpen, setDesktopDropdownOpen] = useState(false)
+  const [isDarkMode, setIsDarkMode]     = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const matches  = useMatches()
@@ -179,6 +182,46 @@ export const AdminLayout = () => {
                     {userProfile?.email || ''}
                   </p>
                 </div>
+
+                {/* Settings */}
+                <button
+                  onClick={() => {
+                    setDesktopDropdownOpen(false)
+                    navigate('/admin/settings')
+                  }}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '10px 16px', fontSize: '13px', color: '#334155',
+                    background: 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9',
+                    cursor: 'pointer', textAlign: 'left',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <Settings size={14} color="#64748b" />
+                  Settings
+                </button>
+
+                {/* Theme Toggle */}
+                <button
+                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '10px 16px', fontSize: '13px', color: '#334155',
+                    background: 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9',
+                    cursor: 'pointer', textAlign: 'left',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  {isDarkMode ? (
+                    <Moon size={14} color="#64748b" />
+                  ) : (
+                    <Sun size={14} color="#64748b" />
+                  )}
+                  {isDarkMode ? 'Dark Mode' : 'Light Mode'}
+                </button>
+
                 {isAdmin && (
                   <button
                     onClick={handleSwitchToUserView}
@@ -258,7 +301,7 @@ export const AdminLayout = () => {
         style={{
           position: 'fixed',
           inset: 0,
-          zIndex: 40,
+          zIndex: 60,
           backgroundColor: 'rgba(0, 0, 0, 0.4)',
           opacity: drawerOpen ? 1 : 0,
           pointerEvents: drawerOpen ? 'auto' : 'none',
@@ -278,7 +321,7 @@ export const AdminLayout = () => {
           height: '100vh',
           width: '288px',
           backgroundColor: '#ffffff',
-          zIndex: 50,
+          zIndex: 60,
           display: 'flex',
           flexDirection: 'column',
           boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
@@ -401,6 +444,35 @@ export const AdminLayout = () => {
           >
             <Settings size={18} />
             Settings
+          </button>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              fontSize: '13px',
+              fontWeight: '500',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              color: '#64748b',
+              backgroundColor: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'left',
+              transition: 'background-color 0.15s',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          >
+            {isDarkMode ? (
+              <Moon size={18} />
+            ) : (
+              <Sun size={18} />
+            )}
+            {isDarkMode ? 'Dark Mode' : 'Light Mode'}
           </button>
 
           {/* Switch to User View */}
