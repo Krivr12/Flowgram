@@ -129,10 +129,6 @@ body {
   display: flex;
 }
 
-.admin-layout-sidebar {
-  display: flex;
-}
-
 .admin-layout-mobile-bottom-nav {
   display: none;
 }
@@ -147,20 +143,12 @@ body {
   display: flex;
 }
 
-.workspace-content {
-  /* desktop: margin-left handled by inline JS (sidebarW) */
-}
-
 @media (max-width: 768px) {
   .admin-layout-mobile-header {
     display: flex !important;
   }
 
   .admin-layout-desktop-header {
-    display: none !important;
-  }
-
-  .admin-layout-sidebar {
     display: none !important;
   }
 
@@ -177,11 +165,6 @@ body {
   .workspace-sidebar {
     display: none !important;
   }
-
-  /* Remove the left margin the sidebar normally pushes */
-  .workspace-content {
-    margin-left: 0 !important;
-  }
 }
 
 @media (min-width: 769px) {
@@ -190,10 +173,6 @@ body {
   }
 
   .admin-layout-desktop-header {
-    display: flex !important;
-  }
-
-  .admin-layout-sidebar {
     display: flex !important;
   }
 

@@ -40,13 +40,67 @@ export const EventWorkspaceLayout = () => {
     return location.pathname.startsWith(fullPath)
   }
 
-  // On mobile, sidebar width is always 0 (hidden via CSS)
-  // On desktop, sidebar width toggles between collapsed and expanded
+  // On mobile, sidebar width is always 0 (hidden)
+  // On desktop, sidebar toggles between collapsed and expanded
   const sidebarW = isMobile ? 0 : (sidebarExpanded ? EXPANDED_W : COLLAPSED_W)
+
+  // Render mobile nav items into the fixed bottom nav in AdminLayout
+  useEffect(() => {
+    const bottomNav = document.querySelector('.admin-layout-mobile-bottom-nav')
+    if (!bottomNav || !isMobile) return
+
+    // Clear existing items
+    bottomNav.innerHTML = ''
+
+    // Add nav items to bottom nav
+    NAV_ITEMS.forEach((item) => {
+      const Icon = item.icon
+      const active = isActive(item.path)
+      
+      const link = document.createElement('a')
+      link.href = basePath + item.path
+      link.style.flex = '1'
+      link.style.padding = '8px 0'
+      link.style.display = 'flex'
+      link.style.flexDirection = 'column'
+      link.style.alignItems = 'center'
+      link.style.justifyContent = 'center'
+      link.style.gap = '2px'
+      link.style.textAlign = 'center'
+      link.style.fontSize = '11px'
+      link.style.fontWeight = '500'
+      link.style.color = active ? '#2196F3' : '#4b5563'
+      link.style.textDecoration = 'none'
+      link.style.cursor = 'pointer'
+      link.style.transition = 'color 0.2s'
+
+      link.onclick = (e) => {
+        e.preventDefault()
+        navigate(basePath + item.path)
+      }
+
+      // Create icon SVG element
+      const iconSpan = document.createElement('span')
+      iconSpan.style.display = 'flex'
+      iconSpan.style.alignItems = 'center'
+      iconSpan.style.justifyContent = 'center'
+      iconSpan.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${active ? 2.25 : 1.75}" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>`
+
+      // Create label
+      const labelSpan = document.createElement('span')
+      labelSpan.textContent = item.label
+      labelSpan.style.fontSize = '11px'
+
+      link.appendChild(iconSpan)
+      link.appendChild(labelSpan)
+      bottomNav.appendChild(link)
+    })
+  }, [isMobile, isActive, basePath, navigate])
 
   return (
     <>
-      {/* ── Sidebar (hidden on mobile via .workspace-sidebar CSS class) ── */}
+      {/* ── Desktop Sidebar (≥769px) ── */}
+      {/* Hidden on mobile via width: 0 calculation */}
       <div
         className="workspace-sidebar"
         onMouseEnter={() => !isMobile && setSidebarExpanded(true)}
@@ -123,7 +177,7 @@ export const EventWorkspaceLayout = () => {
       </div>
 
       {/* ── Content Area ── */}
-      {/* marginLeft adjusts responsively based on isMobile and sidebar state */}
+      {/* marginLeft responds to sidebar width */}
       <div
         className="workspace-content"
         style={{
@@ -131,15 +185,10 @@ export const EventWorkspaceLayout = () => {
           transition: 'margin-left 0.2s ease',
           minHeight: `calc(100vh - ${NAVBAR_H}px)`,
           backgroundColor: '#f8fafc',
+          paddingBottom: isMobile ? '64px' : '0',
         }}
       >
-        <div style={{
-          maxWidth: '1100px',
-          margin: '0 auto',
-          padding: '40px 32px',
-        }}>
-          <Outlet context={{ eventId }} />
-        </div>
+        <Outlet context={{ eventId }} />
       </div>
     </>
   )
