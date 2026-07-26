@@ -287,35 +287,58 @@ export const AdminLayout = () => {
         }}
         aria-label="Mobile menu"
       >
-        {/* Drawer header */}
+        {/* Drawer header — User info + Close button */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '16px',
-          borderBottom: '1px solid #f1f5f9',
+          borderBottom: '1px solid #f3f4f6',
           flexShrink: 0,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+          {/* Left: User avatar + name/email */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
             <div style={{
-              width: '40px', height: '40px', borderRadius: '50%',
-              backgroundColor: '#2563eb', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', color: '#fff', fontSize: '14px',
-              fontWeight: '700', flexShrink: 0,
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              backgroundColor: '#2563eb',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff',
+              fontSize: '14px',
+              fontWeight: '700',
+              flexShrink: 0,
             }}>
               {getInitials(userProfile?.full_name)}
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <p style={{ fontSize: '14px', fontWeight: '600', color: '#0f172a', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <p style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#0f172a',
+                margin: 0,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}>
                 {userProfile?.full_name || 'Admin'}
               </p>
-              <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <p style={{
+                fontSize: '12px',
+                color: '#64748b',
+                margin: '2px 0 0 0',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}>
                 {userProfile?.email || ''}
               </p>
             </div>
           </div>
 
-          {/* Close button — inside the panel */}
+          {/* Right: Close button — inside panel */}
           <button
             onClick={() => setDrawerOpen(false)}
             style={{
@@ -344,7 +367,7 @@ export const AdminLayout = () => {
           </button>
         </div>
 
-        {/* Drawer body */}
+        {/* Drawer body — Navigation links */}
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -408,10 +431,10 @@ export const AdminLayout = () => {
           )}
         </div>
 
-        {/* Drawer footer */}
+        {/* Drawer footer — Logout button */}
         <div style={{
           padding: '16px',
-          borderTop: '1px solid #f1f5f9',
+          borderTop: '1px solid #f3f4f6',
           flexShrink: 0,
         }}>
           <button
@@ -421,13 +444,13 @@ export const AdminLayout = () => {
               alignItems: 'center',
               gap: '8px',
               fontSize: '13px',
+              fontWeight: '500',
               color: '#dc2626',
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
               textAlign: 'left',
               width: '100%',
-              padding: '8px 0',
             }}
             onMouseEnter={(e) => e.currentTarget.style.color = '#b91c1c'}
             onMouseLeave={(e) => e.currentTarget.style.color = '#dc2626'}
