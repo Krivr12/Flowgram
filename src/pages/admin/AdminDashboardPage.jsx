@@ -68,11 +68,8 @@ export const AdminDashboardPage = () => {
       }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
-            Events
+            Select Event
           </h1>
-          <p style={{ fontSize: '14px', color: '#64748b', marginTop: '4px' }}>
-            Select an event to manage its speakers, segments, and notifications.
-          </p>
         </div>
         <button
           onClick={() => navigate('/admin/events/new')}
@@ -208,7 +205,7 @@ export const AdminDashboardPage = () => {
               event={event}
               menuOpen={menuOpen}
               deleting={deleting}
-              onNavigate={() => navigate(`/admin/events/${event.id}`)}
+              onNavigate={() => navigate(`/admin/events/${event.id}/flow`)}
               onMenuToggle={(id) => setMenuOpen(menuOpen === id ? null : id)}
               onMenuClose={() => setMenuOpen(null)}
               onDelete={handleDelete}

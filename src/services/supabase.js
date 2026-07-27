@@ -25,7 +25,7 @@ export const getUserProfile = async (userId) => {
     .from('users')
     .select('*')
     .eq('id', userId)
-    .single()
+    .maybeSingle()
 
   if (error) {
     console.error('Error fetching user profile:', error.message, error.details, error.hint)
@@ -34,19 +34,24 @@ export const getUserProfile = async (userId) => {
   return data
 }
 
-// Update user profile
-export const updateUserProfile = async (userId, { full_name, linkedin_url }) => {
-  const { data, error } = await supabase
+// Update (or create) user profile — upsert self-heals missing rows from older accounts
+export const updateUserProfile = async (userId, { full_name, linkedin_url, email }) => {
+  const { error } = await supabase
     .from('users')
-    .update({ full_name, linkedin_url })
-    .eq('id', userId)
-    .single()
+    .upsert(
+      {
+        id: userId,
+        full_name,
+        linkedin_url,
+        ...(email ? { email } : {}),
+      },
+      { onConflict: 'id' }
+    )
 
   if (error) {
-    console.error('Error updating user profile:', error.message, error.details, error.hint)
+    console.error('Error upserting user profile:', error.message, error.details, error.hint)
     throw error
   }
-  return data
 }
 
 // Auth helper: Logout

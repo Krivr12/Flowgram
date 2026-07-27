@@ -67,16 +67,8 @@ export const EventsSelectionPage = () => {
             marginBottom: '8px',
           }}
         >
-          Browse Events
+          Select Event
         </h1>
-        <p
-          style={{
-            fontSize: '14px',
-            color: '#64748b',
-          }}
-        >
-          Select an event to view the schedule and connect with speakers.
-        </p>
       </div>
 
       {/* Error Alert */}

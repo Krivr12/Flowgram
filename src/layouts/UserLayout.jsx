@@ -12,6 +12,7 @@ import {
   Settings,
 } from 'lucide-react'
 import { getCurrentUser, getUserProfile, logout, supabase } from '../services/supabase'
+import { getEventById } from '../services/events'
 import { Toast } from '../components/Toast'
 import { ConnectModal } from '../components/ConnectModal'
 
@@ -47,10 +48,12 @@ export const UserLayout = () => {
   const [dropdownOpen, setDropdownOpen]     = useState(false)
   const [sidebarOpen, setSidebarOpen]       = useState(false)
   const [showConnectModal, setShowConnectModal] = useState(false)
+  const [eventTitle, setEventTitle]         = useState(null)
   // ── Notification toast ──────────────────────────────────────────
   const [notifToast, setNotifToast]         = useState(null) // { title, message }
   const dropdownRef                         = useRef(null)
   const notifPollIntervalRef                = useRef(null)
+  const lastSeenNotifIdRef                  = useRef(null) // prevents re-showing already-seen notifications
   const navigate                            = useNavigate()
   const location                            = useLocation()
 
@@ -64,6 +67,49 @@ export const UserLayout = () => {
       setProfileLoading(false)
     }
     load()
+  }, [])
+
+  // ── Load event title when selected event changes ─────────────────────────
+  useEffect(() => {
+    const loadEventTitle = async () => {
+      const selectedEventId = localStorage.getItem('selected_event_id')
+      if (!selectedEventId) {
+        setEventTitle(null)
+        return
+      }
+      
+      const result = await getEventById(selectedEventId)
+      if (result.success && result.data) {
+        setEventTitle(result.data.title)
+      } else {
+        setEventTitle(null)
+      }
+    }
+    loadEventTitle()
+  }, [location.pathname]) // Reload when pathname changes
+
+  // Listen for storage events from other tabs
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === 'selected_event_id') {
+        const loadEventTitle = async () => {
+          const selectedEventId = e.newValue
+          if (!selectedEventId) {
+            setEventTitle(null)
+            return
+          }
+          const result = await getEventById(selectedEventId)
+          if (result.success && result.data) {
+            setEventTitle(result.data.title)
+          } else {
+            setEventTitle(null)
+          }
+        }
+        loadEventTitle()
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
   }, [])
 
   // ── Server-side filtered polling for notifications ───────────────────────
@@ -87,13 +133,20 @@ export const UserLayout = () => {
         return
       }
 
-      // Show toast only if we got new data
       if (data && data.length > 0) {
         const latestNotif = data[0]
-        setNotifToast({
-          title: latestNotif.title || 'New Announcement',
-          message: latestNotif.message || '',
-        })
+
+        // Only show toast if this is a notification we haven't seen yet
+        if (latestNotif.id !== lastSeenNotifIdRef.current) {
+          // On the very first poll, just record the id silently — don't toast stale data
+          if (lastSeenNotifIdRef.current !== null) {
+            setNotifToast({
+              title: latestNotif.title || 'New Announcement',
+              message: latestNotif.message || '',
+            })
+          }
+          lastSeenNotifIdRef.current = latestNotif.id
+        }
       }
     } catch (err) {
       console.error('Exception polling notifications:', err)
@@ -105,6 +158,9 @@ export const UserLayout = () => {
     if (notifPollIntervalRef.current) {
       clearInterval(notifPollIntervalRef.current)
     }
+
+    // Reset seen-id so the first poll of a new event silently seeds the ref
+    lastSeenNotifIdRef.current = null
 
     // Fetch immediately on mount
     fetchNotifications()
@@ -252,6 +308,26 @@ export const UserLayout = () => {
             >
               Flowgram
             </span>
+
+            {/* Event Title — appears after logo/avatar */}
+            {eventTitle && (
+              <>
+                <span style={{ color: '#cbd5e1', fontSize: '20px', lineHeight: 1, userSelect: 'none' }}>
+                  •
+                </span>
+                <span style={{
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  color: '#475569',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  maxWidth: '200px',
+                }}>
+                  {eventTitle}
+                </span>
+              </>
+            )}
           </div>
 
           {/* CENTER: Desktop nav links (shows only ≥768px) */}
@@ -622,29 +698,64 @@ export const UserLayout = () => {
 
 
       {/* ── MOBILE BOTTOM NAV ── */}
-      <nav
-        className="user-layout-mobile-bottom-nav"
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: '#fff',
-          borderTop: '1px solid #e5e7eb',
-          justifyContent: 'space-around',
-          height: '64px',
-        }}
-        aria-label="Mobile bottom navigation"
-      >
-        {NAV_ITEMS.map(({ label, to, Icon, modal }) => {
-          const isActive = !modal && (location.pathname === to || (to === '/app' && location.pathname === '/app'))
+      {location.pathname !== '/app/events' && (
+        <nav
+          className="user-layout-mobile-bottom-nav"
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: '#fff',
+            borderTop: '1px solid #e5e7eb',
+            justifyContent: 'space-around',
+            height: '64px',
+          }}
+          aria-label="Mobile bottom navigation"
+        >
+          {NAV_ITEMS.map(({ label, to, Icon, modal }) => {
+            const isActive = !modal && (location.pathname === to || (to === '/app' && location.pathname === '/app'))
 
-          if (modal) {
-            // Connect — opens modal, never navigates
+            if (modal) {
+              // Connect — opens modal, never navigates
+              return (
+                <button
+                  key={label}
+                  onClick={() => setShowConnectModal(true)}
+                  style={{
+                    flex: 1,
+                    padding: '8px 0',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '2px',
+                    textAlign: 'center',
+                    fontSize: '11px',
+                    fontWeight: '500',
+                    color: '#4b5563',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'color 0.2s',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#2196F3')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#4b5563')}
+                >
+                  <Icon size={20} strokeWidth={1.75} />
+                  <span>{label}</span>
+                </button>
+              )
+            }
+
             return (
-              <button
+              <a
                 key={label}
-                onClick={() => setShowConnectModal(true)}
+                href={to}
+                onClick={(e) => {
+                  e.preventDefault()
+                  navigate(to)
+                }}
                 style={{
                   flex: 1,
                   padding: '8px 0',
@@ -656,52 +767,19 @@ export const UserLayout = () => {
                   textAlign: 'center',
                   fontSize: '11px',
                   fontWeight: '500',
-                  color: '#4b5563',
-                  background: 'none',
-                  border: 'none',
+                  color: isActive ? '#2196F3' : '#4b5563',
+                  textDecoration: 'none',
                   cursor: 'pointer',
-                  transition: 'color 0.2s',
+                  transition: 'all 0.2s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#2196F3')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#4b5563')}
               >
-                <Icon size={20} strokeWidth={1.75} />
+                <Icon size={20} strokeWidth={isActive ? 2.25 : 1.75} />
                 <span>{label}</span>
-              </button>
+              </a>
             )
-          }
-
-          return (
-            <a
-              key={label}
-              href={to}
-              onClick={(e) => {
-                e.preventDefault()
-                navigate(to)
-              }}
-              style={{
-                flex: 1,
-                padding: '8px 0',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '2px',
-                textAlign: 'center',
-                fontSize: '11px',
-                fontWeight: '500',
-                color: isActive ? '#2196F3' : '#4b5563',
-                textDecoration: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              <Icon size={20} strokeWidth={isActive ? 2.25 : 1.75} />
-              <span>{label}</span>
-            </a>
-          )
-        })}
-      </nav>
+          })}
+        </nav>
+      )}
 
     </div>
   )

@@ -7,7 +7,7 @@ import {
   MonitorSmartphone,
   X,
   Settings,
-  LayoutDashboard,
+  Calendar,
   Zap,
   Users,
   Bell,
@@ -22,11 +22,11 @@ const NAVBAR_H = 64
 
 // Admin bottom nav items for mobile
 const ADMIN_NAV_ITEMS = [
-  { label: 'Overview', path: '', icon: LayoutDashboard },
-  { label: 'Flow', path: '/flow', icon: Zap },
-  { label: 'Speakers', path: '/speakers', icon: Users },
-  { label: 'Segments', path: '/segments', icon: Layers },
-  { label: 'Notifications', path: '/notifications', icon: Bell },
+  { label: 'Events',         path: null,              icon: Calendar },
+  { label: 'Flow',           path: '/flow',           icon: Zap },
+  { label: 'Speakers',       path: '/speakers',       icon: Users },
+  { label: 'Segments',       path: '/segments',       icon: Layers },
+  { label: 'Notifications',  path: '/notifications',  icon: Bell },
 ]
 
 const getInitials = (name) => {
@@ -561,69 +561,73 @@ export const AdminLayout = () => {
           CSS class: flex on mobile, hidden on desktop
           Fixed sticky positioning prevents scrolling out of view
       ══════════════════════════════════════ */}
-      <nav
-        className="admin-layout-mobile-bottom-nav"
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: '#ffffff',
-          borderTop: '1px solid #e5e7eb',
-          height: '64px',
-          zIndex: 50,
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-around',
-        }}
-        aria-label="Admin mobile navigation"
-      >
-        {/* Mobile nav items with Lucide React icons */}
-        {ADMIN_NAV_ITEMS.map((item) => {
-          const Icon = item.icon
-          const currentPath = location.pathname
-          const basePath = eventId ? `/admin/events/${eventId}` : '/admin'
-          const itemPath = basePath + item.path
-          
-          // Check if this nav item is active
-          const isItemActive = currentPath === itemPath || (item.path === '' && currentPath === basePath)
-          
-          return (
-            <a
-              key={item.label}
-              href={itemPath}
-              onClick={(e) => {
-                e.preventDefault()
-                navigate(itemPath)
-              }}
-              style={{
-                flex: 1,
-                padding: '8px 0',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '2px',
-                textAlign: 'center',
-                fontSize: '11px',
-                fontWeight: '500',
-                color: isItemActive ? '#2196F3' : '#4b5563',
-                textDecoration: 'none',
-                cursor: 'pointer',
-                transition: 'color 0.2s',
-              }}
-            >
-              <Icon 
-                size={20} 
-                strokeWidth={isItemActive ? 2.25 : 1.75}
-                style={{ color: 'currentColor' }}
-              />
-              <span>{item.label}</span>
-            </a>
-          )
-        })}
-      </nav>
+      {location.pathname !== '/admin' && (
+        <nav
+          className="admin-layout-mobile-bottom-nav"
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: '#ffffff',
+            borderTop: '1px solid #e5e7eb',
+            height: '64px',
+            zIndex: 50,
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-around',
+          }}
+          aria-label="Admin mobile navigation"
+        >
+          {/* Mobile nav items with Lucide React icons */}
+          {ADMIN_NAV_ITEMS.map((item) => {
+            const Icon = item.icon
+            const currentPath = location.pathname
+            const basePath = eventId ? `/admin/events/${eventId}` : '/admin'
+            const itemPath = item.path === null ? '/admin' : basePath + item.path
+
+            // "Events" item is active only when on /admin, others use normal matching
+            const isItemActive = item.path === null
+              ? currentPath === '/admin'
+              : currentPath === itemPath || (item.path === '' && currentPath === basePath)
+
+            return (
+              <a
+                key={item.label}
+                href={itemPath}
+                onClick={(e) => {
+                  e.preventDefault()
+                  navigate(itemPath)
+                }}
+                style={{
+                  flex: 1,
+                  padding: '8px 0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '2px',
+                  textAlign: 'center',
+                  fontSize: '11px',
+                  fontWeight: '500',
+                  color: isItemActive ? '#2196F3' : '#4b5563',
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  transition: 'color 0.2s',
+                }}
+              >
+                <Icon 
+                  size={20} 
+                  strokeWidth={isItemActive ? 2.25 : 1.75}
+                  style={{ color: 'currentColor' }}
+                />
+                <span>{item.label}</span>
+              </a>
+            )
+          })}
+        </nav>
+      )}
 
     </div>
   )

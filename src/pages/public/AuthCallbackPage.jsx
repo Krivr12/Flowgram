@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getCurrentUser } from '../../services/supabase'
+import { supabase, getCurrentUser } from '../../services/supabase'
 import { fetchUserProfileWithRetry } from '../../services/auth'
 
 export const AuthCallbackPage = () => {
@@ -23,8 +23,32 @@ export const AuthCallbackPage = () => {
           return
         }
 
-        // Fetch user profile with retry (profile creation may be delayed on OAuth)
-        const userProfile = await fetchUserProfileWithRetry(user.id)
+        // Fetch user profile — may not exist yet for first-time Google OAuth users
+        let userProfile = await fetchUserProfileWithRetry(user.id)
+
+        // First-time Google OAuth: profile doesn't exist, create it now
+        if (!userProfile) {
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert([
+              {
+                id: user.id,
+                email: user.email,
+                full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
+                is_verified: true, // Google accounts are pre-verified by Google
+              },
+            ])
+
+          if (insertError) {
+            console.error('Error creating user profile for OAuth user:', insertError.message)
+            setError('Could not create user profile. Please try again.')
+            setLoading(false)
+            return
+          }
+
+          // Fetch the newly created profile
+          userProfile = await fetchUserProfileWithRetry(user.id)
+        }
 
         if (!userProfile) {
           setError('Could not load user profile. Please try again.')
@@ -32,14 +56,10 @@ export const AuthCallbackPage = () => {
           return
         }
 
-        // Unified Enterprise In-App Toggle routing
-        // All users authenticate through the same callback
-        // Routing is determined by their role
+        // Route by role
         if (userProfile.role === 'ADMIN') {
-          // Admin users go to /admin dashboard
           navigate('/admin', { replace: true })
         } else {
-          // Regular users go to the attendee app
           navigate('/app', { replace: true })
         }
       } catch (err) {

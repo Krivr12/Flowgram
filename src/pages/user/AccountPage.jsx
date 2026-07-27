@@ -9,6 +9,7 @@ export const AccountPage = () => {
 
   // ── State ──
   const [profile, setProfile]               = useState(null)
+  const [currentUser, setCurrentUser]       = useState(null)
   const [loading, setLoading]               = useState(true)
   const [saving, setSaving]                 = useState(false)
   const [formError, setFormError]           = useState(null)
@@ -25,6 +26,7 @@ export const AccountPage = () => {
       try {
         const user = await getCurrentUser()
         if (user) {
+          setCurrentUser(user)
           const p = await getUserProfile(user.id)
           if (p) {
             setProfile(p)
@@ -56,7 +58,9 @@ export const AccountPage = () => {
 
   // ── Handle save ──
   const handleSave = async () => {
-    if (!profile?.id) return
+    // Use currentUser.id as the reliable source of truth — profile row may not exist yet
+    const userId = currentUser?.id || profile?.id
+    if (!userId) return
 
     setSaving(true)
     setFormError(null)
@@ -79,10 +83,11 @@ export const AccountPage = () => {
         linkedin_url: formData.linkedin_url,
       }))
 
-      // Call API
-      await updateUserProfile(profile.id, {
+      // Upsert — self-heals any missing profile rows (PGRST116 proof)
+      await updateUserProfile(userId, {
         full_name: formData.full_name,
         linkedin_url: formData.linkedin_url,
+        email: currentUser?.email || profile?.email,
       })
 
       setSuccessToast({
@@ -94,8 +99,8 @@ export const AccountPage = () => {
       // Rollback on error
       setProfile((prev) => ({
         ...prev,
-        full_name: profile.full_name,
-        linkedin_url: profile.linkedin_url,
+        full_name: profile?.full_name,
+        linkedin_url: profile?.linkedin_url,
       }))
       setFormError('Failed to save changes. Please try again.')
     } finally {

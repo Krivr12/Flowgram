@@ -3,46 +3,12 @@ import { Link } from 'react-router-dom'
 export const LandingPage = () => {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fff' }}>
-
-      {/* ── Public Navbar ── */}
-      <nav style={{
-        backgroundColor: '#fff',
-        borderBottom: '1px solid #e5e7eb',
-        padding: '0 1.5rem',
-        height: '64px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}>
-        <span style={{ fontSize: '1.125rem', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.01em' }}>
-          Flowgram
-        </span>
-
-        <Link
-          to="/login"
-          style={{
-            padding: '8px 20px',
-            backgroundColor: '#2196F3',
-            color: '#fff',
-            borderRadius: '6px',
-            textDecoration: 'none',
-            fontWeight: '500',
-            fontSize: '14px',
-            transition: 'background-color 0.2s',
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1976D2'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2196F3'}
-        >
-          Sign In
-        </Link>
-      </nav>
-
-      {/* ── Hero Section ── */}
+      {/* ── Hero Section (Full Height) ── */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: 'calc(100vh - 64px)',
+        minHeight: '100vh',
         padding: '2rem',
       }}>
         <div style={{ textAlign: 'center', maxWidth: '640px' }}>

@@ -8,12 +8,13 @@ import { LandingPage } from '../pages/public/LandingPage'
 import { AuthCallbackPage } from '../pages/public/AuthCallbackPage'
 import { UserLoginPage } from '../pages/user/UserLoginPage'
 import { FlowPage } from '../pages/user/FlowPage'
+import { SegmentDetailsPage } from '../pages/user/SegmentDetailsPage'
+import { ConcurrentPickerPage } from '../pages/user/ConcurrentPickerPage'
 import { EventsSelectionPage } from '../pages/user/EventsSelectionPage'
 import { NotificationsPage as UserNotificationsPage } from '../pages/user/NotificationsPage'
 import { AccountPage } from '../pages/user/AccountPage'
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage'
 import { AdminFlowPage } from '../pages/admin/AdminFlowPage'
-import { EventOverviewPage } from '../pages/admin/EventOverviewPage'
 import { SpeakersPage } from '../pages/admin/SpeakersPage'
 import { SegmentsPage } from '../pages/admin/SegmentsPage'
 import { NotificationsPage } from '../pages/admin/NotificationsPage'
@@ -34,6 +35,8 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <FlowPage /> },
+      { path: 'segment/:id', element: <SegmentDetailsPage /> },
+      { path: 'picker/:timeBlock', element: <ConcurrentPickerPage /> },
       { path: 'events', element: <EventsSelectionPage /> },
       { path: 'notifications', element: <UserNotificationsPage /> },
       { path: 'account', element: <AccountPage /> },
@@ -66,7 +69,6 @@ export const router = createBrowserRouter([
         path: 'events/:eventId',
         element: <EventWorkspaceLayout />,
         children: [
-          { index: true, element: <EventOverviewPage /> },
           { path: 'flow', element: <AdminFlowPage /> },
           { path: 'speakers', element: <SpeakersPage /> },
           { path: 'segments', element: <SegmentsPage /> },

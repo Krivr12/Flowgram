@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useParams, useNavigate, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Zap, Mic2, Layers, Bell } from 'lucide-react'
+import { Calendar, Zap, Mic2, Layers, Bell } from 'lucide-react'
 
 const COLLAPSED_W = 64
 const EXPANDED_W = 220
@@ -8,7 +8,7 @@ const NAVBAR_H = 64
 const MOBILE_BREAKPOINT = 768
 
 const NAV_ITEMS = [
-  { label: 'Overview',      icon: LayoutDashboard, path: ''            },
+  { label: 'Events',        icon: Calendar,        path: null          },
   { label: 'Flow',          icon: Zap,             path: '/flow'       },
   { label: 'Speakers',      icon: Mic2,            path: '/speakers'   },
   { label: 'Segments',      icon: Layers,          path: '/segments'   },
@@ -73,11 +73,11 @@ export const EventWorkspaceLayout = () => {
         <nav style={{ padding: '8px 0', flex: 1 }}>
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon
-            const active = isActive(item.path)
+            const active = item.path !== null && isActive(item.path)
             return (
               <button
                 key={item.label}
-                onClick={() => navigate(basePath + item.path)}
+                onClick={() => item.path === null ? navigate('/admin') : navigate(basePath + item.path)}
                 title={!sidebarExpanded ? item.label : undefined}
                 style={{
                   width: '100%',
