@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, Check, AlertCircle } from 'lucide-react'
-import { getCurrentUser, getUserProfile, logout, updateUserProfile } from '../../services/supabase'
+import { Check, AlertCircle } from 'lucide-react'
+import { getCurrentUser, getUserProfile, updateUserProfile } from '../../services/supabase'
 import { Toast } from '../../components/Toast'
 
 export const AccountPage = () => {
@@ -108,12 +108,6 @@ export const AccountPage = () => {
     }
   }
 
-  // ── Handle logout ──
-  const handleLogout = async () => {
-    await logout()
-    navigate('/login', { replace: true })
-  }
-
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '24px' }}>
@@ -138,12 +132,9 @@ export const AccountPage = () => {
       <div style={{ maxWidth: '500px', margin: '0 auto' }}>
         {/* Page header */}
         <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#0f172a', margin: '0 0 8px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#252F3E', textAlign: 'left', marginBottom: '16px', marginTop: '8px' }}>
             Account Settings
           </h1>
-          <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>
-            Manage your profile and networking preferences
-          </p>
         </div>
 
         {/* ── Profile Form Card ── */}
@@ -331,53 +322,6 @@ export const AccountPage = () => {
                 Save Changes
               </>
             )}
-          </button>
-        </div>
-
-        {/* ── Sign Out Section ── */}
-        <div style={{
-          backgroundColor: '#fff',
-          borderRadius: '16px',
-          border: '1px solid #fee2e2',
-          padding: '28px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-        }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#991b1b', margin: '0 0 12px' }}>
-            Sign Out
-          </h2>
-          <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 16px', lineHeight: '1.5' }}>
-            You'll be logged out of your account and redirected to the login page.
-          </p>
-          <button
-            onClick={handleLogout}
-            style={{
-              width: '100%',
-              padding: '11px 16px',
-              backgroundColor: 'transparent',
-              color: '#dc2626',
-              border: '1.5px solid #fecaca',
-              borderRadius: '10px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              transition: 'all 0.15s',
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#fee2e2'
-              e.target.style.borderColor = '#fca5a5'
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'transparent'
-              e.target.style.borderColor = '#fecaca'
-            }}
-            aria-label="Sign out of your account"
-          >
-            <LogOut size={16} />
-            Sign Out
           </button>
         </div>
       </div>

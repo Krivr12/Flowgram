@@ -55,7 +55,7 @@ export const NotificationsPage = () => {
     return (
       <div style={{ maxWidth: '100%', paddingTop: '16px', paddingBottom: '80px' }}>
         <div style={{ marginBottom: '28px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#252F3E', textAlign: 'left', marginBottom: '16px', marginTop: '8px' }}>
             Notifications
           </h1>
         </div>
@@ -117,7 +117,7 @@ export const NotificationsPage = () => {
           marginBottom: '28px',
         }}
       >
-        <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#252F3E', textAlign: 'left', marginBottom: '16px', marginTop: '8px', margin: 0 }}>
           Notifications
         </h1>
 

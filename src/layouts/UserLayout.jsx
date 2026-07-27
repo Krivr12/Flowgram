@@ -311,7 +311,7 @@ export const UserLayout = () => {
             </span>
 
             {/* Event Title — appears after logo/avatar */}
-            {eventTitle && (
+            {eventTitle && !location.pathname.includes('/events') && (
               <>
                 <span style={{ color: '#cbd5e1', fontSize: '20px', lineHeight: 1, userSelect: 'none' }}>
                   •
@@ -693,7 +693,7 @@ export const UserLayout = () => {
 
 
       {/* ── PAGE CONTENT ── */}
-      <main style={{ flex: 1, overflowY: 'auto', maxWidth: '1152px', margin: '0 auto', width: '100%', padding: '40px 32px 6rem' }} className="user-layout-page-content">
+      <main style={{ flex: 1, overflowY: 'auto', maxWidth: '100%', margin: '0 auto', width: '100%', padding: '40px 16px 6rem' }} className="user-layout-page-content">
         <Outlet />
       </main>
 

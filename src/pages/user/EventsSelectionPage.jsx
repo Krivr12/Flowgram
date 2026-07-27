@@ -54,7 +54,7 @@ export const EventsSelectionPage = () => {
 
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#252F3E', textAlign: 'left', marginBottom: '16px', marginTop: '8px' }}>
           Select Event
         </h1>
       </div>
