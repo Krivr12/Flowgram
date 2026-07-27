@@ -4,11 +4,6 @@ import QRCode from 'react-qr-code'
 import { getCurrentUser, getUserProfile } from '../services/supabase'
 import { ExternalLink, QrCode, UserCircle, ArrowRight, Copy, Check, X } from 'lucide-react'
 
-const getInitials = (name) => {
-  if (!name) return '?'
-  return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
-}
-
 export const ConnectModal = ({ onClose }) => {
   const navigate = useNavigate()
 
@@ -98,7 +93,7 @@ export const ConnectModal = ({ onClose }) => {
         <div
           style={{
             background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)',
-            padding: '32px 28px 28px',
+            padding: '24px 28px 22px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -137,26 +132,7 @@ export const ConnectModal = ({ onClose }) => {
             <X size={15} />
           </button>
 
-          {/* Avatar */}
-          <div
-            style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '22px',
-              fontWeight: '800',
-              color: '#fff',
-              marginBottom: '14px',
-              boxShadow: '0 4px 20px rgba(99,102,241,0.4)',
-              flexShrink: 0,
-            }}
-          >
-            {loading ? '…' : getInitials(profile?.full_name)}
-          </div>
+          {/* Avatar removed */}
 
           <p style={{ fontSize: '11px', fontWeight: '700', color: '#f97316', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px' }}>
             My Networking Card

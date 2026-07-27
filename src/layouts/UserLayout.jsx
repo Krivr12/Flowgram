@@ -20,19 +20,20 @@ const NAVBAR_H = 64
 const NOTIFICATION_POLL_INTERVAL = 15000 // 15 seconds
 
 // Nav items for mobile bottom bar — Connect has no route; it opens a modal
+// Order: Events | Connect | Flow (center) | Notifications | Settings
 const NAV_ITEMS = [
-  { label: 'Flow',          to: '/app',               Icon: Zap,      modal: false },
   { label: 'Events',        to: '/app/events',        Icon: Calendar, modal: false },
   { label: 'Connect',       to: null,                 Icon: Users,    modal: true  },
+  { label: 'Flow',          to: '/app',               Icon: Zap,      modal: false },
   { label: 'Notifications', to: '/app/notifications', Icon: Bell,     modal: false },
   { label: 'Settings',      to: '/app/account',       Icon: Settings, modal: false },
 ]
 
 // Desktop center nav items (text only, no icons displayed)
 const DESKTOP_NAV = [
-  { label: 'Flow',          to: '/app' },
   { label: 'Events',        to: '/app/events' },
   { label: 'Connect',       to: null,                 modal: true  },
+  { label: 'Flow',          to: '/app' },
   { label: 'Notifications', to: '/app/notifications' },
   { label: 'Settings',      to: '/app/account' },
 ]
@@ -322,7 +323,7 @@ export const UserLayout = () => {
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  maxWidth: '200px',
+                  maxWidth: '340px',
                 }}>
                   {eventTitle}
                 </span>

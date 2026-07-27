@@ -2,21 +2,10 @@ import { useEffect, useState, useRef } from 'react'
 import { useOutletContext, useParams } from 'react-router-dom'
 import { Bell, Send, AlertCircle, RefreshCw } from 'lucide-react'
 import { Toast } from '../../components/Toast'
+import { NotificationItem } from '../../components/NotificationItem'
 import { createNotification, getNotificationsByEventId } from '../../services/notifications'
 
 const NOTIFICATION_POLL_INTERVAL = 15000 // 15 seconds
-
-const formatDateTime = (dateStr) => {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  return date.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
 
 export const NotificationsPage = () => {
   const { event } = useOutletContext()
@@ -358,83 +347,9 @@ export const NotificationsPage = () => {
         )}
 
         {!loading && notifications.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {notifications.map((notif) => (
-              <div
-                key={notif.id}
-                style={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '10px',
-                  padding: '16px',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                  transition: 'all 0.15s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'
-                  e.currentTarget.style.borderColor = '#cbd5e1'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'
-                  e.currentTarget.style.borderColor = '#e2e8f0'
-                }}
-              >
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <div
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '8px',
-                      backgroundColor: '#fef3c7',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Bell size={18} color="#b45309" />
-                  </div>
-
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <h3
-                      style={{
-                        fontSize: '14px',
-                        fontWeight: '700',
-                        color: '#0f172a',
-                        margin: '0 0 4px',
-                      }}
-                    >
-                      {notif.title}
-                    </h3>
-                    <p
-                      style={{
-                        fontSize: '13px',
-                        color: '#64748b',
-                        margin: '4px 0',
-                        lineHeight: '1.4',
-                      }}
-                    >
-                      {notif.message}
-                    </p>
-                    <div
-                      style={{
-                        display: 'flex',
-                        gap: '12px',
-                        fontSize: '12px',
-                        color: '#94a3b8',
-                        marginTop: '8px',
-                        flexWrap: 'wrap',
-                      }}
-                    >
-                      <span>
-                        📤 Notification
-                      </span>
-                      <span>•</span>
-                      <span>{formatDateTime(notif.created_at)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <NotificationItem key={notif.id} notification={notif} />
             ))}
           </div>
         )}

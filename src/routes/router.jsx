@@ -13,6 +13,7 @@ import { ConcurrentPickerPage } from '../pages/user/ConcurrentPickerPage'
 import { EventsSelectionPage } from '../pages/user/EventsSelectionPage'
 import { NotificationsPage as UserNotificationsPage } from '../pages/user/NotificationsPage'
 import { AccountPage } from '../pages/user/AccountPage'
+import { EventDetailsPage } from '../pages/user/EventDetailsPage'
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage'
 import { AdminFlowPage } from '../pages/admin/AdminFlowPage'
 import { SpeakersPage } from '../pages/admin/SpeakersPage'
@@ -38,6 +39,7 @@ export const router = createBrowserRouter([
       { path: 'segment/:id', element: <SegmentDetailsPage /> },
       { path: 'picker/:timeBlock', element: <ConcurrentPickerPage /> },
       { path: 'events', element: <EventsSelectionPage /> },
+      { path: 'event/:id', element: <EventDetailsPage /> },
       { path: 'notifications', element: <UserNotificationsPage /> },
       { path: 'account', element: <AccountPage /> },
     ],

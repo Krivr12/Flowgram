@@ -1,29 +1,32 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Calendar, MapPin, Users } from 'lucide-react'
+import { MapPin, Info } from 'lucide-react'
 import { getAllEvents } from '../../services/events'
 
-const formatDate = (dateStr) => {
+// Format: "July 12, 2026 | 1:00 PM"
+const formatEventDate = (dateStr) => {
   if (!dateStr) return ''
   const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
-const formatDateRange = (startStr, endStr) => {
-  const start = new Date(startStr)
-  const end = new Date(endStr)
-
-  const startDate = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  const endDate = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-
-  return `${startDate} - ${endDate}`
+  const datePart = date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+  const timePart = date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'UTC',
+  })
+  return `${datePart} | ${timePart}`
 }
 
 export const EventsSelectionPage = () => {
   const navigate = useNavigate()
-  const [events, setEvents] = useState([])
+  const [events, setEvents]   = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [error, setError]     = useState('')
 
   useEffect(() => {
     loadEvents()
@@ -32,14 +35,12 @@ export const EventsSelectionPage = () => {
   const loadEvents = async () => {
     setLoading(true)
     setError('')
-
     const result = await getAllEvents()
     if (result.success) {
       setEvents(result.data || [])
     } else {
       setError(result.error || 'Failed to load events')
     }
-
     setLoading(false)
   }
 
@@ -49,197 +50,143 @@ export const EventsSelectionPage = () => {
   }
 
   return (
-    <div
-      style={{
-        maxWidth: '100%',
-        padding: '0 24px',
-        paddingTop: '40px',
-        paddingBottom: '80px',
-      }}
-    >
+    <div style={{ maxWidth: '100%', paddingTop: '16px', paddingBottom: '80px' }}>
+
       {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1
-          style={{
-            fontSize: '24px',
-            fontWeight: '700',
-            color: '#0f172a',
-            marginBottom: '8px',
-          }}
-        >
+      <div style={{ marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
           Select Event
         </h1>
       </div>
 
-      {/* Error Alert */}
+      {/* Error */}
       {error && (
-        <div
-          style={{
-            backgroundColor: '#fee2e2',
-            border: '1px solid #fca5a5',
-            color: '#991b1b',
-            padding: '16px',
-            borderRadius: '8px',
-            fontSize: '14px',
-            marginBottom: '24px',
-          }}
-        >
+        <div style={{
+          backgroundColor: '#fee2e2',
+          border: '1px solid #fca5a5',
+          color: '#991b1b',
+          padding: '16px',
+          borderRadius: '8px',
+          fontSize: '14px',
+          marginBottom: '24px',
+        }}>
           {error}
         </div>
       )}
 
-      {/* Loading State */}
+      {/* Loading */}
       {loading && (
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '60px 24px',
-            color: '#64748b',
-            fontSize: '14px',
-          }}
-        >
+        <div style={{ textAlign: 'center', padding: '60px 24px', color: '#64748b', fontSize: '14px' }}>
           Loading events...
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Empty */}
       {!loading && events.length === 0 && (
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '60px 24px',
-            color: '#64748b',
-            fontSize: '14px',
-          }}
-        >
+        <div style={{ textAlign: 'center', padding: '60px 24px', color: '#64748b', fontSize: '14px' }}>
           No events available yet.
         </div>
       )}
 
-      {/* Events Grid */}
+      {/* Event List */}
       {!loading && events.length > 0 && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-            gap: '24px',
-          }}
-        >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {events.map((event) => (
             <div
               key={event.id}
-              onClick={() => handleSelectEvent(event.id)}
               style={{
                 backgroundColor: '#fff',
                 border: '1px solid #e2e8f0',
                 borderRadius: '12px',
-                padding: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                overflow: 'hidden',
                 cursor: 'pointer',
                 transition: 'all 0.15s',
-                display: 'flex',
-                flexDirection: 'column',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)'
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'
                 e.currentTarget.style.borderColor = '#cbd5e1'
-                e.currentTarget.style.transform = 'translateY(-2px)'
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.boxShadow = 'none'
                 e.currentTarget.style.borderColor = '#e2e8f0'
-                e.currentTarget.style.transform = 'translateY(0)'
               }}
             >
-              {/* Event Title */}
-              <h3
-                style={{
-                  fontSize: '16px',
-                  fontWeight: '700',
-                  color: '#0f172a',
-                  marginBottom: '16px',
-                  lineHeight: '1.4',
-                  flex: 1,
-                }}
-              >
-                {event.title}
-              </h3>
-
-              {/* Event Details */}
+              {/* ── Clickable main body → selects event & goes to Flow ── */}
               <div
+                onClick={() => handleSelectEvent(event.id)}
                 style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '12px',
-                  marginBottom: '20px',
-                  fontSize: '13px',
-                  color: '#64748b',
+                  flex: 1,
+                  padding: '20px 20px',
+                  minWidth: 0,
                 }}
               >
-                {/* Date Range */}
-                {event.start_date && event.end_date && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                    }}
-                  >
-                    <Calendar size={16} color="#94a3b8" style={{ flexShrink: 0 }} />
-                    <span>{formatDateRange(event.start_date, event.end_date)}</span>
-                  </div>
+                {/* Title */}
+                <h3 style={{
+                  fontSize: '18px',
+                  fontWeight: '800',
+                  color: '#0f172a',
+                  margin: '0 0 8px',
+                  lineHeight: 1.3,
+                }}>
+                  {event.title}
+                </h3>
+
+                {/* Date */}
+                {event.start_date && (
+                  <p style={{
+                    fontSize: '13px',
+                    color: '#64748b',
+                    margin: '0 0 6px',
+                    fontWeight: '500',
+                  }}>
+                    {formatEventDate(event.start_date)}
+                  </p>
                 )}
 
                 {/* Venue */}
                 {event.venue && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                    }}
-                  >
-                    <MapPin size={16} color="#94a3b8" style={{ flexShrink: 0 }} />
-                    <span>{event.venue}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <MapPin size={13} color="#94a3b8" style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '500' }}>
+                      {event.venue}
+                    </span>
                   </div>
-                )}
-
-                {/* Description */}
-                {event.description && (
-                  <p
-                    style={{
-                      fontSize: '13px',
-                      color: '#64748b',
-                      lineHeight: '1.4',
-                      marginTop: '8px',
-                    }}
-                  >
-                    {event.description.substring(0, 100)}
-                    {event.description.length > 100 ? '...' : ''}
-                  </p>
                 )}
               </div>
 
-              {/* CTA Button */}
+              {/* ── Info icon → navigates to EventDetailsPage ── */}
               <button
                 onClick={(e) => {
                   e.stopPropagation()
-                  handleSelectEvent(event.id)
+                  navigate(`/app/event/${event.id}`)
                 }}
+                aria-label="View event details"
                 style={{
-                  backgroundColor: '#f97316',
-                  color: '#fff',
+                  flexShrink: 0,
+                  width: '52px',
+                  alignSelf: 'stretch',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'none',
                   border: 'none',
-                  padding: '12px 20px',
-                  borderRadius: '8px',
-                  fontSize: '13px',
-                  fontWeight: '600',
+                  borderLeft: '1px solid #f1f5f9',
                   cursor: 'pointer',
-                  transition: 'background-color 0.15s',
+                  color: '#94a3b8',
+                  transition: 'background-color 0.15s, color 0.15s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#ea580c')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f97316')}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f8fafc'
+                  e.currentTarget.style.color = '#475569'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                  e.currentTarget.style.color = '#94a3b8'
+                }}
               >
-                View Schedule
+                <Info size={17} color="#94a3b8" strokeWidth={2} />
               </button>
             </div>
           ))}
