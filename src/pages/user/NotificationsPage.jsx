@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, AlertCircle, ArrowRight } from 'lucide-react'
+import { Bell, AlertCircle, ArrowRight, RefreshCw } from 'lucide-react'
 import { getNotificationsByEventId } from '../../services/notifications'
+
+const NOTIFICATION_POLL_INTERVAL = 15000 // 15 seconds
 
 const formatDateTime = (dateStr) => {
   if (!dateStr) return ''
@@ -19,7 +21,9 @@ export const NotificationsPage = () => {
   const navigate                          = useNavigate()
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading]             = useState(true)
+  const [isRefreshing, setIsRefreshing]   = useState(false)
   const [error, setError]                 = useState('')
+  const pollIntervalRef                   = useRef(null)
 
   // Read once on mount — stable reference so we don't re-render on every
   // pathname change the way UserLayout does.
@@ -27,10 +31,17 @@ export const NotificationsPage = () => {
 
   useEffect(() => {
     loadNotifications()
+    // Set up polling: fetch immediately, then every 15 seconds
+    pollIntervalRef.current = setInterval(loadNotifications, NOTIFICATION_POLL_INTERVAL)
+
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current)
+      }
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadNotifications = async () => {
-    setLoading(true)
     setError('')
 
     const eventId = localStorage.getItem('selected_event_id')
@@ -54,6 +65,12 @@ export const NotificationsPage = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true)
+    await loadNotifications()
+    setIsRefreshing(false)
   }
 
   // ── No event selected ────────────────────────────────────────────────────
@@ -154,6 +171,48 @@ export const NotificationsPage = () => {
           Stay updated with event announcements and schedule changes.
         </p>
       </div>
+
+      {/* Manual Refresh Button */}
+      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+        <button
+          onClick={handleManualRefresh}
+          disabled={isRefreshing}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '40px',
+            height: '40px',
+            borderRadius: '8px',
+            border: '1px solid #e2e8f0',
+            backgroundColor: '#fff',
+            cursor: isRefreshing ? 'not-allowed' : 'pointer',
+            transition: 'all 0.15s',
+            opacity: isRefreshing ? 0.6 : 1,
+          }}
+          onMouseEnter={(e) => !isRefreshing && (e.currentTarget.style.backgroundColor = '#f1f5f9')}
+          onMouseLeave={(e) => !isRefreshing && (e.currentTarget.style.backgroundColor = '#fff')}
+          title="Refresh notifications"
+          aria-label="Refresh notifications"
+        >
+          <RefreshCw
+            size={18}
+            color="#64748b"
+            style={{
+              animation: isRefreshing ? 'spin 1s linear infinite' : 'none',
+            }}
+          />
+        </button>
+      </div>
+
+      <style>
+        {`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}
+      </style>
 
       {/* Error */}
       {error && (

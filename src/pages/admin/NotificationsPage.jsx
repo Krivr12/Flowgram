@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useOutletContext, useParams } from 'react-router-dom'
-import { Bell, Send, AlertCircle } from 'lucide-react'
+import { Bell, Send, AlertCircle, RefreshCw } from 'lucide-react'
 import { Toast } from '../../components/Toast'
 import { createNotification, getNotificationsByEventId } from '../../services/notifications'
+
+const NOTIFICATION_POLL_INTERVAL = 15000 // 15 seconds
 
 const formatDateTime = (dateStr) => {
   if (!dateStr) return ''
@@ -21,19 +23,28 @@ export const NotificationsPage = () => {
   const { eventId } = useParams()
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [toast, setToast] = useState(null)
   const [formData, setFormData] = useState({ title: '', message: '' })
+  const pollIntervalRef = useRef(null)
 
   useEffect(() => {
     if (eventId) {
       loadNotifications()
+      // Set up polling: fetch immediately, then every 15 seconds
+      pollIntervalRef.current = setInterval(() => loadNotifications(), NOTIFICATION_POLL_INTERVAL)
+    }
+
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current)
+      }
     }
   }, [eventId])
 
   const loadNotifications = async () => {
-    setLoading(true)
     setError('')
     console.log('Loading notifications for event:', eventId)
     const result = await getNotificationsByEventId(eventId)
@@ -44,6 +55,12 @@ export const NotificationsPage = () => {
       setError(result.error)
     }
     setLoading(false)
+  }
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true)
+    await loadNotifications()
+    setIsRefreshing(false)
   }
 
   const handleInputChange = (e) => {
@@ -256,9 +273,49 @@ export const NotificationsPage = () => {
 
       {/* Notifications History */}
       <div>
-        <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', marginBottom: '16px' }}>
-          Sent Notifications
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+            Sent Notifications
+          </h2>
+          <button
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '36px',
+              height: '36px',
+              borderRadius: '6px',
+              border: '1px solid #e2e8f0',
+              backgroundColor: '#fff',
+              cursor: isRefreshing ? 'not-allowed' : 'pointer',
+              transition: 'all 0.15s',
+              opacity: isRefreshing ? 0.6 : 1,
+            }}
+            onMouseEnter={(e) => !isRefreshing && (e.currentTarget.style.backgroundColor = '#f1f5f9')}
+            onMouseLeave={(e) => !isRefreshing && (e.currentTarget.style.backgroundColor = '#fff')}
+            title="Refresh notifications"
+            aria-label="Refresh notifications"
+          >
+            <RefreshCw
+              size={16}
+              color="#64748b"
+              style={{
+                animation: isRefreshing ? 'spin 1s linear infinite' : 'none',
+              }}
+            />
+          </button>
+        </div>
+
+        <style>
+          {`
+            @keyframes spin {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(360deg); }
+            }
+          `}
+        </style>
 
         {loading && (
           <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>

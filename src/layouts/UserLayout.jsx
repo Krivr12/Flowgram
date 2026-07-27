@@ -16,6 +16,7 @@ import { Toast } from '../components/Toast'
 import { ConnectModal } from '../components/ConnectModal'
 
 const NAVBAR_H = 64
+const NOTIFICATION_POLL_INTERVAL = 15000 // 15 seconds
 
 // Nav items for mobile bottom bar — Connect has no route; it opens a modal
 const NAV_ITEMS = [
@@ -46,10 +47,10 @@ export const UserLayout = () => {
   const [dropdownOpen, setDropdownOpen]     = useState(false)
   const [sidebarOpen, setSidebarOpen]       = useState(false)
   const [showConnectModal, setShowConnectModal] = useState(false)
-  // ── Realtime notification toast ──────────────────────────────────────────
+  // ── Notification toast ──────────────────────────────────────────
   const [notifToast, setNotifToast]         = useState(null) // { title, message }
   const dropdownRef                         = useRef(null)
-  const realtimeChannelRef                  = useRef(null)
+  const notifPollIntervalRef                = useRef(null)
   const navigate                            = useNavigate()
   const location                            = useLocation()
 
@@ -65,65 +66,76 @@ export const UserLayout = () => {
     load()
   }, [])
 
-  // ── Server-side filtered realtime subscription ───────────────────────────
-  // Re-subscribes whenever the stored event changes (e.g. user switches events).
-  // We poll localStorage on a storage event AND on location change so that
-  // switching event on /app/events immediately refreshes the channel.
-  const subscribeToNotifications = useCallback(() => {
+  // ── Server-side filtered polling for notifications ───────────────────────
+  // Replaces Realtime WebSocket with HTTP polling every 15 seconds
+
+  const fetchNotifications = useCallback(async () => {
     const selectedEventId = localStorage.getItem('selected_event_id')
-
-    // Tear down any existing channel first
-    if (realtimeChannelRef.current) {
-      supabase.removeChannel(realtimeChannelRef.current)
-      realtimeChannelRef.current = null
-    }
-
-    // Guard: no event selected — nothing to subscribe to
     if (!selectedEventId) return
 
-    const channel = supabase
-      .channel(`notifications-event-${selectedEventId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `event_id=eq.${selectedEventId}`,
-        },
-        (payload) => {
-          const { title, message } = payload.new ?? {}
-          setNotifToast({ title: title || 'New Announcement', message: message || '' })
-        }
-      )
-      .subscribe()
+    try {
+      // Fetch latest notifications for the selected event
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('event_id', selectedEventId)
+        .order('created_at', { ascending: false })
+        .limit(1)
 
-    realtimeChannelRef.current = channel
+      if (error) {
+        console.error('Error polling notifications:', error)
+        return
+      }
+
+      // Show toast only if we got new data
+      if (data && data.length > 0) {
+        const latestNotif = data[0]
+        setNotifToast({
+          title: latestNotif.title || 'New Announcement',
+          message: latestNotif.message || '',
+        })
+      }
+    } catch (err) {
+      console.error('Exception polling notifications:', err)
+    }
   }, [])
+
+  const setupNotificationPolling = useCallback(() => {
+    // Clear any existing interval
+    if (notifPollIntervalRef.current) {
+      clearInterval(notifPollIntervalRef.current)
+    }
+
+    // Fetch immediately on mount
+    fetchNotifications()
+
+    // Then set up polling
+    notifPollIntervalRef.current = setInterval(fetchNotifications, NOTIFICATION_POLL_INTERVAL)
+  }, [fetchNotifications])
 
   // Subscribe on mount
   useEffect(() => {
-    subscribeToNotifications()
+    setupNotificationPolling()
     return () => {
-      if (realtimeChannelRef.current) {
-        supabase.removeChannel(realtimeChannelRef.current)
+      if (notifPollIntervalRef.current) {
+        clearInterval(notifPollIntervalRef.current)
       }
     }
-  }, [subscribeToNotifications])
+  }, [setupNotificationPolling])
 
-  // Re-subscribe when the user navigates (covers switching events on /app/events)
+  // Re-setup polling when the user navigates (covers switching events on /app/events)
   useEffect(() => {
-    subscribeToNotifications()
-  }, [location.pathname, subscribeToNotifications])
+    setupNotificationPolling()
+  }, [location.pathname, setupNotificationPolling])
 
-  // Re-subscribe when localStorage changes from another tab
+  // Setup polling when localStorage changes from another tab
   useEffect(() => {
     const onStorage = (e) => {
-      if (e.key === 'selected_event_id') subscribeToNotifications()
+      if (e.key === 'selected_event_id') setupNotificationPolling()
     }
     window.addEventListener('storage', onStorage)
     return () => window.removeEventListener('storage', onStorage)
-  }, [subscribeToNotifications])
+  }, [setupNotificationPolling])
   // ────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {

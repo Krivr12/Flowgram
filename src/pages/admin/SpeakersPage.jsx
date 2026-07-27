@@ -3,8 +3,9 @@ import { useOutletContext } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Plus, Trash2, X, Edit2 } from 'lucide-react'
+import { Plus, Trash2, X, Edit2, User, Camera } from 'lucide-react'
 import { getAllSpeakers, createSpeaker, updateSpeaker, deleteSpeaker } from '../../services/speakers'
+import { uploadProfilePictureToS3, generateMediaPath } from '../../services/s3UploadService'
 
 const speakerSchema = z.object({
   full_name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -13,6 +14,7 @@ const speakerSchema = z.object({
   company: z.string().min(1, 'Company is required'),
   event_role: z.enum(['SPEAKER', 'HOST', 'PANELIST']),
   linkedin_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  profile_picture_url: z.string().optional().or(z.literal('')),
 })
 
 const INPUT = {
@@ -42,6 +44,9 @@ export const SpeakersPage = () => {
   const [showModal, setShowModal] = useState(false)
   const [editingSpeaker, setEditingSpeaker] = useState(null)
   const [deleting, setDeleting] = useState(null)
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   const { register, handleSubmit, reset, setValue, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(speakerSchema),
@@ -60,15 +65,49 @@ export const SpeakersPage = () => {
     setLoading(false)
   }
 
+  const handleImageSelect = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setSelectedFile(file)
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      setImagePreview(event.target?.result)
+    }
+    reader.readAsDataURL(file)
+  }
+
   const onSubmit = async (data) => {
+    let imageUrl = editingSpeaker?.profile_picture_url || null
+
+    // Upload new image if selected
+    if (selectedFile) {
+      setUploadingImage(true)
+      const fileExtension = selectedFile.name.split('.').pop() || 'jpg'
+      const s3Path = generateMediaPath('speaker-photos', fileExtension)
+
+      const uploadResult = await uploadProfilePictureToS3(selectedFile, s3Path)
+      setUploadingImage(false)
+
+      if (!uploadResult.success) {
+        setError(uploadResult.error || 'Failed to upload image')
+        return
+      }
+
+      imageUrl = uploadResult.url
+    }
+
+    // Add profile_picture_url to data
+    const submissionData = { ...data, profile_picture_url: imageUrl }
+
     if (editingSpeaker) {
-      const result = await updateSpeaker(editingSpeaker.id, data)
+      const result = await updateSpeaker(editingSpeaker.id, submissionData)
       if (result.success) {
         setSpeakers((prev) => prev.map((s) => s.id === editingSpeaker.id ? result.data : s))
         closeModal()
       } else setError(result.error)
     } else {
-      const result = await createSpeaker(data)
+      const result = await createSpeaker(submissionData)
       if (result.success) {
         setSpeakers((prev) => [result.data, ...prev])
         closeModal()
@@ -84,6 +123,9 @@ export const SpeakersPage = () => {
     setValue('company', speaker.company)
     setValue('event_role', speaker.event_role)
     setValue('linkedin_url', speaker.linkedin_url || '')
+    setValue('profile_picture_url', speaker.profile_picture_url || '')
+    setImagePreview(speaker.profile_picture_url || null)
+    setSelectedFile(null)
     setShowModal(true)
   }
 
@@ -98,6 +140,8 @@ export const SpeakersPage = () => {
   const closeModal = () => {
     setShowModal(false)
     setEditingSpeaker(null)
+    setSelectedFile(null)
+    setImagePreview(null)
     reset()
   }
 
@@ -170,14 +214,23 @@ export const SpeakersPage = () => {
             const roleStyle = EVENT_ROLE_COLORS[speaker.event_role] || EVENT_ROLE_COLORS.SPEAKER
             return (
               <div key={speaker.id} style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {/* Name + badge */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
-                  <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#0f172a', margin: 0, lineHeight: '1.4' }}>
-                    {speaker.full_name}
-                  </h3>
-                  <span style={{ padding: '2px 10px', borderRadius: '9999px', fontSize: '11px', fontWeight: '600', backgroundColor: roleStyle.bg, color: roleStyle.color, flexShrink: 0 }}>
-                    {speaker.event_role}
-                  </span>
+                {/* Avatar + Name + badge */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '4px' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '9999px', backgroundColor: '#f1f5f9', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {speaker.profile_picture_url ? (
+                      <img src={speaker.profile_picture_url} alt={speaker.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <User size={24} color="#94a3b8" />
+                    )}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#0f172a', margin: 0, lineHeight: '1.4' }}>
+                      {speaker.full_name}
+                    </h3>
+                    <span style={{ display: 'inline-block', marginTop: '4px', padding: '2px 10px', borderRadius: '9999px', fontSize: '11px', fontWeight: '600', backgroundColor: roleStyle.bg, color: roleStyle.color }}>
+                      {speaker.event_role}
+                    </span>
+                  </div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -234,6 +287,33 @@ export const SpeakersPage = () => {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Hidden file input */}
+              <input
+                type="file"
+                accept="image/*"
+                id="speaker-image-upload"
+                onChange={handleImageSelect}
+                style={{ display: 'none' }}
+              />
+
+              {/* Avatar Upload UI */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '8px' }}>
+                <label htmlFor="speaker-image-upload" style={{ cursor: 'pointer', width: '100%', display: 'flex', justifyContent: 'center' }}>
+                  <div style={{ position: 'relative', width: '96px', height: '96px', borderRadius: '9999px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '2px solid #e2e8f0' }}>
+                    {imagePreview ? (
+                      <img src={imagePreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <User size={40} color="#94a3b8" />
+                    )}
+                    {/* Camera Icon Overlay */}
+                    <div style={{ position: 'absolute', bottom: 0, right: 0, backgroundColor: '#eff6ff', padding: '6px', borderRadius: '9999px', border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                      <Camera size={16} color="#2563eb" />
+                    </div>
+                  </div>
+                </label>
+                <p style={{ fontSize: '12px', color: '#64748b', marginTop: '8px', textAlign: 'center' }}>Click to upload photo</p>
+              </div>
+
               {[
                 { name: 'full_name', label: 'Full Name', placeholder: 'e.g. Jane Doe' },
                 { name: 'role', label: 'Title / Role', placeholder: 'e.g. Senior Engineer, AWS Hero' },
@@ -280,8 +360,8 @@ export const SpeakersPage = () => {
                 <button type="button" onClick={closeModal} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>
                   Cancel
                 </button>
-                <button type="submit" disabled={isSubmitting} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: '#f97316', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: 'pointer', opacity: isSubmitting ? 0.7 : 1 }}>
-                  {isSubmitting ? 'Saving…' : editingSpeaker ? 'Update Speaker' : 'Add Speaker'}
+                <button type="submit" disabled={isSubmitting || uploadingImage} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: '#f97316', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: 'pointer', opacity: isSubmitting || uploadingImage ? 0.7 : 1 }}>
+                  {isSubmitting || uploadingImage ? 'Saving…' : editingSpeaker ? 'Update Speaker' : 'Add Speaker'}
                 </button>
               </div>
             </form>

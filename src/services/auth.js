@@ -35,10 +35,20 @@ export const signinWithEmail = async (email, password) => {
 
 // Sign in with Google
 export const signinWithGoogle = async () => {
+  // Determine redirect URL based on environment
+  let redirectUrl = window.location.origin // fallback
+  const appEnv = import.meta.env.VITE_APP_ENV
+
+  if (appEnv === 'development') {
+    redirectUrl = 'http://localhost:5173/auth/callback'
+  } else if (appEnv === 'production') {
+    redirectUrl = 'https://flowgram-orpin.vercel.app/auth/callback'
+  }
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo: redirectUrl,
     },
   })
 
