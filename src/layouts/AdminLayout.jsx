@@ -108,7 +108,7 @@ export const AdminLayout = () => {
         className="admin-layout-desktop-header"
         style={{
           height: `${NAVBAR_H}px`,
-          backgroundColor: '#E6E6E6',
+          backgroundColor: '#f8fafc',
           borderBottom: 'none',
           boxShadow: 'none',
           position: 'sticky',
@@ -277,7 +277,7 @@ export const AdminLayout = () => {
         className="admin-layout-mobile-header"
         style={{
           height: `${NAVBAR_H}px`,
-          backgroundColor: '#E6E6E6',
+          backgroundColor: '#f8fafc',
           borderBottom: 'none',
           boxShadow: 'none',
           position: 'fixed',
