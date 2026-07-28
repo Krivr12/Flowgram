@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getSegmentsByEventId, updateSegment } from '../../services/segments'
 import { updateSegmentStatus } from '../../services/notifications'
-import { getEventById } from '../../services/events'
+import { getEventById, updateEvent } from '../../services/events'
 import { ChevronDown, Clock, MapPin } from 'lucide-react'
 
-// ─── Formatters ──────────────────────────────────────────────────────────────
+// ─── Formatters ───────────────────────────────────────────────────────────────
 
 const formatTime = (timeStr) => {
   if (!timeStr) return ''
@@ -26,15 +26,15 @@ const formatDate = (dateStr) => {
   })
 }
 
-// ─── Status config ────────────────────────────────────────────────────────────
+// ─── Segment status config ────────────────────────────────────────────────────
 
 const STATUS_OPTIONS = ['Not Started', 'Ongoing', 'Finished', 'Skipped']
 
 const STATUS_STYLE = {
-  Ongoing:      { bg: '#fef3c7', text: '#92400e', dot: '#f59e0b' },
-  Finished:     { bg: '#dcfce7', text: '#166534', dot: '#22c55e' },
-  Skipped:      { bg: '#fee2e2', text: '#991b1b', dot: '#ef4444' },
-  'Not Started':{ bg: '#f1f5f9', text: '#334155', dot: '#94a3b8' },
+  Ongoing:       { bg: '#fef3c7', text: '#92400e', dot: '#f59e0b' },
+  Finished:      { bg: '#dcfce7', text: '#166534', dot: '#22c55e' },
+  Skipped:       { bg: '#fee2e2', text: '#991b1b', dot: '#ef4444' },
+  'Not Started': { bg: '#f1f5f9', text: '#334155', dot: '#94a3b8' },
 }
 
 const getStatusStyle = (status) => STATUS_STYLE[status] ?? STATUS_STYLE['Not Started']
@@ -44,23 +44,27 @@ const getStatusStyle = (status) => STATUS_STYLE[status] ?? STATUS_STYLE['Not Sta
 const CAPACITY_OPTIONS = ['VACANT', 'FILLING', 'FULL', 'AT CAPACITY']
 
 const CAPACITY_STYLE = {
-  VACANT:      { bg: '#f0fdf4', text: '#15803d', dot: '#22c55e' },
-  FILLING:     { bg: '#fffbeb', text: '#b45309', dot: '#f59e0b' },
-  FULL:        { bg: '#fff7ed', text: '#c2410c', dot: '#f97316' },
-  'AT CAPACITY':{ bg: '#fee2e2', text: '#991b1b', dot: '#ef4444' },
+  VACANT:        { bg: '#f0fdf4', text: '#15803d', dot: '#22c55e' },
+  FILLING:       { bg: '#fffbeb', text: '#b45309', dot: '#f59e0b' },
+  FULL:          { bg: '#fff7ed', text: '#c2410c', dot: '#f97316' },
+  'AT CAPACITY': { bg: '#fee2e2', text: '#991b1b', dot: '#ef4444' },
 }
 
-const getCapacityStyle = (capacity) =>
-  CAPACITY_STYLE[capacity] ?? CAPACITY_STYLE['VACANT']
+// ─── Event status config ──────────────────────────────────────────────────────
 
-// ─── Group segments by start_time key ────────────────────────────────────────
-// Returns an array of { timeKey, label, segments } in ascending time order.
-// Since segments are already fetched ordered by start_time ASC, we preserve
-// that order — useMemo just groups them.
+const EVENT_STATUS_OPTIONS = ['UPCOMING', 'STARTED', 'FINISHED', 'CANCELLED']
+
+const EVENT_STATUS_STYLE = {
+  UPCOMING:  { bg: 'rgba(99,179,237,0.18)',  text: '#93c5fd', dot: '#60a5fa' },
+  STARTED:   { bg: 'rgba(251,191,36,0.18)',  text: '#fcd34d', dot: '#fbbf24' },
+  FINISHED:  { bg: 'rgba(52,211,153,0.18)',  text: '#6ee7b7', dot: '#34d399' },
+  CANCELLED: { bg: 'rgba(239,68,68,0.18)',   text: '#fca5a5', dot: '#ef4444' },
+}
+
+// ─── Group segments by start_time ─────────────────────────────────────────────
 
 const groupSegmentsByStartTime = (segments) => {
   const map = new Map()
-
   for (const seg of segments) {
     const key = seg.start_time ?? '__no_time__'
     if (!map.has(key)) {
@@ -68,14 +72,12 @@ const groupSegmentsByStartTime = (segments) => {
     }
     map.get(key).segments.push(seg)
   }
-
   return Array.from(map.values())
 }
 
-// ─── Inline dropdown ─────────────────────────────────────────────────────────
-// A reusable pill-button + popover used for both status and capacity.
+// ─── Inline control dropdown ──────────────────────────────────────────────────
 
-const ControlDropdown = ({ id, dropdownKey, value, options, styleMap, openId, onToggle, onSelect, disabled }) => {
+const ControlDropdown = ({ dropdownKey, value, options, styleMap, openId, onToggle, onSelect, disabled }) => {
   const style = styleMap[value] ?? Object.values(styleMap)[0]
   const isOpen = openId === dropdownKey
 
@@ -102,24 +104,9 @@ const ControlDropdown = ({ id, dropdownKey, value, options, styleMap, openId, on
           letterSpacing: '0.01em',
         }}
       >
-        {/* Status dot */}
-        <span
-          style={{
-            width: '6px',
-            height: '6px',
-            borderRadius: '50%',
-            backgroundColor: style.dot,
-            flexShrink: 0,
-          }}
-        />
+        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: style.dot, flexShrink: 0 }} />
         {value || options[0]}
-        <ChevronDown
-          size={12}
-          style={{
-            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.15s',
-          }}
-        />
+        <ChevronDown size={12} style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }} />
       </button>
 
       {isOpen && (
@@ -159,28 +146,88 @@ const ControlDropdown = ({ id, dropdownKey, value, options, styleMap, openId, on
                   textAlign: 'left',
                   transition: 'background 0.1s',
                 }}
-                onMouseEnter={(e) => {
-                  if (!isActive) e.currentTarget.style.backgroundColor = '#f8fafc'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = isActive ? optStyle.bg : 'transparent'
-                }}
+                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = '#f8fafc' }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isActive ? optStyle.bg : 'transparent' }}
               >
-                <span
-                  style={{
-                    width: '7px',
-                    height: '7px',
-                    borderRadius: '50%',
-                    backgroundColor: optStyle.dot,
-                    flexShrink: 0,
-                  }}
-                />
+                <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: optStyle.dot, flexShrink: 0 }} />
                 {opt}
               </button>
             )
           })}
         </div>
       )}
+    </div>
+  )
+}
+
+// ─── Confirmation Modal ───────────────────────────────────────────────────────
+
+const ConfirmModal = ({ isOpen, onCancel, onConfirm }) => {
+  if (!isOpen) return null
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(0,0,0,0.45)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 50,
+      }}
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel() }}
+    >
+      <div
+        style={{
+          backgroundColor: '#fff',
+          borderRadius: '14px',
+          padding: '28px 28px 24px',
+          width: '100%',
+          maxWidth: '380px',
+          boxShadow: '0 20px 48px rgba(0,0,0,0.18)',
+          margin: '0 16px',
+        }}
+      >
+        <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: '0 0 8px' }}>
+          Confirm Status Change
+        </h3>
+        <p style={{ fontSize: '14px', color: '#64748b', margin: '0 0 24px', lineHeight: '1.5' }}>
+          Are you sure you want to update this status?
+        </p>
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+          <button
+            onClick={onCancel}
+            style={{
+              padding: '9px 20px',
+              borderRadius: '8px',
+              border: '1px solid #e2e8f0',
+              backgroundColor: '#fff',
+              color: '#475569',
+              fontSize: '13px',
+              fontWeight: '600',
+              cursor: 'pointer',
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            style={{
+              padding: '9px 20px',
+              borderRadius: '8px',
+              border: 'none',
+              backgroundColor: '#252F3E',
+              color: '#fff',
+              fontSize: '13px',
+              fontWeight: '600',
+              cursor: 'pointer',
+            }}
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -195,18 +242,25 @@ export const AdminFlowPage = () => {
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState('')
 
-  // Tracks which dropdown is open: `${segmentId}-status` or `${segmentId}-capacity`
+  // Dropdown open state: `${segmentId}-status` | `${segmentId}-capacity`
   const [openDropdown, setOpenDropdown]       = useState(null)
-  // Tracks which segment is mid-save so both controls disable together
+  // Segment currently being saved (disables its controls)
   const [updatingSegment, setUpdatingSegment] = useState(null)
+  // Whether the event status is being saved
+  const [updatingEventStatus, setUpdatingEventStatus] = useState(false)
+
+  // ── Confirmation modal state ────────────────────────────────────────────────
+  // pendingStatusUpdate shape:
+  //   { type: 'segment-status', segmentId, value }
+  //   { type: 'segment-capacity', segmentId, value }
+  //   { type: 'event-status', value }
+  const [pendingStatusUpdate, setPendingStatusUpdate] = useState(null)
+  const isModalOpen = pendingStatusUpdate !== null
 
   // ── Data loading ────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (!eventId) {
-      setLoading(false)
-      return
-    }
+    if (!eventId) { setLoading(false); return }
     loadEventAndSegments()
   }, [eventId])
 
@@ -218,13 +272,8 @@ export const AdminFlowPage = () => {
         getEventById(eventId),
         getSegmentsByEventId(eventId),
       ])
-
-      if (!eventResult.success) {
-        setError(eventResult.error || 'Failed to load event')
-        return
-      }
+      if (!eventResult.success) { setError(eventResult.error || 'Failed to load event'); return }
       setEvent(eventResult.data)
-
       if (segmentsResult.success) {
         setSegments(segmentsResult.data || [])
       } else {
@@ -244,44 +293,73 @@ export const AdminFlowPage = () => {
 
   // ── Optimistic local update helper ─────────────────────────────────────────
 
-  const patchSegment = (segmentId, patch) => {
-    setSegments((prev) =>
-      prev.map((s) => (s.id === segmentId ? { ...s, ...patch } : s))
-    )
-  }
+  const patchSegment = (segmentId, patch) =>
+    setSegments((prev) => prev.map((s) => (s.id === segmentId ? { ...s, ...patch } : s)))
 
-  // ── Status change ───────────────────────────────────────────────────────────
+  // ── Intercept changes → queue pending, open modal ──────────────────────────
 
-  const handleStatusChange = async (segmentId, newStatus) => {
+  const requestSegmentStatus   = (segmentId, value) => {
     setOpenDropdown(null)
-    setUpdatingSegment(segmentId)
-    patchSegment(segmentId, { segment_status: newStatus })
-
-    const result = await updateSegmentStatus(segmentId, newStatus)
-    if (!result.success) {
-      setError(result.error || 'Failed to update status')
-      // Roll back — reload from server
-      loadEventAndSegments()
-    }
-    setUpdatingSegment(null)
+    setPendingStatusUpdate({ type: 'segment-status', segmentId, value })
   }
 
-  // ── Capacity change ─────────────────────────────────────────────────────────
-
-  const handleCapacityChange = async (segmentId, newCapacity) => {
+  const requestSegmentCapacity = (segmentId, value) => {
     setOpenDropdown(null)
-    setUpdatingSegment(segmentId)
-    patchSegment(segmentId, { room_capacity: newCapacity })
-
-    const result = await updateSegment(segmentId, { room_capacity: newCapacity })
-    if (!result.success) {
-      setError(result.error || 'Failed to update room capacity')
-      loadEventAndSegments()
-    }
-    setUpdatingSegment(null)
+    setPendingStatusUpdate({ type: 'segment-capacity', segmentId, value })
   }
 
-  // Close any open dropdown when clicking outside
+  const requestEventStatus = (value) => {
+    setPendingStatusUpdate({ type: 'event-status', value })
+  }
+
+  // ── Modal: cancel ──────────────────────────────────────────────────────────
+
+  const handleModalCancel = () => setPendingStatusUpdate(null)
+
+  // ── Modal: confirm → execute the right DB update ──────────────────────────
+
+  const handleModalConfirm = async () => {
+    if (!pendingStatusUpdate) return
+    const pending = pendingStatusUpdate
+    setPendingStatusUpdate(null)
+
+    if (pending.type === 'segment-status') {
+      const { segmentId, value } = pending
+      setUpdatingSegment(segmentId)
+      patchSegment(segmentId, { segment_status: value })
+      const result = await updateSegmentStatus(segmentId, value)
+      if (!result.success) {
+        setError(result.error || 'Failed to update status')
+        loadEventAndSegments()
+      }
+      setUpdatingSegment(null)
+    }
+
+    if (pending.type === 'segment-capacity') {
+      const { segmentId, value } = pending
+      setUpdatingSegment(segmentId)
+      patchSegment(segmentId, { room_capacity: value })
+      const result = await updateSegment(segmentId, { room_capacity: value })
+      if (!result.success) {
+        setError(result.error || 'Failed to update room capacity')
+        loadEventAndSegments()
+      }
+      setUpdatingSegment(null)
+    }
+
+    if (pending.type === 'event-status') {
+      setUpdatingEventStatus(true)
+      setEvent((prev) => ({ ...prev, event_status: pending.value }))
+      const result = await updateEvent(eventId, { event_status: pending.value })
+      if (!result.success) {
+        setError(result.error || 'Failed to update event status')
+        loadEventAndSegments()
+      }
+      setUpdatingEventStatus(false)
+    }
+  }
+
+  // Close dropdowns on outside click
   useEffect(() => {
     if (!openDropdown) return
     const close = () => setOpenDropdown(null)
@@ -294,14 +372,18 @@ export const AdminFlowPage = () => {
   return (
     <div>
 
+      {/* ── Confirmation modal ── */}
+      <ConfirmModal
+        isOpen={isModalOpen}
+        onCancel={handleModalCancel}
+        onConfirm={handleModalConfirm}
+      />
+
       {/* ── Page header ── */}
-      <div style={{ marginBottom: '32px' }}>
+      <div style={{ marginBottom: '28px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
-          Program Flow
+          Manage Flow
         </h1>
-        <p style={{ fontSize: '14px', color: '#64748b', marginTop: '4px' }}>
-          Manage the flow of {event?.title || 'this event'}. Update status and room capacity in real time.
-        </p>
       </div>
 
       {/* ── Error banner ── */}
@@ -331,53 +413,87 @@ export const AdminFlowPage = () => {
         </div>
       )}
 
-      {/* ── Event summary card ── */}
+      {/* ── Current Event card (navy redesign) ── */}
       {event && (
         <div
           style={{
-            backgroundColor: '#fff',
-            border: '1px solid #e2e8f0',
+            backgroundColor: '#252F3E',
             borderRadius: '12px',
-            padding: '20px 24px',
-            marginBottom: '36px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '16px',
-            flexWrap: 'wrap',
+            padding: '20px',
+            marginBottom: '32px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
           }}
         >
-          <div style={{ flex: 1, minWidth: '180px' }}>
-            <p style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>
-              Current Event
-            </p>
-            <h2 style={{ fontSize: '17px', fontWeight: '700', color: '#0f172a', margin: 0, lineHeight: 1.3 }}>
-              {event.title}
-            </h2>
-          </div>
-          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', fontSize: '13px', color: '#64748b' }}>
+          {/* Label */}
+          <p style={{ fontSize: '10px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px' }}>
+            Current Event
+          </p>
+
+          {/* Title */}
+          <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', margin: '0 0 10px', lineHeight: '1.3' }}>
+            {event.title}
+          </h2>
+
+          {/* Venue + Date side-by-side */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
             {event.venue && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', color: '#cbd5e1' }}>
                 <MapPin size={13} color="#94a3b8" /> {event.venue}
               </span>
             )}
             {event.start_date && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', color: '#cbd5e1' }}>
                 <Clock size={13} color="#94a3b8" /> {formatDate(event.start_date)}
               </span>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginBottom: '14px' }} />
+
+          {/* Event Status dropdown */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '12px', fontWeight: '600', color: '#94a3b8' }}>Event Status</span>
+            <select
+              value={event.event_status || 'UPCOMING'}
+              onChange={(e) => requestEventStatus(e.target.value)}
+              disabled={updatingEventStatus}
+              style={{
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                padding: '6px 32px 6px 12px',
+                borderRadius: '7px',
+                border: '1px solid rgba(255,255,255,0.15)',
+                backgroundColor: EVENT_STATUS_STYLE[event.event_status || 'UPCOMING']?.bg ?? 'rgba(99,179,237,0.18)',
+                color: EVENT_STATUS_STYLE[event.event_status || 'UPCOMING']?.text ?? '#93c5fd',
+                fontSize: '12px',
+                fontWeight: '700',
+                cursor: updatingEventStatus ? 'not-allowed' : 'pointer',
+                opacity: updatingEventStatus ? 0.6 : 1,
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 10px center',
+                letterSpacing: '0.04em',
+              }}
+            >
+              {EVENT_STATUS_OPTIONS.map((opt) => (
+                <option key={opt} value={opt} style={{ backgroundColor: '#1e2a3a', color: '#e2e8f0' }}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+            {updatingEventStatus && (
+              <span style={{ fontSize: '11px', color: '#64748b' }}>Saving…</span>
             )}
           </div>
         </div>
       )}
 
-      {/* ── Segments section ── */}
+      {/* ── Schedule section ── */}
       <div>
-        <h2 style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>
+        <h2 style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a', marginBottom: '20px' }}>
           Schedule
         </h2>
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '24px' }}>
-          Segments grouped by start time. Concurrent sessions appear side by side.
-        </p>
 
         {/* Loading */}
         {loading && (
@@ -406,15 +522,14 @@ export const AdminFlowPage = () => {
         {/* ── Time groups ── */}
         {!loading && timeGroups.map(({ timeKey, label, segments: groupSegs }) => (
           <div key={timeKey}>
-
             {/* Time block header */}
             <h3
               style={{
                 fontSize: '13px',
                 fontWeight: '700',
                 color: '#0f172a',
-                marginTop: '32px',
-                marginBottom: '12px',
+                marginTop: '28px',
+                marginBottom: '10px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
@@ -444,12 +559,10 @@ export const AdminFlowPage = () => {
               )}
             </h3>
 
-            {/* Responsive segment grid */}
+            {/* Segment grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
               {groupSegs.map((segment) => {
-                const statusStyle   = getStatusStyle(segment.segment_status)
-                const capacityStyle = getCapacityStyle(segment.room_capacity)
-                const isUpdating    = updatingSegment === segment.id
+                const isUpdating = updatingSegment === segment.id
 
                 return (
                   <div
@@ -458,11 +571,11 @@ export const AdminFlowPage = () => {
                       backgroundColor: '#fff',
                       border: '1px solid #e2e8f0',
                       borderRadius: '12px',
-                      padding: '20px',
+                      padding: '16px',
                       boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '12px',
+                      gap: '8px',
                       transition: 'box-shadow 0.15s, border-color 0.15s',
                     }}
                     onMouseEnter={(e) => {
@@ -474,58 +587,59 @@ export const AdminFlowPage = () => {
                       e.currentTarget.style.borderColor = '#e2e8f0'
                     }}
                   >
-                    {/* Card header: title + time range */}
-                    <div>
-                      <h3
-                        style={{
-                          fontSize: '15px',
-                          fontWeight: '700',
-                          color: '#0f172a',
-                          margin: '0 0 6px',
-                          lineHeight: '1.3',
-                        }}
-                      >
-                        {segment.title}
-                      </h3>
+                    {/* Title */}
+                    <h3
+                      style={{
+                        fontSize: '14px',
+                        fontWeight: '700',
+                        color: '#0f172a',
+                        margin: 0,
+                        lineHeight: '1.3',
+                      }}
+                    >
+                      {segment.title}
+                    </h3>
 
+                    {/* ── Time + Venue row (compact, side-by-side) ── */}
+                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                       {/* Time range */}
-                      <div
+                      <span
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '5px',
-                          fontSize: '12px',
-                          color: '#94a3b8',
-                          fontWeight: '500',
-                        }}
-                      >
-                        <Clock size={11} />
-                        {formatTime(segment.start_time)}
-                        {segment.end_time && (
-                          <>
-                            <span style={{ color: '#cbd5e1' }}>→</span>
-                            {formatTime(segment.end_time)}
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Room name */}
-                    {segment.room_name && (
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '5px',
+                          gap: '4px',
                           fontSize: '12px',
                           color: '#64748b',
                           fontWeight: '500',
                         }}
                       >
-                        <MapPin size={11} color="#94a3b8" />
-                        {segment.room_name}
-                      </div>
-                    )}
+                        <Clock size={11} color="#64748b" />
+                        {formatTime(segment.start_time)}
+                        {segment.end_time && (
+                          <>
+                            <span style={{ color: '#cbd5e1', margin: '0 1px' }}>→</span>
+                            {formatTime(segment.end_time)}
+                          </>
+                        )}
+                      </span>
+
+                      {/* Venue */}
+                      {segment.room_name && (
+                        <span
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            fontSize: '12px',
+                            color: '#64748b',
+                            fontWeight: '500',
+                          }}
+                        >
+                          <MapPin size={11} color="#64748b" />
+                          {segment.room_name}
+                        </span>
+                      )}
+                    </div>
 
                     {/* Speaker tag */}
                     {segment.speaker_name && (
@@ -553,36 +667,33 @@ export const AdminFlowPage = () => {
                         display: 'flex',
                         gap: '8px',
                         flexWrap: 'wrap',
-                        paddingTop: '4px',
+                        paddingTop: '8px',
                         borderTop: '1px solid #f1f5f9',
                         marginTop: 'auto',
                       }}
-                      // Stop click from bubbling to document (would close dropdown)
                       onMouseDown={(e) => e.stopPropagation()}
                     >
                       {/* Status dropdown */}
                       <ControlDropdown
-                        id={segment.id}
                         dropdownKey={`${segment.id}-status`}
                         value={segment.segment_status || 'Not Started'}
                         options={STATUS_OPTIONS}
                         styleMap={STATUS_STYLE}
                         openId={openDropdown}
                         onToggle={setOpenDropdown}
-                        onSelect={(val) => handleStatusChange(segment.id, val)}
+                        onSelect={(val) => requestSegmentStatus(segment.id, val)}
                         disabled={isUpdating}
                       />
 
                       {/* Capacity dropdown */}
                       <ControlDropdown
-                        id={segment.id}
                         dropdownKey={`${segment.id}-capacity`}
                         value={segment.room_capacity || 'VACANT'}
                         options={CAPACITY_OPTIONS}
                         styleMap={CAPACITY_STYLE}
                         openId={openDropdown}
                         onToggle={setOpenDropdown}
-                        onSelect={(val) => handleCapacityChange(segment.id, val)}
+                        onSelect={(val) => requestSegmentCapacity(segment.id, val)}
                         disabled={isUpdating}
                       />
 

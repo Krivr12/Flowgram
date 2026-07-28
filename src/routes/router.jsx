@@ -15,9 +15,12 @@ import { NotificationsPage as UserNotificationsPage } from '../pages/user/Notifi
 import { AccountPage } from '../pages/user/AccountPage'
 import { EventDetailsPage } from '../pages/user/EventDetailsPage'
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage'
+import { AdminEventFormPage } from '../pages/admin/AdminEventFormPage'
 import { AdminFlowPage } from '../pages/admin/AdminFlowPage'
 import { SpeakersPage } from '../pages/admin/SpeakersPage'
-import { SegmentsPage } from '../pages/admin/SegmentsPage'
+import { AdminSpeakerFormPage } from '../pages/admin/AdminSpeakerFormPage'
+import { AdminSegmentsPage } from '../pages/admin/AdminSegmentsPage'
+import { AdminSegmentFormPage } from '../pages/admin/AdminSegmentFormPage'
 import { NotificationsPage } from '../pages/admin/NotificationsPage'
 
 export const router = createBrowserRouter([
@@ -56,24 +59,24 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <AdminDashboardPage /> },
 
-      {
-        path: 'events/new',
-        element: (
-          <div style={{ maxWidth: '1152px', margin: '0 auto', padding: '40px 32px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a' }}>
-              New Event — Step 2 coming soon
-            </h1>
-          </div>
-        ),
-      },
+      // Create — must be listed before the :eventId workspace route
+      { path: 'events/new', element: <AdminEventFormPage /> },
 
+      // Edit — likewise must be listed before :eventId
+      { path: 'events/edit/:eventId', element: <AdminEventFormPage /> },
+
+      // Event workspace (Flow, Speakers, Segments, Notifications)
       {
         path: 'events/:eventId',
         element: <EventWorkspaceLayout />,
         children: [
           { path: 'flow', element: <AdminFlowPage /> },
           { path: 'speakers', element: <SpeakersPage /> },
-          { path: 'segments', element: <SegmentsPage /> },
+          { path: 'speakers/new', element: <AdminSpeakerFormPage /> },
+          { path: 'speakers/edit/:speakerId', element: <AdminSpeakerFormPage /> },
+          { path: 'segments', element: <AdminSegmentsPage /> },
+          { path: 'segments/new', element: <AdminSegmentFormPage /> },
+          { path: 'segments/edit/:segmentId', element: <AdminSegmentFormPage /> },
           { path: 'notifications', element: <NotificationsPage /> },
         ],
       },

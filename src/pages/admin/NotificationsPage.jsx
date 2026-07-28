@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
-import { useOutletContext, useParams } from 'react-router-dom'
-import { Bell, Send, AlertCircle, RefreshCw } from 'lucide-react'
+import { useParams } from 'react-router-dom'
+import { Bell, Send, AlertCircle, RefreshCw, Plus, X } from 'lucide-react'
 import { Toast } from '../../components/Toast'
 import { NotificationItem } from '../../components/NotificationItem'
 import { createNotification, getNotificationsByEventId } from '../../services/notifications'
@@ -8,7 +8,6 @@ import { createNotification, getNotificationsByEventId } from '../../services/no
 const NOTIFICATION_POLL_INTERVAL = 15000 // 15 seconds
 
 export const NotificationsPage = () => {
-  const { event } = useOutletContext()
   const { eventId } = useParams()
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(false)
@@ -17,6 +16,7 @@ export const NotificationsPage = () => {
   const [error, setError] = useState('')
   const [toast, setToast] = useState(null)
   const [formData, setFormData] = useState({ title: '', message: '' })
+  const [showModal, setShowModal] = useState(false)
   const pollIntervalRef = useRef(null)
 
   useEffect(() => {
@@ -35,9 +35,7 @@ export const NotificationsPage = () => {
 
   const loadNotifications = async () => {
     setError('')
-    console.log('Loading notifications for event:', eventId)
     const result = await getNotificationsByEventId(eventId)
-    console.log('Notifications result:', result)
     if (result.success) {
       setNotifications(result.data || [])
     } else {
@@ -81,6 +79,7 @@ export const NotificationsPage = () => {
         }
         setFormData({ title: '', message: '' })
         setToast({ type: 'success', message: 'Notification sent successfully!' })
+        setShowModal(false)
       } else {
         setToast({ type: 'error', message: result.error || 'Failed to send notification' })
       }
@@ -90,6 +89,11 @@ export const NotificationsPage = () => {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const handleCloseModal = () => {
+    setShowModal(false)
+    setFormData({ title: '', message: '' })
   }
 
   return (
@@ -104,14 +108,25 @@ export const NotificationsPage = () => {
         />
       )}
 
-      {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+      {/* Header with Announce button */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+        <h1 className="text-xl font-bold text-[#252F3E] text-left mt-4 mb-4" style={{ margin: 0 }}>
           Notifications
         </h1>
-        <p style={{ fontSize: '14px', color: '#64748b', marginTop: '4px' }}>
-          Broadcast messages to attendees of {event?.title || 'this event'}.
-        </p>
+        <button
+          onClick={() => setShowModal(true)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            backgroundColor: '#FF9900', color: '#fff',
+            fontWeight: '600', fontSize: '14px',
+            padding: '10px 20px', borderRadius: '9999px',
+            border: 'none', cursor: 'pointer', flexShrink: 0,
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e68a00'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FF9900'}
+        >
+          <Plus size={16} /> Announce
+        </button>
       </div>
 
       {/* Error Alert (persistent) */}
@@ -135,132 +150,7 @@ export const NotificationsPage = () => {
         </div>
       )}
 
-      {/* Create Notification Form */}
-      <div
-        style={{
-          backgroundColor: '#fff',
-          border: '1px solid #e2e8f0',
-          borderRadius: '12px',
-          padding: '24px',
-          marginBottom: '32px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        }}
-      >
-        <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', marginBottom: '20px' }}>
-          Send New Notification
-        </h2>
-
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Title Input */}
-          <div>
-            <label
-              style={{
-                display: 'block',
-                fontSize: '13px',
-                fontWeight: '600',
-                color: '#334155',
-                marginBottom: '6px',
-              }}
-            >
-              Title
-            </label>
-            <input
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              placeholder="e.g., Session Update"
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                fontSize: '13px',
-                outline: 'none',
-                boxSizing: 'border-box',
-                transition: 'border-color 0.15s',
-              }}
-              onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
-              onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
-            />
-          </div>
-
-          {/* Message Input */}
-          <div>
-            <label
-              style={{
-                display: 'block',
-                fontSize: '13px',
-                fontWeight: '600',
-                color: '#334155',
-                marginBottom: '6px',
-              }}
-            >
-              Message
-            </label>
-            <textarea
-              name="message"
-              value={formData.message}
-              onChange={handleInputChange}
-              placeholder="Enter your notification message here..."
-              rows="4"
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                fontSize: '13px',
-                outline: 'none',
-                boxSizing: 'border-box',
-                fontFamily: 'inherit',
-                resize: 'vertical',
-                transition: 'border-color 0.15s',
-              }}
-              onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
-              onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
-            />
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={submitting || !formData.title.trim() || !formData.message.trim()}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              backgroundColor: submitting || !formData.title.trim() || !formData.message.trim() ? '#cbd5e1' : '#f97316',
-              color: '#fff',
-              border: 'none',
-              padding: '12px 20px',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontWeight: '600',
-              cursor: submitting || !formData.title.trim() || !formData.message.trim() ? 'not-allowed' : 'pointer',
-              transition: 'background-color 0.15s',
-              opacity: submitting || !formData.title.trim() || !formData.message.trim() ? 0.6 : 1,
-            }}
-            onMouseEnter={(e) => {
-              if (!submitting && formData.title.trim() && formData.message.trim()) {
-                e.currentTarget.style.backgroundColor = '#ea580c'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!submitting && formData.title.trim() && formData.message.trim()) {
-                e.currentTarget.style.backgroundColor = '#f97316'
-              } else {
-                e.currentTarget.style.backgroundColor = '#cbd5e1'
-              }
-            }}
-          >
-            <Send size={16} />
-            {submitting ? 'Sending...' : 'Send Notification'}
-          </button>
-        </form>
-      </div>
-
-      {/* Notifications History */}
+      {/* Sent Notifications Section */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
@@ -354,6 +244,185 @@ export const NotificationsPage = () => {
           </div>
         )}
       </div>
+
+      {/* Announce Modal */}
+      {showModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+          }}
+          onMouseDown={(e) => { if (e.target === e.currentTarget) handleCloseModal() }}
+        >
+          <div
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: '14px',
+              padding: '28px',
+              width: '100%',
+              maxWidth: '480px',
+              boxShadow: '0 20px 48px rgba(0,0,0,0.18)',
+              margin: '0 16px',
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+                Send Announcement
+              </h2>
+              <button
+                onClick={handleCloseModal}
+                style={{
+                  padding: '6px',
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                  color: '#94a3b8',
+                  display: 'flex',
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Title Input */}
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: '#374151',
+                    marginBottom: '6px',
+                  }}
+                >
+                  Title *
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Session Update"
+                  autoFocus
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0',
+                    fontSize: '13px',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    transition: 'border-color 0.15s',
+                  }}
+                  onFocus={(e) => (e.target.style.borderColor = '#FF9900')}
+                  onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
+                />
+              </div>
+
+              {/* Message Input */}
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: '#374151',
+                    marginBottom: '6px',
+                  }}
+                >
+                  Message *
+                </label>
+                <textarea
+                  name="message"
+                  value={formData.message}
+                  onChange={handleInputChange}
+                  placeholder="Enter your notification message here..."
+                  rows="4"
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0',
+                    fontSize: '13px',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    fontFamily: 'inherit',
+                    resize: 'vertical',
+                    transition: 'border-color 0.15s',
+                  }}
+                  onFocus={(e) => (e.target.style.borderColor = '#FF9900')}
+                  onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
+                />
+              </div>
+
+              {/* Modal Actions */}
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '8px' }}>
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  style={{
+                    padding: '10px 20px',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    color: '#475569',
+                    backgroundColor: 'transparent',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '9999px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.15s',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting || !formData.title.trim() || !formData.message.trim()}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '10px 20px',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: submitting || !formData.title.trim() || !formData.message.trim() ? '#9ca3af' : '#fff',
+                    backgroundColor: submitting || !formData.title.trim() || !formData.message.trim() ? '#d1d5db' : '#FF9900',
+                    border: 'none',
+                    borderRadius: '9999px',
+                    cursor: submitting || !formData.title.trim() || !formData.message.trim() ? 'not-allowed' : 'pointer',
+                    transition: 'background-color 0.15s',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!submitting && formData.title.trim() && formData.message.trim()) {
+                      e.currentTarget.style.backgroundColor = '#e68a00'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!submitting && formData.title.trim() && formData.message.trim()) {
+                      e.currentTarget.style.backgroundColor = '#FF9900'
+                    } else {
+                      e.currentTarget.style.backgroundColor = '#d1d5db'
+                    }
+                  }}
+                >
+                  <Send size={14} />
+                  {submitting ? 'Sending...' : 'Send'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

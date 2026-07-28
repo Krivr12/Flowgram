@@ -1,168 +1,39 @@
 import { useEffect, useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { Plus, Trash2, X, Edit2, User, Camera } from 'lucide-react'
-import { getAllSpeakers, createSpeaker, updateSpeaker, deleteSpeaker } from '../../services/speakers'
-import { uploadProfilePictureToS3, generateMediaPath } from '../../services/s3UploadService'
-
-const speakerSchema = z.object({
-  full_name: z.string().min(2, 'Name must be at least 2 characters'),
-  role: z.string().min(1, 'Role is required'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
-  company: z.string().min(1, 'Company is required'),
-  event_role: z.enum(['SPEAKER', 'HOST', 'PANELIST']),
-  linkedin_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
-  profile_picture_url: z.string().optional().or(z.literal('')),
-})
-
-const INPUT = {
-  width: '100%',
-  padding: '10px 14px',
-  borderRadius: '8px',
-  border: '1px solid #e2e8f0',
-  fontSize: '14px',
-  color: '#0f172a',
-  outline: 'none',
-  boxSizing: 'border-box',
-}
-
-const LABEL = {
-  display: 'block',
-  fontSize: '13px',
-  fontWeight: '500',
-  color: '#475569',
-  marginBottom: '6px',
-}
+import { useNavigate, useParams } from 'react-router-dom'
+import { Plus, User, ChevronRight } from 'lucide-react'
+import { getAllSpeakers } from '../../services/speakers'
 
 export const SpeakersPage = () => {
-  const { event, eventId } = useOutletContext()
-  const [speakers, setSpeakers] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [showModal, setShowModal] = useState(false)
-  const [editingSpeaker, setEditingSpeaker] = useState(null)
-  const [deleting, setDeleting] = useState(null)
-  const [selectedFile, setSelectedFile] = useState(null)
-  const [imagePreview, setImagePreview] = useState(null)
-  const [uploadingImage, setUploadingImage] = useState(false)
+  const { eventId } = useParams()
+  const navigate = useNavigate()
 
-  const { register, handleSubmit, reset, setValue, formState: { errors, isSubmitting } } = useForm({
-    resolver: zodResolver(speakerSchema),
-    defaultValues: { event_role: 'SPEAKER' },
-  })
+  const [speakers, setSpeakers] = useState([])
+  const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState('')
 
   useEffect(() => { loadSpeakers() }, [eventId])
 
   const loadSpeakers = async () => {
     setLoading(true)
-    // Speakers are global but we fetch all — in a full implementation
-    // you'd filter by event via segment_speakers join
     const result = await getAllSpeakers()
     if (result.success) setSpeakers(result.data || [])
     else setError(result.error)
     setLoading(false)
   }
 
-  const handleImageSelect = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setSelectedFile(file)
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      setImagePreview(event.target?.result)
-    }
-    reader.readAsDataURL(file)
-  }
-
-  const onSubmit = async (data) => {
-    let imageUrl = editingSpeaker?.profile_picture_url || null
-
-    // Upload new image if selected
-    if (selectedFile) {
-      setUploadingImage(true)
-      const fileExtension = selectedFile.name.split('.').pop() || 'jpg'
-      const s3Path = generateMediaPath('speaker-photos', fileExtension)
-
-      const uploadResult = await uploadProfilePictureToS3(selectedFile, s3Path)
-      setUploadingImage(false)
-
-      if (!uploadResult.success) {
-        setError(uploadResult.error || 'Failed to upload image')
-        return
-      }
-
-      imageUrl = uploadResult.url
-    }
-
-    // Add profile_picture_url to data
-    const submissionData = { ...data, profile_picture_url: imageUrl }
-
-    if (editingSpeaker) {
-      const result = await updateSpeaker(editingSpeaker.id, submissionData)
-      if (result.success) {
-        setSpeakers((prev) => prev.map((s) => s.id === editingSpeaker.id ? result.data : s))
-        closeModal()
-      } else setError(result.error)
-    } else {
-      const result = await createSpeaker(submissionData)
-      if (result.success) {
-        setSpeakers((prev) => [result.data, ...prev])
-        closeModal()
-      } else setError(result.error)
-    }
-  }
-
-  const handleEdit = (speaker) => {
-    setEditingSpeaker(speaker)
-    setValue('full_name', speaker.full_name)
-    setValue('role', speaker.role)
-    setValue('description', speaker.description)
-    setValue('company', speaker.company)
-    setValue('event_role', speaker.event_role)
-    setValue('linkedin_url', speaker.linkedin_url || '')
-    setValue('profile_picture_url', speaker.profile_picture_url || '')
-    setImagePreview(speaker.profile_picture_url || null)
-    setSelectedFile(null)
-    setShowModal(true)
-  }
-
-  const handleDelete = async (speakerId) => {
-    setDeleting(speakerId)
-    const result = await deleteSpeaker(speakerId)
-    if (result.success) setSpeakers((prev) => prev.filter((s) => s.id !== speakerId))
-    else setError(result.error)
-    setDeleting(null)
-  }
-
-  const closeModal = () => {
-    setShowModal(false)
-    setEditingSpeaker(null)
-    setSelectedFile(null)
-    setImagePreview(null)
-    reset()
-  }
-
-  const EVENT_ROLE_COLORS = {
-    SPEAKER:  { bg: '#eff6ff', color: '#2563eb' },
-    HOST:     { bg: '#fff7ed', color: '#ea580c' },
-    PANELIST: { bg: '#f5f3ff', color: '#7c3aed' },
-  }
+  const goToNew  = () => navigate(`/admin/events/${eventId}/speakers/new`)
+  const goToEdit = (id) => navigate(`/admin/events/${eventId}/speakers/edit/${id}`)
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '32px' }}>
-        <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', margin: 0 }}>Speakers</h1>
-          <p style={{ fontSize: '14px', color: '#64748b', marginTop: '4px' }}>
-            Manage speakers for {event?.title || 'this event'}.
-          </p>
-        </div>
+
+      {/* ── Header ── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+        <h1 className="text-xl font-bold text-[#252F3E] text-left mt-4 mb-4" style={{ margin: 0 }}>
+          Speakers
+        </h1>
         <button
-          onClick={() => { setEditingSpeaker(null); reset(); setShowModal(true) }}
+          onClick={goToNew}
           style={{
             display: 'flex', alignItems: 'center', gap: '6px',
             backgroundColor: '#f97316', color: '#fff',
@@ -177,29 +48,29 @@ export const SpeakersPage = () => {
         </button>
       </div>
 
-      {/* Error */}
+      {/* ── Error ── */}
       {error && (
         <div style={{ marginBottom: '16px', padding: '12px 16px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', fontSize: '14px', color: '#dc2626' }}>
           {error}
         </div>
       )}
 
-      {/* Loading */}
+      {/* ── Loading skeletons ── */}
       {loading && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-          {[1,2,3].map((i) => (
-            <div key={i} style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', height: '160px' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {[1, 2, 3].map((i) => (
+            <div key={i} style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '18px 20px', height: '72px' }} />
           ))}
         </div>
       )}
 
-      {/* Empty */}
+      {/* ── Empty state ── */}
       {!loading && speakers.length === 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '80px 24px', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
           <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#0f172a', margin: '0 0 6px' }}>No speakers yet</h2>
           <p style={{ fontSize: '14px', color: '#64748b', margin: '0 0 24px' }}>Add the first speaker for this event.</p>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={goToNew}
             style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#f97316', color: '#fff', fontWeight: '600', fontSize: '14px', padding: '10px 20px', borderRadius: '9999px', border: 'none', cursor: 'pointer' }}
           >
             <Plus size={16} /> Add Speaker
@@ -207,167 +78,76 @@ export const SpeakersPage = () => {
         </div>
       )}
 
-      {/* Grid */}
+      {/* ── Speaker list ── */}
       {!loading && speakers.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-          {speakers.map((speaker) => {
-            const roleStyle = EVENT_ROLE_COLORS[speaker.event_role] || EVENT_ROLE_COLORS.SPEAKER
-            return (
-              <div key={speaker.id} style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {/* Avatar + Name + badge */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '4px' }}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: '9999px', backgroundColor: '#f1f5f9', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {speaker.profile_picture_url ? (
-                      <img src={speaker.profile_picture_url} alt={speaker.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <User size={24} color="#94a3b8" />
-                    )}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#0f172a', margin: 0, lineHeight: '1.4' }}>
-                      {speaker.full_name}
-                    </h3>
-                    <span style={{ display: 'inline-block', marginTop: '4px', padding: '2px 10px', borderRadius: '9999px', fontSize: '11px', fontWeight: '600', backgroundColor: roleStyle.bg, color: roleStyle.color }}>
-                      {speaker.event_role}
-                    </span>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <p style={{ fontSize: '13px', color: '#475569', margin: 0 }}>{speaker.role}</p>
-                  <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>{speaker.company}</p>
-                </div>
-
-                <p style={{ fontSize: '13px', color: '#64748b', margin: 0, lineHeight: '1.5', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>
-                  {speaker.description}
-                </p>
-
-                {speaker.linkedin_url && (
-                  <a href={speaker.linkedin_url} target="_blank" rel="noopener noreferrer"
-                    style={{ fontSize: '13px', color: '#2563eb', textDecoration: 'none' }}>
-                    LinkedIn ↗
-                  </a>
-                )}
-
-                {/* Actions */}
-                <div style={{ display: 'flex', gap: '8px', paddingTop: '12px', borderTop: '1px solid #f1f5f9', marginTop: 'auto' }}>
-                  <button
-                    onClick={() => handleEdit(speaker)}
-                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#fff', color: '#475569', fontSize: '13px', cursor: 'pointer' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
-                  >
-                    <Edit2 size={14} /> Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(speaker.id)}
-                    disabled={deleting === speaker.id}
-                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px', borderRadius: '8px', border: 'none', backgroundColor: '#fef2f2', color: '#dc2626', fontSize: '13px', cursor: 'pointer', opacity: deleting === speaker.id ? 0.5 : 1 }}
-                  >
-                    <Trash2 size={14} /> {deleting === speaker.id ? 'Deleting…' : 'Delete'}
-                  </button>
-                </div>
-              </div>
-            )
-          })}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {speakers.map((speaker) => (
+            <SpeakerCard
+              key={speaker.id}
+              speaker={speaker}
+              onClick={() => goToEdit(speaker.id)}
+            />
+          ))}
         </div>
       )}
 
-      {/* Modal */}
-      {showModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div style={{ backgroundColor: '#fff', borderRadius: '16px', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', width: '100%', maxWidth: '520px', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
-                {editingSpeaker ? 'Edit Speaker' : 'Add New Speaker'}
-              </h2>
-              <button onClick={closeModal} style={{ padding: '6px', borderRadius: '6px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#94a3b8' }}>
-                <X size={18} />
-              </button>
-            </div>
+    </div>
+  )
+}
 
-            <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Hidden file input */}
-              <input
-                type="file"
-                accept="image/*"
-                id="speaker-image-upload"
-                onChange={handleImageSelect}
-                style={{ display: 'none' }}
-              />
+// ─── Speaker Card ─────────────────────────────────────────────────────────────
 
-              {/* Avatar Upload UI */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '8px' }}>
-                <label htmlFor="speaker-image-upload" style={{ cursor: 'pointer', width: '100%', display: 'flex', justifyContent: 'center' }}>
-                  <div style={{ position: 'relative', width: '96px', height: '96px', borderRadius: '9999px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '2px solid #e2e8f0' }}>
-                    {imagePreview ? (
-                      <img src={imagePreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <User size={40} color="#94a3b8" />
-                    )}
-                    {/* Camera Icon Overlay */}
-                    <div style={{ position: 'absolute', bottom: 0, right: 0, backgroundColor: '#eff6ff', padding: '6px', borderRadius: '9999px', border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                      <Camera size={16} color="#2563eb" />
-                    </div>
-                  </div>
-                </label>
-                <p style={{ fontSize: '12px', color: '#64748b', marginTop: '8px', textAlign: 'center' }}>Click to upload photo</p>
-              </div>
+const SpeakerCard = ({ speaker, onClick }) => {
+  const [hovered, setHovered] = useState(false)
 
-              {[
-                { name: 'full_name', label: 'Full Name', placeholder: 'e.g. Jane Doe' },
-                { name: 'role', label: 'Title / Role', placeholder: 'e.g. Senior Engineer, AWS Hero' },
-                { name: 'company', label: 'Company', placeholder: 'e.g. Amazon Web Services' },
-              ].map(({ name, label, placeholder }) => (
-                <div key={name}>
-                  <label style={LABEL}>{label} *</label>
-                  <input {...register(name)} placeholder={placeholder} style={INPUT}
-                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                    onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-                  />
-                  {errors[name] && <p style={{ fontSize: '12px', color: '#dc2626', margin: '4px 0 0' }}>{errors[name].message}</p>}
-                </div>
-              ))}
+  const roleCompany = [speaker.role, speaker.company].filter(Boolean).join(' | ')
 
-              <div>
-                <label style={LABEL}>Event Role *</label>
-                <select {...register('event_role')} style={{ ...INPUT, backgroundColor: '#fff' }}>
-                  <option value="SPEAKER">Speaker</option>
-                  <option value="HOST">Host</option>
-                  <option value="PANELIST">Panelist</option>
-                </select>
-              </div>
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '14px',
+        backgroundColor: '#fff',
+        border: '1px solid',
+        borderColor: hovered ? '#cbd5e1' : '#e2e8f0',
+        borderRadius: '12px',
+        padding: '14px 18px',
+        cursor: 'pointer',
+        boxShadow: hovered ? '0 4px 16px rgba(0,0,0,0.08)' : '0 1px 3px rgba(0,0,0,0.05)',
+        transition: 'box-shadow 0.15s, border-color 0.15s',
+      }}
+    >
+      {/* Avatar */}
+      <div style={{
+        width: '44px', height: '44px', borderRadius: '9999px',
+        backgroundColor: '#f1f5f9', flexShrink: 0,
+        overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {speaker.profile_picture_url ? (
+          <img src={speaker.profile_picture_url} alt={speaker.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <User size={22} color="#94a3b8" />
+        )}
+      </div>
 
-              <div>
-                <label style={LABEL}>Bio / Description *</label>
-                <textarea {...register('description')} placeholder="Speaker bio" rows={4} style={{ ...INPUT, resize: 'vertical' }}
-                  onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                  onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-                />
-                {errors.description && <p style={{ fontSize: '12px', color: '#dc2626', margin: '4px 0 0' }}>{errors.description.message}</p>}
-              </div>
+      {/* Name + role | company */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontSize: '15px', fontWeight: '600', color: '#0f172a', margin: 0, lineHeight: '1.3' }}>
+          {speaker.full_name}
+        </p>
+        {roleCompany && (
+          <p style={{ fontSize: '13px', color: '#6b7280', margin: '2px 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {roleCompany}
+          </p>
+        )}
+      </div>
 
-              <div>
-                <label style={LABEL}>LinkedIn URL (optional)</label>
-                <input {...register('linkedin_url')} type="url" placeholder="https://linkedin.com/in/…" style={INPUT}
-                  onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                  onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-                />
-                {errors.linkedin_url && <p style={{ fontSize: '12px', color: '#dc2626', margin: '4px 0 0' }}>{errors.linkedin_url.message}</p>}
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px', paddingTop: '8px' }}>
-                <button type="button" onClick={closeModal} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>
-                  Cancel
-                </button>
-                <button type="submit" disabled={isSubmitting || uploadingImage} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: '#f97316', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: 'pointer', opacity: isSubmitting || uploadingImage ? 0.7 : 1 }}>
-                  {isSubmitting || uploadingImage ? 'Saving…' : editingSpeaker ? 'Update Speaker' : 'Add Speaker'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Chevron */}
+      <ChevronRight size={18} color={hovered ? '#f97316' : '#cbd5e1'} style={{ flexShrink: 0, transition: 'color 0.15s' }} />
     </div>
   )
 }

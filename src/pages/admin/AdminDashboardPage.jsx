@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Calendar, MapPin, MoreVertical, Trash2 } from 'lucide-react'
+import { Plus, Calendar, MapPin, MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import { getAllEvents, deleteEvent } from '../../services/events'
 
 
@@ -48,16 +48,11 @@ export const AdminDashboardPage = () => {
       timeZone: 'UTC',
     })
 
-  // Centered content container — matches navbar inner width
-  const containerStyle = {
-    maxWidth: '1152px',
-    margin: '0 auto',
-    padding: '40px 32px',
-    width: '100%',
-  }
+  // The AdminLayout already provides the centered max-width container.
+  // No inner container wrapper needed here.
 
   return (
-    <div style={containerStyle}>
+    <div>
 
       {/* ── Page Header ── */}
       <div style={{
@@ -77,7 +72,7 @@ export const AdminDashboardPage = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            backgroundColor: '#f97316',
+            backgroundColor: '#FF9900',
             color: '#fff',
             fontWeight: '600',
             fontSize: '14px',
@@ -88,8 +83,8 @@ export const AdminDashboardPage = () => {
             boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
             flexShrink: 0,
           }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#ea580c'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f97316'}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e68a00'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FF9900'}
         >
           <Plus size={16} />
           New Event
@@ -171,7 +166,7 @@ export const AdminDashboardPage = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              backgroundColor: '#f97316',
+              backgroundColor: '#FF9900',
               color: '#fff',
               fontWeight: '600',
               fontSize: '14px',
@@ -180,8 +175,8 @@ export const AdminDashboardPage = () => {
               border: 'none',
               cursor: 'pointer',
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#ea580c'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f97316'}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e68a00'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FF9900'}
           >
             <Plus size={16} />
             New Event
@@ -203,6 +198,7 @@ export const AdminDashboardPage = () => {
               menuOpen={menuOpen}
               deleting={deleting}
               onNavigate={() => navigate(`/admin/events/${event.id}/flow`)}
+              onEdit={() => navigate(`/admin/events/edit/${event.id}`)}
               onMenuToggle={(id) => setMenuOpen(menuOpen === id ? null : id)}
               onMenuClose={() => setMenuOpen(null)}
               onDelete={handleDelete}
@@ -216,7 +212,7 @@ export const AdminDashboardPage = () => {
 }
 
 // ── Separated card component for cleaner logic ──
-const EventCard = ({ event, menuOpen, deleting, onNavigate, onMenuToggle, onMenuClose, onDelete, formatDate }) => {
+const EventCard = ({ event, menuOpen, deleting, onNavigate, onEdit, onMenuToggle, onMenuClose, onDelete, formatDate }) => {
   const [hovered, setHovered] = useState(false)
   const isMenuOpen = menuOpen === event.id
 
@@ -254,9 +250,7 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onMenuToggle, onMenu
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            opacity: hovered || isMenuOpen ? 1 : 0,
-            transition: 'opacity 0.15s',
-            color: '#64748b',
+            color: '#252F3E',
           }}
         >
           <MoreVertical size={15} />
@@ -264,6 +258,7 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onMenuToggle, onMenu
 
         {isMenuOpen && (
           <>
+            {/* Backdrop to close menu when clicking outside */}
             <div
               style={{ position: 'fixed', inset: 0, zIndex: 10 }}
               onClick={(e) => {
@@ -283,6 +278,34 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onMenuToggle, onMenu
               zIndex: 20,
               overflow: 'hidden',
             }}>
+              {/* Edit */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onMenuClose()
+                  onEdit()
+                }}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '9px 14px',
+                  fontSize: '13px',
+                  color: '#374151',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: '1px solid #f1f5f9',
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <Pencil size={13} color="#64748b" />
+                Edit Event
+              </button>
+
+              {/* Delete */}
               <button
                 onClick={(e) => onDelete(e, event.id)}
                 disabled={deleting === event.id}
@@ -312,7 +335,7 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onMenuToggle, onMenu
 
       {/* Card body */}
       <div style={{ flex: 1, padding: '20px 20px', minWidth: 0 }}>
-        {/* Title — Navy Blue, bold, matches User View */}
+        {/* Title — Navy Blue, bold */}
         <h3 style={{
           fontSize: '17px',
           fontWeight: '800',
@@ -330,9 +353,7 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onMenuToggle, onMenu
             <Calendar size={13} color="#94a3b8" style={{ flexShrink: 0 }} />
             <span>
               {formatDate(event.start_date)}
-              {event.end_date && (
-                <> — {formatDate(event.end_date)}</>
-              )}
+              {event.end_date && <> — {formatDate(event.end_date)}</>}
             </span>
           </div>
         )}
