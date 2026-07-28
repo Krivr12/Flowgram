@@ -3,7 +3,6 @@ import { Outlet, Link, useNavigate, useMatches, useLocation } from 'react-router
 import {
   LogOut,
   ChevronDown,
-  ChevronRight,
   MonitorSmartphone,
   X,
   Settings,
@@ -59,13 +58,24 @@ export const AdminLayout = () => {
   }, [])
 
   useEffect(() => {
-    if (!eventId) { setEventName(null); return }
+    if (!eventId) {
+      // Fall back to localStorage-stored event when no eventId in URL (e.g. on /admin dashboard)
+      const storedId = localStorage.getItem('selected_event_id')
+      if (!storedId) { setEventName(null); return }
+      const loadStored = async () => {
+        const result = await getEventById(storedId)
+        if (result.success) setEventName(result.data.title)
+        else setEventName(null)
+      }
+      loadStored()
+      return
+    }
     const loadEvent = async () => {
       const result = await getEventById(eventId)
       if (result.success) setEventName(result.data.title)
     }
     loadEvent()
-  }, [eventId])
+  }, [eventId, location.pathname])
 
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? 'hidden' : ''
@@ -98,8 +108,9 @@ export const AdminLayout = () => {
         className="admin-layout-desktop-header"
         style={{
           height: `${NAVBAR_H}px`,
-          backgroundColor: '#ffffff',
-          borderBottom: '1px solid #e2e8f0',
+          backgroundColor: '#E6E6E6',
+          borderBottom: 'none',
+          boxShadow: 'none',
           position: 'sticky',
           top: 0,
           zIndex: 40,
@@ -111,7 +122,7 @@ export const AdminLayout = () => {
         }}
       >
         {/* Left: Breadcrumb */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Link
             to="/admin"
             style={{
@@ -121,12 +132,13 @@ export const AdminLayout = () => {
           >
             Flowgram
           </Link>
-          {eventName && (
+          {/* Only show event title when NOT on the Select Event page (/admin) */}
+          {eventName && location.pathname !== '/admin' && (
             <>
-              <ChevronRight size={14} color="#cbd5e1" />
+              <span style={{ color: '#9ca3af', fontSize: '20px', lineHeight: 1, userSelect: 'none' }}>•</span>
               <span style={{
-                fontSize: '13px', fontWeight: '500', color: '#64748b',
-                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '240px',
+                fontSize: '14px', fontWeight: '600', color: '#475569',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '280px',
               }}>
                 {eventName}
               </span>
@@ -143,7 +155,7 @@ export const AdminLayout = () => {
               padding: '6px 12px 6px 6px', borderRadius: '8px',
               border: 'none', background: 'transparent', cursor: 'pointer',
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.07)'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <div style={{
@@ -265,8 +277,9 @@ export const AdminLayout = () => {
         className="admin-layout-mobile-header"
         style={{
           height: `${NAVBAR_H}px`,
-          backgroundColor: '#ffffff',
-          borderBottom: '1px solid #e2e8f0',
+          backgroundColor: '#E6E6E6',
+          borderBottom: 'none',
+          boxShadow: 'none',
           position: 'fixed',
           top: 0,
           left: 0,
@@ -275,6 +288,7 @@ export const AdminLayout = () => {
           flexDirection: 'row',
           alignItems: 'center',
           padding: '0 16px',
+          gap: '10px',
         }}
       >
         {/* Avatar button — opens drawer */}
@@ -290,6 +304,20 @@ export const AdminLayout = () => {
         >
           {getInitials(userProfile?.full_name)}
         </button>
+
+        {/* Event title next to avatar — hidden on Select Event page */}
+        {eventName && location.pathname !== '/admin' && (
+          <>
+            <span style={{ color: '#9ca3af', fontSize: '18px', lineHeight: 1, userSelect: 'none' }}>•</span>
+            <span style={{
+              fontSize: '13px', fontWeight: '600', color: '#475569',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              maxWidth: 'calc(100vw - 120px)',
+            }}>
+              {eventName}
+            </span>
+          </>
+        )}
       </header>
 
       {/* ══════════════════════════════════════

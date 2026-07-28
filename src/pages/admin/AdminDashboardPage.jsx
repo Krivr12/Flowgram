@@ -115,26 +115,23 @@ export const AdminDashboardPage = () => {
       {loading && (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '24px',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+          gap: '12px',
         }}>
           {[1, 2, 3].map((i) => (
             <div key={i} style={{
-              backgroundColor: '#fff',
+              backgroundColor: '#ffffff',
               borderRadius: '12px',
-              border: '1px solid #e2e8f0',
+              border: '1px solid #f3f4f6',
               boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-              padding: '24px',
+              padding: '20px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '16px',
+              gap: '10px',
             }}>
               <div style={{ height: '18px', backgroundColor: '#f1f5f9', borderRadius: '6px', width: '65%' }} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div style={{ height: '14px', backgroundColor: '#f1f5f9', borderRadius: '6px', width: '50%' }} />
-                <div style={{ height: '14px', backgroundColor: '#f1f5f9', borderRadius: '6px', width: '60%' }} />
-              </div>
-              <div style={{ height: '22px', backgroundColor: '#f1f5f9', borderRadius: '9999px', width: '56px' }} />
+              <div style={{ height: '14px', backgroundColor: '#f1f5f9', borderRadius: '6px', width: '50%' }} />
+              <div style={{ height: '14px', backgroundColor: '#f1f5f9', borderRadius: '6px', width: '60%' }} />
             </div>
           ))}
         </div>
@@ -197,7 +194,7 @@ export const AdminDashboardPage = () => {
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          gap: '24px',
+          gap: '12px',
         }}>
           {events.map((event) => (
             <EventCard
@@ -230,20 +227,20 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onMenuToggle, onMenu
       onMouseLeave={() => setHovered(false)}
       style={{
         position: 'relative',
-        backgroundColor: '#fff',
+        backgroundColor: '#ffffff',
         borderRadius: '12px',
-        border: hovered ? '1px solid #bfdbfe' : '1px solid #e2e8f0',
+        border: hovered ? '1px solid #cbd5e1' : '1px solid #f3f4f6',
         boxShadow: hovered ? '0 4px 16px rgba(0,0,0,0.08)' : '0 1px 3px rgba(0,0,0,0.04)',
-        padding: '24px',
+        overflow: 'hidden',
         cursor: 'pointer',
         display: 'flex',
         flexDirection: 'column',
-        gap: '16px',
+        width: '100%',
         transition: 'box-shadow 0.15s, border-color 0.15s',
       }}
     >
-      {/* Three-dot menu — only visible on hover */}
-      <div style={{ position: 'absolute', top: '14px', right: '14px' }}>
+      {/* Three-dot menu — positioned inside card, only visible on hover */}
+      <div style={{ position: 'absolute', top: '14px', right: '14px', zIndex: 1 }}>
         <button
           onClick={(e) => {
             e.stopPropagation()
@@ -313,62 +310,44 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onMenuToggle, onMenu
         )}
       </div>
 
-      {/* Title */}
-      <div style={{ paddingRight: '24px' }}>
+      {/* Card body */}
+      <div style={{ flex: 1, padding: '20px 20px', minWidth: 0 }}>
+        {/* Title — Navy Blue, bold, matches User View */}
         <h3 style={{
-          fontSize: '15px',
-          fontWeight: '600',
-          color: hovered ? '#2563eb' : '#0f172a',
-          margin: 0,
-          lineHeight: '1.4',
-          transition: 'color 0.15s',
+          fontSize: '17px',
+          fontWeight: '800',
+          color: '#252F3E',
+          margin: '0 0 8px',
+          lineHeight: 1.3,
+          paddingRight: '24px',
         }}>
           {event.title}
         </h3>
-      </div>
 
-      {/* Meta info */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '13px', color: '#64748b' }}>
-          <Calendar size={13} color="#fb923c" style={{ flexShrink: 0 }} />
-          <span>{formatDate(event.start_date)}</span>
-          {event.end_date && (
-            <>
-              <span style={{ color: '#cbd5e1' }}>—</span>
-              <span>{formatDate(event.end_date)}</span>
-            </>
-          )}
-        </div>
+        {/* Date */}
+        {event.start_date && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '13px', color: '#64748b', marginBottom: '6px', fontWeight: '500' }}>
+            <Calendar size={13} color="#94a3b8" style={{ flexShrink: 0 }} />
+            <span>
+              {formatDate(event.start_date)}
+              {event.end_date && (
+                <> — {formatDate(event.end_date)}</>
+              )}
+            </span>
+          </div>
+        )}
+
+        {/* Venue */}
         {event.venue && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '13px', color: '#64748b' }}>
-            <MapPin size={13} color="#fb923c" style={{ flexShrink: 0 }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '13px', color: '#94a3b8', fontWeight: '500' }}>
+            <MapPin size={13} color="#94a3b8" style={{ flexShrink: 0 }} />
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {event.venue}
             </span>
           </div>
         )}
       </div>
-
-      {/* Status badge */}
-      <div style={{ paddingTop: '12px', borderTop: '1px dashed #e2e8f0' }}>
-        <span style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '6px',
-          padding: '3px 10px',
-          borderRadius: '9999px',
-          fontSize: '12px',
-          fontWeight: '500',
-          backgroundColor: '#f0fdf4',
-          color: '#16a34a',
-        }}>
-          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#22c55e' }} />
-          Active
-        </span>
-      </div>
     </div>
   )
 }
-
-// Need useState in EventCard
 
