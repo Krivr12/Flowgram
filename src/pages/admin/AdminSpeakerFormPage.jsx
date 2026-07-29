@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Camera, User } from 'lucide-react'
-import { createSpeaker, getSpeakerById, updateSpeaker } from '../../services/speakers'
+import { ArrowLeft, Camera, User, Trash2 } from 'lucide-react'
+import { createSpeaker, getSpeakerById, updateSpeaker, deleteSpeaker } from '../../services/speakers'
 import { uploadProfilePictureToS3, generateMediaPath } from '../../services/s3UploadService'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -18,28 +18,28 @@ const EMPTY_FORM = {
 
 // ─── Shared input styles ──────────────────────────────────────────────────────
 
-const inputStyle = {
+const getInputStyle = (isDarkMode) => ({
   width: '100%',
   padding: '10px 14px',
   fontSize: '14px',
-  color: '#0f172a',
-  backgroundColor: '#fff',
-  border: '1px solid #e2e8f0',
+  color: isDarkMode ? '#e2e8f0' : '#0f172a',
+  backgroundColor: isDarkMode ? '#252F3E' : '#fff',
+  border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0',
   borderRadius: '8px',
   outline: 'none',
   boxSizing: 'border-box',
   transition: 'border-color 0.15s, box-shadow 0.15s',
-}
+})
 
 // ─── Field wrapper ────────────────────────────────────────────────────────────
 
-const Field = ({ label, required, error, children }) => (
+const Field = ({ label, required, error, children, isDarkMode }) => (
   <div>
-    <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
-      {label}{required && ' *'}
+    <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: isDarkMode ? '#cbd5e1' : '#374151', marginBottom: '6px' }}>
+      {label}{required && <span style={{ color: '#ff0000', marginLeft: '2px' }}>*</span>}
     </label>
     {children}
-    {error && <p style={{ fontSize: '12px', color: '#dc2626', marginTop: '4px' }}>{error}</p>}
+    {error && <p style={{ fontSize: '12px', color: isDarkMode ? '#fca5a5' : '#dc2626', marginTop: '4px' }}>{error}</p>}
   </div>
 )
 
@@ -50,6 +50,9 @@ export const AdminSpeakerFormPage = () => {
   const isEditMode = Boolean(speakerId)
   const navigate   = useNavigate()
 
+  const [isDarkMode, setIsDarkMode] = useState(() =>
+    document.documentElement.classList.contains('dark')
+  )
   const [initialValues, setInitialValues] = useState(EMPTY_FORM)
   const [form, setForm]                   = useState(EMPTY_FORM)
   const [errors, setErrors]               = useState({})
@@ -63,6 +66,18 @@ export const AdminSpeakerFormPage = () => {
   const [imagePreview, setImagePreview]   = useState(null)
   const [uploadingImage, setUploadingImage] = useState(false)
   const fileInputRef = useRef(null)
+  const [deleting, setDeleting]           = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  // ── Observe dark mode changes ─────────────────────────────────────────────
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
 
   // ── Load speaker in edit mode ─────────────────────────────────────────────
 
@@ -179,12 +194,24 @@ export const AdminSpeakerFormPage = () => {
 
   const handleBack = () => navigate(`/admin/events/${eventId}/speakers`)
 
+  const handleDelete = async () => {
+    setDeleting(true)
+    const result = await deleteSpeaker(speakerId)
+    if (result.success) {
+      navigate(`/admin/events/${eventId}/speakers`)
+    } else {
+      setServerError(result.error || 'Failed to delete speaker.')
+      setDeleting(false)
+      setShowDeleteConfirm(false)
+    }
+  }
+
   // ── Loading state (edit mode only) ───────────────────────────────────────
 
   if (loading) {
     return (
       <div style={{ padding: '32px', display: 'flex', justifyContent: 'center' }}>
-        <p style={{ fontSize: '14px', color: '#94a3b8' }}>Loading speaker…</p>
+        <p style={{ fontSize: '14px', color: isDarkMode ? '#cbd5e1' : '#94a3b8' }}>Loading speaker…</p>
       </div>
     )
   }
@@ -192,8 +219,8 @@ export const AdminSpeakerFormPage = () => {
   // ── Button styles ─────────────────────────────────────────────────────────
 
   const isBusy      = submitting || uploadingImage
-  const submitBg    = canSubmit && !isBusy ? '#FF9900' : '#d1d5db'
-  const submitColor = canSubmit && !isBusy ? '#fff'    : '#9ca3af'
+  const submitBg    = canSubmit && !isBusy ? '#2563eb' : isDarkMode ? 'rgba(148, 163, 184, 0.2)' : '#d1d5db'
+  const submitColor = canSubmit && !isBusy ? '#fff'    : isDarkMode ? '#64748b' : '#9ca3af'
   const submitLabel = isBusy
     ? (isEditMode ? 'Saving…' : 'Adding…')
     : (isEditMode ? 'Save Changes' : 'Add Speaker')
@@ -201,12 +228,14 @@ export const AdminSpeakerFormPage = () => {
   // ── Focus-aware border helper ─────────────────────────────────────────────
 
   const fieldBorder = (name) => {
-    if (errors[name])        return '#fca5a5'
-    if (focusedField === name) return '#FF9900'
-    return '#e2e8f0'
+    if (errors[name])        return isDarkMode ? '#fca5a5' : '#fca5a5'
+    if (focusedField === name) return '#2563eb'
+    return isDarkMode ? 'rgba(100, 116, 139, 0.3)' : '#e2e8f0'
   }
   const fieldShadow = (name) =>
-    focusedField === name && !errors[name] ? '0 0 0 3px rgba(255,153,0,0.15)' : 'none'
+    focusedField === name && !errors[name] ? '0 0 0 3px rgba(37, 99, 235, 0.15)' : 'none'
+
+  const inputStyle = getInputStyle(isDarkMode)
 
   return (
     <div>
@@ -216,21 +245,21 @@ export const AdminSpeakerFormPage = () => {
         onClick={handleBack}
         style={{
           display: 'inline-flex', alignItems: 'center', gap: '6px',
-          fontSize: '13px', fontWeight: '500', color: '#64748b',
+          fontSize: '13px', fontWeight: '500', color: isDarkMode ? '#94a3b8' : '#64748b',
           background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 24px',
         }}
-        onMouseEnter={(e) => e.currentTarget.style.color = '#334155'}
-        onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
+        onMouseEnter={(e) => e.currentTarget.style.color = isDarkMode ? '#cbd5e1' : '#334155'}
+        onMouseLeave={(e) => e.currentTarget.style.color = isDarkMode ? '#94a3b8' : '#64748b'}
       >
         <ArrowLeft size={15} />
         Back to Speakers
       </button>
 
       {/* ── Page heading ── */}
-      <h1 className="text-xl font-bold text-[#252F3E] text-left mt-4 mb-4" style={{ fontSize: '24px', fontWeight: '700', color: '#252F3E', margin: '0 0 8px' }}>
+      <h1 style={{ fontSize: '24px', fontWeight: '700', color: isDarkMode ? '#f8fafc' : '#252F3E', margin: '0 0 8px' }}>
         {isEditMode ? 'Edit Speaker' : 'New Speaker'}
       </h1>
-      <p style={{ fontSize: '14px', color: '#64748b', margin: '0 0 32px' }}>
+      <p style={{ fontSize: '14px', color: isDarkMode ? '#cbd5e1' : '#64748b', margin: '0 0 32px' }}>
         {isEditMode
           ? 'Update the speaker details below.'
           : 'Fill in the details to add a new speaker.'}
@@ -238,13 +267,13 @@ export const AdminSpeakerFormPage = () => {
 
       {/* ── Server error ── */}
       {serverError && (
-        <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '12px 16px', borderRadius: '8px', fontSize: '14px', marginBottom: '24px' }}>
+        <div style={{ backgroundColor: isDarkMode ? 'rgba(220, 38, 38, 0.1)' : '#fef2f2', border: isDarkMode ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid #fecaca', color: isDarkMode ? '#fca5a5' : '#dc2626', padding: '12px 16px', borderRadius: '8px', fontSize: '14px', marginBottom: '24px' }}>
           {serverError}
         </div>
       )}
 
       {/* ── Form card ── */}
-      <div style={{ backgroundColor: '#fff', border: '1px solid #f3f4f6', borderRadius: '16px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', padding: '32px', maxWidth: '680px' }}>
+      <div style={{ backgroundColor: isDarkMode ? '#252F3E' : '#fff', border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #f3f4f6', borderRadius: '16px', boxShadow: isDarkMode ? '0 1px 4px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.05)', padding: '32px', maxWidth: '680px' }}>
         <form onSubmit={handleSubmit} noValidate>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
@@ -262,22 +291,22 @@ export const AdminSpeakerFormPage = () => {
                 onClick={() => fileInputRef.current?.click()}
                 style={{ cursor: 'pointer' }}
               >
-                <div style={{ position: 'relative', width: '96px', height: '96px', borderRadius: '9999px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '2px solid #e2e8f0' }}>
+                <div style={{ position: 'relative', width: '96px', height: '96px', borderRadius: '9999px', backgroundColor: isDarkMode ? 'rgba(100, 116, 139, 0.2)' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: isDarkMode ? '2px solid rgba(100, 116, 139, 0.3)' : '2px solid #e2e8f0' }}>
                   {imagePreview ? (
                     <img src={imagePreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     <User size={40} color="#94a3b8" />
                   )}
-                  <div style={{ position: 'absolute', bottom: 0, right: 0, backgroundColor: '#eff6ff', padding: '6px', borderRadius: '9999px', border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ position: 'absolute', bottom: 0, right: 0, backgroundColor: isDarkMode ? 'rgba(37, 99, 235, 0.2)' : '#eff6ff', padding: '6px', borderRadius: '9999px', border: isDarkMode ? '2px solid #252F3E' : '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Camera size={14} color="#2563eb" />
                   </div>
                 </div>
               </label>
-              <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>Click to upload photo</p>
+              <p style={{ fontSize: '12px', color: isDarkMode ? '#cbd5e1' : '#64748b', margin: 0 }}>Click to upload photo</p>
             </div>
 
             {/* Full Name */}
-            <Field label="Full Name" required error={errors.full_name}>
+            <Field label="Full Name" required error={errors.full_name} isDarkMode={isDarkMode}>
               <input
                 type="text"
                 value={form.full_name}
@@ -290,7 +319,7 @@ export const AdminSpeakerFormPage = () => {
             </Field>
 
             {/* Role */}
-            <Field label="Title / Role" required error={errors.role}>
+            <Field label="Title / Role" required error={errors.role} isDarkMode={isDarkMode}>
               <input
                 type="text"
                 value={form.role}
@@ -303,7 +332,7 @@ export const AdminSpeakerFormPage = () => {
             </Field>
 
             {/* Company */}
-            <Field label="Company" required error={errors.company}>
+            <Field label="Company" required error={errors.company} isDarkMode={isDarkMode}>
               <input
                 type="text"
                 value={form.company}
@@ -316,7 +345,7 @@ export const AdminSpeakerFormPage = () => {
             </Field>
 
             {/* Event Role */}
-            <Field label="Event Role" required>
+            <Field label="Event Role" required isDarkMode={isDarkMode}>
               <select
                 value={form.event_role}
                 onChange={handleChange('event_role')}
@@ -331,7 +360,7 @@ export const AdminSpeakerFormPage = () => {
             </Field>
 
             {/* Bio / Description */}
-            <Field label="Bio / Description" required error={errors.description}>
+            <Field label="Bio / Description" required error={errors.description} isDarkMode={isDarkMode}>
               <textarea
                 value={form.description}
                 onChange={handleChange('description')}
@@ -344,7 +373,7 @@ export const AdminSpeakerFormPage = () => {
             </Field>
 
             {/* LinkedIn */}
-            <Field label="LinkedIn URL (optional)" error={errors.linkedin_url}>
+            <Field label="LinkedIn URL (optional)" error={errors.linkedin_url} isDarkMode={isDarkMode}>
               <input
                 type="url"
                 value={form.linkedin_url}
@@ -359,30 +388,84 @@ export const AdminSpeakerFormPage = () => {
           </div>
 
           {/* ── Actions ── */}
-          <div style={{ display: 'flex', gap: '12px', marginTop: '32px', justifyContent: 'flex-end' }}>
-            <button
-              type="button"
-              onClick={handleBack}
-              style={{ padding: '10px 20px', fontSize: '14px', fontWeight: '500', color: '#374151', backgroundColor: 'transparent', border: '1px solid #e2e8f0', borderRadius: '9999px', cursor: 'pointer', transition: 'background-color 0.15s' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              Cancel
-            </button>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '32px', justifyContent: 'space-between', alignItems: 'center' }}>
+            {isEditMode && (
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={deleting}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 16px', fontSize: '14px', fontWeight: '500', color: '#dc2626', backgroundColor: 'transparent', border: isDarkMode ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid #fecaca', borderRadius: '9999px', cursor: 'pointer', transition: 'background-color 0.15s', opacity: deleting ? 0.5 : 1 }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(220, 38, 38, 0.1)' : '#fef2f2'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <Trash2 size={14} />
+                Delete Speaker
+              </button>
+            )}
 
-            <button
-              type="submit"
-              disabled={!canSubmit || isBusy}
-              style={{ padding: '10px 24px', fontSize: '14px', fontWeight: '600', color: submitColor, backgroundColor: submitBg, border: 'none', borderRadius: '9999px', cursor: canSubmit && !isBusy ? 'pointer' : 'not-allowed', transition: 'background-color 0.2s', minWidth: '140px' }}
-              onMouseEnter={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#e68a00' }}
-              onMouseLeave={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#FF9900' }}
-            >
-              {submitLabel}
-            </button>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={handleBack}
+                style={{ padding: '10px 20px', fontSize: '14px', fontWeight: '500', color: isDarkMode ? '#cbd5e1' : '#374151', backgroundColor: 'transparent', border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0', borderRadius: '9999px', cursor: 'pointer', transition: 'background-color 0.15s' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(100, 116, 139, 0.1)' : '#f8fafc'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={!canSubmit || isBusy}
+                style={{ padding: '10px 24px', fontSize: '14px', fontWeight: '600', color: submitColor, backgroundColor: submitBg, border: 'none', borderRadius: '9999px', cursor: canSubmit && !isBusy ? 'pointer' : 'not-allowed', transition: 'background-color 0.2s', minWidth: '140px' }}
+                onMouseEnter={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#1d4ed8' }}
+                onMouseLeave={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#2563eb' }}
+              >
+                {submitLabel}
+              </button>
+            </div>
           </div>
 
         </form>
       </div>
+
+      {/* ── Delete Confirmation Modal ── */}
+      {showDeleteConfirm && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
+          onMouseDown={(e) => { if (e.target === e.currentTarget && !deleting) setShowDeleteConfirm(false) }}
+        >
+          <div style={{ backgroundColor: isDarkMode ? '#252F3E' : '#fff', borderRadius: '14px', padding: '28px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 48px rgba(0,0,0,0.18)', margin: '0 16px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', color: isDarkMode ? '#e2e8f0' : '#0f172a', margin: '0 0 8px' }}>
+              Delete Speaker?
+            </h3>
+            <p style={{ fontSize: '14px', color: isDarkMode ? '#cbd5e1' : '#64748b', margin: '0 0 24px' }}>
+              This action cannot be undone. "{form.full_name}" will be permanently deleted.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+                style={{ padding: '10px 16px', fontSize: '14px', fontWeight: '500', color: isDarkMode ? '#cbd5e1' : '#374151', backgroundColor: 'transparent', border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(100, 116, 139, 0.1)' : '#f8fafc'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                style={{ padding: '10px 16px', fontSize: '14px', fontWeight: '600', color: '#fff', backgroundColor: '#dc2626', border: 'none', borderRadius: '8px', cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.7 : 1 }}
+                onMouseEnter={(e) => { if (!deleting) e.currentTarget.style.backgroundColor = '#b91c1c' }}
+                onMouseLeave={(e) => { if (!deleting) e.currentTarget.style.backgroundColor = '#dc2626' }}
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

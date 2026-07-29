@@ -14,10 +14,21 @@ export const AccountPage = () => {
   const [saving, setSaving]                 = useState(false)
   const [formError, setFormError]           = useState(null)
   const [successToast, setSuccessToast]     = useState(null)
+  const [isDarkMode, setIsDarkMode]         = useState(() =>
+    document.documentElement.classList.contains('dark')
+  )
   const [formData, setFormData]             = useState({
     full_name: '',
     linkedin_url: '',
   })
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
 
   // ── Fetch user profile on mount ──
   useEffect(() => {
@@ -111,13 +122,13 @@ export const AccountPage = () => {
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '24px' }}>
-        <p style={{ color: '#cbd5e1', fontSize: '14px' }}>Loading…</p>
+        <p style={{ color: isDarkMode ? '#cbd5e1' : '#cbd5e1', fontSize: '14px', transition: 'color 0.2s' }}>Loading…</p>
       </div>
     )
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', padding: '32px 24px' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: isDarkMode ? '#1a222d' : '#f8fafc', padding: '32px 24px', transition: 'background-color 0.2s' }}>
       {/* Success toast */}
       {successToast && (
         <Toast
@@ -132,21 +143,22 @@ export const AccountPage = () => {
       <div style={{ maxWidth: '500px', margin: '0 auto' }}>
         {/* Page header */}
         <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#252F3E', textAlign: 'left', marginBottom: '16px', marginTop: '8px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: isDarkMode ? '#e2e8f0' : '#0f172a', textAlign: 'left', marginBottom: '16px', marginTop: '8px', transition: 'color 0.2s' }}>
             Account Settings
           </h1>
         </div>
 
         {/* ── Profile Form Card ── */}
         <div style={{
-          backgroundColor: '#fff',
+          backgroundColor: isDarkMode ? '#252F3E' : '#fff',
           borderRadius: '16px',
-          border: '1px solid #e2e8f0',
+          border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
           padding: '28px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+          boxShadow: isDarkMode ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.04)',
           marginBottom: '24px',
+          transition: 'background-color 0.2s, border-color 0.2s, box-shadow 0.2s',
         }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: '0 0 20px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', color: isDarkMode ? '#e2e8f0' : '#0f172a', margin: '0 0 20px', transition: 'color 0.2s' }}>
             Profile Information
           </h2>
 
@@ -156,14 +168,15 @@ export const AccountPage = () => {
               display: 'flex',
               alignItems: 'flex-start',
               gap: '12px',
-              backgroundColor: '#fee2e2',
-              border: '1px solid #fecaca',
+              backgroundColor: isDarkMode ? 'rgba(220, 38, 38, 0.1)' : '#fee2e2',
+              border: isDarkMode ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid #fecaca',
               borderRadius: '10px',
               padding: '12px 14px',
               marginBottom: '16px',
+              transition: 'background-color 0.2s, border-color 0.2s',
             }}>
-              <AlertCircle size={16} color="#dc2626" style={{ flexShrink: 0, marginTop: '2px' }} />
-              <p style={{ fontSize: '13px', color: '#991b1b', margin: 0, lineHeight: '1.4' }}>
+              <AlertCircle size={16} color={isDarkMode ? '#fca5a5' : '#dc2626'} style={{ flexShrink: 0, marginTop: '2px', transition: 'color 0.2s' }} />
+              <p style={{ fontSize: '13px', color: isDarkMode ? '#fca5a5' : '#991b1b', margin: 0, lineHeight: '1.4', transition: 'color 0.2s' }}>
                 {formError}
               </p>
             </div>
@@ -175,10 +188,11 @@ export const AccountPage = () => {
               display: 'block',
               fontSize: '12px',
               fontWeight: '700',
-              color: '#64748b',
+              color: isDarkMode ? '#94a3b8' : '#64748b',
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
               marginBottom: '8px',
+              transition: 'color 0.2s',
             }}>
               Email Address
             </label>
@@ -190,17 +204,18 @@ export const AccountPage = () => {
                 width: '100%',
                 padding: '10px 12px',
                 borderRadius: '10px',
-                border: '1px solid #e2e8f0',
-                backgroundColor: '#f1f5f9',
+                border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
+                backgroundColor: isDarkMode ? 'rgba(100,116,139,0.1)' : '#f1f5f9',
                 fontSize: '14px',
-                color: '#64748b',
+                color: isDarkMode ? '#94a3b8' : '#64748b',
                 cursor: 'not-allowed',
                 boxSizing: 'border-box',
                 fontFamily: 'inherit',
+                transition: 'background-color 0.2s, border-color 0.2s, color 0.2s',
               }}
               aria-label="Email address (read-only)"
             />
-            <p style={{ fontSize: '11px', color: '#94a3b8', margin: '4px 0 0', fontStyle: 'italic' }}>
+            <p style={{ fontSize: '11px', color: isDarkMode ? '#64748b' : '#94a3b8', margin: '4px 0 0', fontStyle: 'italic', transition: 'color 0.2s' }}>
               Your email address cannot be changed
             </p>
           </div>
@@ -211,10 +226,11 @@ export const AccountPage = () => {
               display: 'block',
               fontSize: '12px',
               fontWeight: '700',
-              color: '#64748b',
+              color: isDarkMode ? '#94a3b8' : '#64748b',
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
               marginBottom: '8px',
+              transition: 'color 0.2s',
             }}>
               Full Name
             </label>
@@ -228,15 +244,16 @@ export const AccountPage = () => {
                 width: '100%',
                 padding: '10px 12px',
                 borderRadius: '10px',
-                border: '1px solid #e2e8f0',
+                border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
                 fontSize: '14px',
-                color: '#0f172a',
+                color: isDarkMode ? '#e2e8f0' : '#0f172a',
+                backgroundColor: isDarkMode ? '#1a222d' : '#fff',
                 boxSizing: 'border-box',
                 fontFamily: 'inherit',
-                transition: 'border-color 0.15s',
+                transition: 'border-color 0.15s, background-color 0.2s, color 0.2s',
               }}
-              onFocus={(e) => (e.target.style.borderColor = '#cbd5e1')}
-              onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
+              onFocus={(e) => (e.target.style.borderColor = isDarkMode ? 'rgba(100,116,139,0.5)' : '#cbd5e1')}
+              onBlur={(e) => (e.target.style.borderColor = isDarkMode ? 'rgba(100,116,139,0.3)' : '#e2e8f0')}
               aria-label="Full name"
             />
           </div>
@@ -247,10 +264,11 @@ export const AccountPage = () => {
               display: 'block',
               fontSize: '12px',
               fontWeight: '700',
-              color: '#64748b',
+              color: isDarkMode ? '#94a3b8' : '#64748b',
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
               marginBottom: '8px',
+              transition: 'color 0.2s',
             }}>
               LinkedIn Profile URL
             </label>
@@ -264,18 +282,19 @@ export const AccountPage = () => {
                 width: '100%',
                 padding: '10px 12px',
                 borderRadius: '10px',
-                border: '1px solid #e2e8f0',
+                border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
                 fontSize: '14px',
-                color: '#0f172a',
+                color: isDarkMode ? '#e2e8f0' : '#0f172a',
+                backgroundColor: isDarkMode ? '#1a222d' : '#fff',
                 boxSizing: 'border-box',
                 fontFamily: 'inherit',
-                transition: 'border-color 0.15s',
+                transition: 'border-color 0.15s, background-color 0.2s, color 0.2s',
               }}
-              onFocus={(e) => (e.target.style.borderColor = '#cbd5e1')}
-              onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
+              onFocus={(e) => (e.target.style.borderColor = isDarkMode ? 'rgba(100,116,139,0.5)' : '#cbd5e1')}
+              onBlur={(e) => (e.target.style.borderColor = isDarkMode ? 'rgba(100,116,139,0.3)' : '#e2e8f0')}
               aria-label="LinkedIn profile URL"
             />
-            <p style={{ fontSize: '11px', color: '#94a3b8', margin: '4px 0 0' }}>
+            <p style={{ fontSize: '11px', color: isDarkMode ? '#64748b' : '#94a3b8', margin: '4px 0 0', transition: 'color 0.2s' }}>
               This URL is used to generate your networking QR code in Connect
             </p>
           </div>
@@ -287,7 +306,7 @@ export const AccountPage = () => {
             style={{
               width: '100%',
               padding: '11px 16px',
-              backgroundColor: saving ? '#cbd5e1' : '#2563eb',
+              backgroundColor: saving ? (isDarkMode ? '#475569' : '#cbd5e1') : (isDarkMode ? '#2563eb' : '#2563eb'),
               color: '#fff',
               border: 'none',
               borderRadius: '10px',
@@ -300,8 +319,8 @@ export const AccountPage = () => {
               gap: '8px',
               transition: 'background-color 0.15s',
             }}
-            onMouseEnter={(e) => { if (!saving) e.target.style.backgroundColor = '#1d4ed8' }}
-            onMouseLeave={(e) => { if (!saving) e.target.style.backgroundColor = '#2563eb' }}
+            onMouseEnter={(e) => { if (!saving) e.target.style.backgroundColor = isDarkMode ? '#1d4ed8' : '#1d4ed8' }}
+            onMouseLeave={(e) => { if (!saving) e.target.style.backgroundColor = isDarkMode ? '#2563eb' : '#2563eb' }}
             aria-label={saving ? 'Saving changes...' : 'Save changes'}
           >
             {saving ? (

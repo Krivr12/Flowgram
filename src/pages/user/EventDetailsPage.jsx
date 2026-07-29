@@ -29,6 +29,17 @@ export const EventDetailsPage = () => {
   const [event, setEvent]     = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState('')
+  const [isDarkMode, setIsDarkMode] = useState(() =>
+    document.documentElement.classList.contains('dark')
+  )
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     const load = async () => {
@@ -60,8 +71,9 @@ export const EventDetailsPage = () => {
         alignItems: 'center',
         justifyContent: 'center',
         minHeight: '60vh',
-        color: '#94a3b8',
+        color: isDarkMode ? '#94a3b8' : '#94a3b8',
         fontSize: '15px',
+        transition: 'color 0.2s',
       }}>
         Loading event details...
       </div>
@@ -86,12 +98,13 @@ export const EventDetailsPage = () => {
           style={{
             padding: '10px 20px',
             borderRadius: '8px',
-            border: '1px solid #e2e8f0',
-            backgroundColor: '#fff',
-            color: '#0f172a',
+            border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
+            backgroundColor: isDarkMode ? '#252F3E' : '#fff',
+            color: isDarkMode ? '#e2e8f0' : '#0f172a',
             fontSize: '13px',
             fontWeight: '600',
             cursor: 'pointer',
+            transition: 'background-color 0.2s, border-color 0.2s, color 0.2s',
           }}
         >
           Go Back
@@ -116,18 +129,18 @@ export const EventDetailsPage = () => {
             padding: '6px 0',
             background: 'none',
             border: 'none',
-            color: '#64748b',
+            color: isDarkMode ? '#94a3b8' : '#64748b',
             fontSize: '14px',
             fontWeight: '600',
             cursor: 'pointer',
             transition: 'color 0.15s, transform 0.15s',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.color = '#0f172a'
+            e.currentTarget.style.color = isDarkMode ? '#e2e8f0' : '#0f172a'
             e.currentTarget.style.transform = 'translateX(-3px)'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.color = '#64748b'
+            e.currentTarget.style.color = isDarkMode ? '#94a3b8' : '#64748b'
             e.currentTarget.style.transform = 'translateX(0)'
           }}
         >
@@ -143,9 +156,10 @@ export const EventDetailsPage = () => {
         <h1 style={{
           fontSize: '30px',
           fontWeight: '800',
-          color: '#0f172a',
+          color: isDarkMode ? '#e2e8f0' : '#0f172a',
           margin: '0 0 20px',
           lineHeight: 1.25,
+          transition: 'color 0.2s',
         }}>
           {event.title}
         </h1>
@@ -159,10 +173,11 @@ export const EventDetailsPage = () => {
               gap: '7px',
               padding: '8px 14px',
               borderRadius: '8px',
-              backgroundColor: '#f1f5f9',
+              backgroundColor: isDarkMode ? 'rgba(100,116,139,0.1)' : '#f1f5f9',
               fontSize: '13px',
               fontWeight: '600',
-              color: '#475569',
+              color: isDarkMode ? '#94a3b8' : '#475569',
+              transition: 'background-color 0.2s, color 0.2s',
             }}>
               <Calendar size={14} />
               {formatEventDate(event.start_date)}
@@ -176,10 +191,11 @@ export const EventDetailsPage = () => {
               gap: '7px',
               padding: '8px 14px',
               borderRadius: '8px',
-              backgroundColor: '#f1f5f9',
+              backgroundColor: isDarkMode ? 'rgba(100,116,139,0.1)' : '#f1f5f9',
               fontSize: '13px',
               fontWeight: '600',
-              color: '#475569',
+              color: isDarkMode ? '#94a3b8' : '#475569',
+              transition: 'background-color 0.2s, color 0.2s',
             }}>
               <MapPin size={14} />
               {event.venue}
@@ -191,9 +207,10 @@ export const EventDetailsPage = () => {
         {event.description && (
           <p style={{
             fontSize: '15px',
-            color: '#475569',
+            color: isDarkMode ? '#cbd5e1' : '#475569',
             lineHeight: 1.75,
             margin: 0,
+            transition: 'color 0.2s',
           }}>
             {event.description}
           </p>
@@ -207,18 +224,19 @@ export const EventDetailsPage = () => {
         left: 0,
         right: 0,
         padding: '16px 24px',
-        backgroundColor: '#fff',
-        borderTop: '1px solid #e2e8f0',
+        backgroundColor: isDarkMode ? '#252F3E' : '#fff',
+        borderTop: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
         zIndex: 30,
         display: 'flex',
         justifyContent: 'center',
+        transition: 'background-color 0.2s, border-color 0.2s',
       }}>
         <button
           onClick={handleViewFlow}
           style={{
             width: '100%',
             maxWidth: '480px',
-            backgroundColor: '#f97316',
+            backgroundColor: isDarkMode ? '#2563eb' : '#f97316',
             color: '#fff',
             border: 'none',
             padding: '15px 28px',
@@ -229,11 +247,11 @@ export const EventDetailsPage = () => {
             transition: 'background-color 0.15s, transform 0.1s',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#ea580c'
+            e.currentTarget.style.backgroundColor = isDarkMode ? '#1d4ed8' : '#ea580c'
             e.currentTarget.style.transform = 'translateY(-1px)'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#f97316'
+            e.currentTarget.style.backgroundColor = isDarkMode ? '#2563eb' : '#f97316'
             e.currentTarget.style.transform = 'translateY(0)'
           }}
         >

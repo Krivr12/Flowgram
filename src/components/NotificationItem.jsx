@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   CheckCircle,
   AlertTriangle,
@@ -32,28 +32,42 @@ const formatRelativeTime = (dateStr) => {
 const getNotifMeta = (title = '', message = '') => {
   const text = `${title} ${message}`.toLowerCase()
 
-  if (/finished|capacity/.test(text)) {
-    return { Icon: CheckCircle, color: '#16a34a' }        // green
-  }
-  if (/skipped|full|at capacity/.test(text)) {
-    return { Icon: AlertTriangle, color: '#dc2626' }      // red
-  }
-  if (/ongoing|filling/.test(text)) {
-    return { Icon: PlayCircle, color: '#ca8a04' }         // yellow
-  }
-  return { Icon: Info, color: '#2563eb' }                 // blue (default)
+  if (/finished|capacity/.test(text))
+    return { Icon: CheckCircle,   color: '#16a34a' }   // green
+  if (/skipped|full|at capacity/.test(text))
+    return { Icon: AlertTriangle, color: '#dc2626' }   // red
+  if (/ongoing|filling/.test(text))
+    return { Icon: PlayCircle,    color: '#ca8a04' }   // yellow
+  return { Icon: Info,            color: '#2563eb' }   // blue (default)
 }
 
-// ─── Threshold for showing the chevron ───────────────────────────────────────
-const TRUNCATE_THRESHOLD = 80 // characters
+// ─── Threshold for "show more" chevron ───────────────────────────────────────
+const TRUNCATE_THRESHOLD = 80
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const NotificationItem = ({ notification }) => {
   const [isExpanded, setIsExpanded] = useState(false)
-  const { Icon, color } = getNotifMeta(notification.title, notification.message)
+  const [isDarkMode, setIsDarkMode] = useState(() =>
+    document.documentElement.classList.contains('dark')
+  )
 
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const { Icon, color } = getNotifMeta(notification.title, notification.message)
   const isLong = (notification.message || '').length > TRUNCATE_THRESHOLD
+
+  const bgColor      = isDarkMode ? '#252F3E' : '#ffffff'
+  const borderColor  = isDarkMode ? 'rgba(100, 116, 139, 0.3)' : '#e2e8f0'
+  const titleColor   = isDarkMode ? '#f8fafc' : '#0f172a'
+  const messageColor = isDarkMode ? '#94a3b8' : '#64748b'
+  const timeColor    = '#94a3b8'   // same in both modes — already muted
 
   return (
     <div
@@ -62,52 +76,25 @@ export const NotificationItem = ({ notification }) => {
         alignItems: 'flex-start',
         gap: '14px',
         padding: '14px 16px',
-        backgroundColor: '#ffffff',
-        border: '1px solid #e2e8f0',
+        backgroundColor: bgColor,
+        border: `1px solid ${borderColor}`,
         borderRadius: '12px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        boxShadow: isDarkMode ? '0 1px 3px rgba(0,0,0,0.1)' : '0 1px 3px rgba(0,0,0,0.04)',
       }}
     >
-      {/* ── Dynamic icon ── */}
+      {/* ── Dynamic icon — color stays as-is per notification type ── */}
       <div style={{ flexShrink: 0, paddingTop: '2px' }}>
         <Icon size={20} color={color} strokeWidth={2} />
       </div>
 
       {/* ── Body ── */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        {/* Title row */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            gap: '12px',
-            marginBottom: '3px',
-          }}
-        >
-          <p
-            style={{
-              fontSize: '14px',
-              fontWeight: '700',
-              color: '#0f172a',
-              margin: 0,
-              lineHeight: 1.35,
-            }}
-          >
+        {/* Title + timestamp row */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '3px' }}>
+          <p style={{ fontSize: '14px', fontWeight: '700', color: titleColor, margin: 0, lineHeight: 1.35 }}>
             {notification.title}
           </p>
-
-          {/* Timestamp — top right */}
-          <span
-            style={{
-              fontSize: '11px',
-              color: '#94a3b8',
-              fontWeight: '500',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-              paddingTop: '2px',
-            }}
-          >
+          <span style={{ fontSize: '11px', color: timeColor, fontWeight: '500', whiteSpace: 'nowrap', flexShrink: 0, paddingTop: '2px' }}>
             {formatRelativeTime(notification.created_at)}
           </span>
         </div>
@@ -118,10 +105,9 @@ export const NotificationItem = ({ notification }) => {
             <p
               style={{
                 fontSize: '13px',
-                color: '#64748b',
+                color: messageColor,
                 margin: 0,
                 lineHeight: 1.6,
-                // Manual line clamp via webkit — widely supported
                 display: '-webkit-box',
                 WebkitBoxOrient: 'vertical',
                 WebkitLineClamp: isExpanded ? 'unset' : 2,
@@ -131,35 +117,24 @@ export const NotificationItem = ({ notification }) => {
               {notification.message}
             </p>
 
-            {/* Chevron toggle — only shown when message is long */}
             {isLong && (
               <button
                 onClick={() => setIsExpanded((v) => !v)}
                 aria-label={isExpanded ? 'Collapse message' : 'Expand message'}
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  marginTop: '4px',
-                  padding: '2px 0',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#94a3b8',
-                  fontSize: '12px',
-                  fontWeight: '600',
+                  display: 'inline-flex', alignItems: 'center', gap: '4px',
+                  marginTop: '4px', padding: '2px 0',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: '#94a3b8', fontSize: '12px', fontWeight: '600',
                   transition: 'color 0.15s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#475569')}
+                onMouseEnter={(e) => (e.currentTarget.style.color = isDarkMode ? '#cbd5e1' : '#475569')}
                 onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
               >
                 <ChevronDown
                   size={14}
                   strokeWidth={2.5}
-                  style={{
-                    transition: 'transform 0.2s',
-                    transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                  }}
+                  style={{ transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
                 />
                 {isExpanded ? 'Show less' : 'Show more'}
               </button>

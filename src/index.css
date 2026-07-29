@@ -245,3 +245,24 @@ body {
     display: flex !important;
   }
 }
+
+/* ── Datetime Input Calendar Icon Theming ── */
+/* Light mode: light gray calendar icon */
+input[type="datetime-local"] {
+  accent-color: #2563eb;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(0.5);
+  cursor: pointer;
+}
+
+/* Dark mode: light gray calendar icon - keep it light */
+html.dark input[type="datetime-local"] {
+  accent-color: #2563eb;
+}
+
+html.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0) brightness(1.2);
+  cursor: pointer;
+}

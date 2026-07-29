@@ -58,6 +58,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <AdminDashboardPage /> },
+      { path: 'account', element: <AccountPage /> },
 
       // Create — must be listed before the :eventId workspace route
       { path: 'events/new', element: <AdminEventFormPage /> },

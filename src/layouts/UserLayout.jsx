@@ -10,6 +10,8 @@ import {
   LayoutDashboard,
   X,
   Settings,
+  Sun,
+  Moon,
 } from 'lucide-react'
 import { getCurrentUser, getUserProfile, logout, supabase } from '../services/supabase'
 import { getEventById } from '../services/events'
@@ -52,6 +54,10 @@ export const UserLayout = () => {
   const [eventTitle, setEventTitle]         = useState(null)
   // ── Notification toast ──────────────────────────────────────────
   const [notifToast, setNotifToast]         = useState(null) // { title, message }
+  const [isDarkMode, setIsDarkMode]         = useState(() => {
+    const saved = localStorage.getItem('user_dark_mode')
+    return saved ? JSON.parse(saved) : false
+  })
   const dropdownRef                         = useRef(null)
   const notifPollIntervalRef                = useRef(null)
   const lastSeenNotifIdRef                  = useRef(null) // prevents re-showing already-seen notifications
@@ -68,6 +74,23 @@ export const UserLayout = () => {
       setProfileLoading(false)
     }
     load()
+  }, [])
+
+  // Apply / remove `dark` class on <html> so all dark: utilities work globally
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+    localStorage.setItem('user_dark_mode', JSON.stringify(isDarkMode))
+  }, [isDarkMode])
+
+  // Remove dark class when leaving user layout
+  useEffect(() => {
+    return () => {
+      document.documentElement.classList.remove('dark')
+    }
   }, [])
 
   // ── Load event title when selected event changes ─────────────────────────
@@ -222,7 +245,18 @@ export const UserLayout = () => {
     navigate('/admin', { replace: true })
   }
 
+  const toggleDarkMode = () => setIsDarkMode((prev) => !prev)
+
   const isAdmin = userProfile?.role === 'ADMIN'
+
+  // Color tokens — derived from isDarkMode so inline styles stay consistent
+  const bg       = isDarkMode ? '#1a222d' : '#f8fafc'
+  const cardBg   = isDarkMode ? '#252F3E' : '#ffffff'
+  const border   = isDarkMode ? 'rgba(100,116,139,0.3)' : '#e2e8f0'
+  const textMain = isDarkMode ? '#e2e8f0' : '#334155'
+  const textSub  = isDarkMode ? '#94a3b8' : '#64748b'
+  const hoverBg  = isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'
+  const hoverBgStrong = isDarkMode ? '#2d3748' : '#f8fafc'
 
   if (profileLoading) {
     return (
@@ -233,7 +267,7 @@ export const UserLayout = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: bg, display: 'flex', flexDirection: 'column', transition: 'background-color 0.2s' }}>
 
       {/* ── Realtime Notification Toast ── */}
       {notifToast && (
@@ -254,12 +288,13 @@ export const UserLayout = () => {
       {/* ── TOP NAVBAR (matching AdminLayout structure) ── */}
       <header style={{
         height: `${NAVBAR_H}px`,
-        backgroundColor: '#ffffff',
-        borderBottom: '1px solid #e2e8f0',
+        backgroundColor: bg,
+        borderBottom: 'none',
         position: 'sticky',
         top: 0,
         zIndex: 40,
         flexShrink: 0,
+        transition: 'background-color 0.2s',
       }}>
         <div style={{
           maxWidth: '100%',
@@ -302,7 +337,7 @@ export const UserLayout = () => {
               style={{
                 fontSize: '16px',
                 fontWeight: '700',
-                color: '#0f172a',
+                color: isDarkMode ? '#fff' : '#0f172a',
                 letterSpacing: '-0.01em',
                 whiteSpace: 'nowrap',
               }}
@@ -319,11 +354,12 @@ export const UserLayout = () => {
                 <span style={{
                   fontSize: '15px',
                   fontWeight: '600',
-                  color: '#475569',
+                  color: textSub,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   maxWidth: '340px',
+                  transition: 'color 0.2s',
                 }}>
                   {eventTitle}
                 </span>
@@ -351,15 +387,15 @@ export const UserLayout = () => {
                     style={{
                       fontSize: '13px',
                       fontWeight: '500',
-                      color: '#64748b',
+                      color: textSub,
                       background: 'transparent',
                       border: 'none',
                       cursor: 'pointer',
                       transition: 'color 0.15s',
                       padding: 0,
                     }}
-                    onMouseEnter={(e) => (e.target.style.color = '#475569')}
-                    onMouseLeave={(e) => (e.target.style.color = '#64748b')}
+                    onMouseEnter={(e) => (e.target.style.color = textMain)}
+                    onMouseLeave={(e) => (e.target.style.color = textSub)}
                   >
                     {label}
                   </button>
@@ -373,7 +409,7 @@ export const UserLayout = () => {
                   style={{
                     fontSize: '13px',
                     fontWeight: '500',
-                    color: isActive ? '#2563eb' : '#64748b',
+                    color: isActive ? '#2563eb' : textSub,
                     textDecoration: 'none',
                     cursor: 'pointer',
                     transition: 'color 0.15s',
@@ -382,8 +418,8 @@ export const UserLayout = () => {
                     e.preventDefault()
                     navigate(to)
                   }}
-                  onMouseEnter={(e) => !isActive && (e.target.style.color = '#475569')}
-                  onMouseLeave={(e) => !isActive && (e.target.style.color = '#64748b')}
+                  onMouseEnter={(e) => !isActive && (e.target.style.color = textMain)}
+                  onMouseLeave={(e) => !isActive && (e.target.style.color = textSub)}
                 >
                   {label}
                 </a>
@@ -404,8 +440,9 @@ export const UserLayout = () => {
                 border: 'none',
                 background: 'transparent',
                 cursor: 'pointer',
+                transition: 'background-color 0.15s',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBg}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               <div style={{
@@ -426,11 +463,12 @@ export const UserLayout = () => {
               <span style={{
                 fontSize: '14px',
                 fontWeight: '500',
-                color: '#334155',
+                color: textMain,
                 maxWidth: '160px',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
+                transition: 'color 0.2s',
               }}>
                 {userProfile?.full_name || 'User'}
               </span>
@@ -456,27 +494,54 @@ export const UserLayout = () => {
                   right: 0,
                   top: 'calc(100% + 8px)',
                   width: '240px',
-                  backgroundColor: '#fff',
+                  backgroundColor: cardBg,
                   borderRadius: '12px',
-                  boxShadow: '0 10px 40px rgba(0,0,0,0.12)',
-                  border: '1px solid #e2e8f0',
+                  boxShadow: isDarkMode ? '0 10px 40px rgba(0,0,0,0.4)' : '0 10px 40px rgba(0,0,0,0.12)',
+                  border: `1px solid ${border}`,
                   zIndex: 50,
                   overflow: 'hidden',
+                  transition: 'background-color 0.2s',
                 }}>
 
                   {/* Profile header */}
                   <div style={{
                     padding: '12px 16px',
-                    borderBottom: '1px solid #f1f5f9',
-                    backgroundColor: '#f8fafc',
+                    borderBottom: `1px solid ${border}`,
+                    backgroundColor: isDarkMode ? '#1e2a38' : '#f8fafc',
+                    transition: 'background-color 0.2s',
                   }}>
-                    <p style={{ fontSize: '13px', fontWeight: '600', color: '#0f172a', margin: 0 }}>
+                    <p style={{ fontSize: '13px', fontWeight: '600', color: isDarkMode ? '#e2e8f0' : '#0f172a', margin: 0, transition: 'color 0.2s' }}>
                       {userProfile?.full_name || 'User'}
                     </p>
-                    <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <p style={{ fontSize: '12px', color: textSub, margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', transition: 'color 0.2s' }}>
                       {userProfile?.email || ''}
                     </p>
                   </div>
+
+                  {/* Theme Toggle */}
+                  <button
+                    onClick={toggleDarkMode}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '10px 16px',
+                      fontSize: '13px',
+                      color: isDarkMode ? '#cbd5e1' : '#334155',
+                      background: 'transparent',
+                      border: 'none',
+                      borderBottom: `1px solid ${border}`,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'background-color 0.15s, color 0.2s',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBgStrong}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    {isDarkMode ? <Sun size={14} color="#fbbf24" /> : <Moon size={14} color={textSub} />}
+                    {isDarkMode ? 'Switch to Light' : 'Switch to Dark'}
+                  </button>
 
                   {/* Return to Admin View — ADMIN only */}
                   {isAdmin && (
@@ -489,18 +554,19 @@ export const UserLayout = () => {
                         gap: '8px',
                         padding: '10px 16px',
                         fontSize: '13px',
-                        color: '#334155',
+                        color: isDarkMode ? '#cbd5e1' : '#334155',
                         background: 'transparent',
                         border: 'none',
-                        borderBottom: '1px solid #f1f5f9',
+                        borderBottom: `1px solid ${border}`,
                         cursor: 'pointer',
                         textAlign: 'left',
+                        transition: 'background-color 0.15s, color 0.2s',
                       }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBgStrong}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      <LayoutDashboard size={14} color="#64748b" />
-                      Return to Admin Dashboard
+                      <LayoutDashboard size={14} color={textSub} />
+                      Return to Admin
                     </button>
                   )}
 
@@ -519,8 +585,9 @@ export const UserLayout = () => {
                       border: 'none',
                       cursor: 'pointer',
                       textAlign: 'left',
+                      transition: 'background-color 0.15s',
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(220,38,38,0.1)' : '#fef2f2'}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
                     <LogOut size={14} />
@@ -559,16 +626,16 @@ export const UserLayout = () => {
           zIndex: 50,
           height: '100%',
           width: '288px',
-          backgroundColor: '#fff',
+          backgroundColor: cardBg,
           flexDirection: 'column',
           boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
           transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
-          transition: 'transform 0.3s ease-in-out',
+          transition: 'transform 0.3s ease-in-out, background-color 0.2s',
         }}
         aria-label="Mobile menu"
       >
         {/* Sidebar header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', borderBottom: '1px solid #f3f4f6' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', borderBottom: `1px solid ${border}`, transition: 'border-color 0.2s' }}>
           <div style={{
             width: '40px',
             height: '40px',
@@ -585,10 +652,10 @@ export const UserLayout = () => {
             {getInitials(userProfile?.full_name)}
           </div>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <p style={{ fontSize: '14px', fontWeight: '600', color: '#0f172a', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <p style={{ fontSize: '14px', fontWeight: '600', color: isDarkMode ? '#e2e8f0' : '#0f172a', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', transition: 'color 0.2s' }}>
               {userProfile?.full_name || 'User'}
             </p>
-            <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <p style={{ fontSize: '12px', color: textSub, margin: '2px 0 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', transition: 'color 0.2s' }}>
               {userProfile?.email || ''}
             </p>
           </div>
@@ -605,8 +672,9 @@ export const UserLayout = () => {
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
+              transition: 'background-color 0.15s, color 0.2s',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#64748b' }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = hoverBgStrong; e.currentTarget.style.color = textSub }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#94a3b8' }}
             aria-label="Close menu"
           >
@@ -627,16 +695,41 @@ export const UserLayout = () => {
               fontWeight: '500',
               padding: '8px 12px',
               borderRadius: '6px',
-              color: isActive ? '#2563eb' : '#64748b',
-              backgroundColor: isActive ? '#dbeafe' : 'transparent',
+              color: isActive ? '#2563eb' : textSub,
+              backgroundColor: isActive ? (isDarkMode ? 'rgba(37, 99, 235, 0.1)' : '#dbeafe') : 'transparent',
               textDecoration: 'none',
               cursor: 'pointer',
-              transition: 'all 0.15s',
+              transition: 'all 0.15s, color 0.2s, background-color 0.2s',
             })}
           >
             <Settings size={18} />
             Settings
           </NavLink>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleDarkMode}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              fontSize: '13px',
+              fontWeight: '500',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              color: isDarkMode ? '#fbbf24' : textSub,
+              backgroundColor: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'left',
+              transition: 'background-color 0.15s, color 0.2s',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBgStrong}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          >
+            {isDarkMode ? <Sun size={18} color="#fbbf24" /> : <Moon size={18} color={textSub} />}
+            {isDarkMode ? 'Switch to Light' : 'Switch to Dark'}
+          </button>
 
           {/* Switch to Admin View — ADMIN only */}
           {isAdmin && (
@@ -650,14 +743,14 @@ export const UserLayout = () => {
                 fontWeight: '500',
                 padding: '8px 12px',
                 borderRadius: '6px',
-                color: '#2563eb',
+                color: '#42b4ff',
                 backgroundColor: 'transparent',
                 border: 'none',
                 cursor: 'pointer',
                 textAlign: 'left',
-                transition: 'background-color 0.15s',
+                transition: 'background-color 0.15s, color 0.2s',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBgStrong}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               <LayoutDashboard size={18} />
@@ -667,7 +760,7 @@ export const UserLayout = () => {
         </div>
 
         {/* Sidebar footer */}
-        <div style={{ marginTop: 'auto', padding: '16px', borderTop: '1px solid #f3f4f6' }}>
+        <div style={{ marginTop: 'auto', padding: '16px', borderTop: `1px solid ${border}`, transition: 'border-color 0.2s' }}>
           <button
             onClick={handleLogout}
             style={{
@@ -681,6 +774,7 @@ export const UserLayout = () => {
               cursor: 'pointer',
               textAlign: 'left',
               width: '100%',
+              transition: 'color 0.15s',
             }}
             onMouseEnter={(e) => e.currentTarget.style.color = '#b91c1c'}
             onMouseLeave={(e) => e.currentTarget.style.color = '#dc2626'}
@@ -693,7 +787,7 @@ export const UserLayout = () => {
 
 
       {/* ── PAGE CONTENT ── */}
-      <main style={{ flex: 1, overflowY: 'auto', maxWidth: '100%', margin: '0 auto', width: '100%', padding: '40px 16px 6rem' }} className="user-layout-page-content">
+      <main style={{ flex: 1, overflowY: 'auto', maxWidth: '100%', margin: '0 auto', width: '100%', padding: '40px 16px 6rem', transition: 'background-color 0.2s' }} className="user-layout-page-content">
         <Outlet />
       </main>
 
@@ -707,10 +801,11 @@ export const UserLayout = () => {
             bottom: 0,
             left: 0,
             right: 0,
-            backgroundColor: '#fff',
-            borderTop: '1px solid #e5e7eb',
+            backgroundColor: cardBg,
+            borderTop: `1px solid ${border}`,
             justifyContent: 'space-around',
             height: '64px',
+            transition: 'background-color 0.2s, border-color 0.2s',
           }}
           aria-label="Mobile bottom navigation"
         >
@@ -734,14 +829,14 @@ export const UserLayout = () => {
                     textAlign: 'center',
                     fontSize: '11px',
                     fontWeight: '500',
-                    color: '#4b5563',
+                    color: isDarkMode ? '#94a3b8' : '#4b5563',
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
                     transition: 'color 0.2s',
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = '#2196F3')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#4b5563')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = isDarkMode ? '#94a3b8' : '#4b5563')}
                 >
                   <Icon size={20} strokeWidth={1.75} />
                   <span>{label}</span>
@@ -768,10 +863,10 @@ export const UserLayout = () => {
                   textAlign: 'center',
                   fontSize: '11px',
                   fontWeight: '500',
-                  color: isActive ? '#2196F3' : '#4b5563',
+                  color: isActive ? '#2196F3' : (isDarkMode ? '#94a3b8' : '#4b5563'),
                   textDecoration: 'none',
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
+                  transition: 'all 0.2s, color 0.2s',
                 }}
               >
                 <Icon size={20} strokeWidth={isActive ? 2.25 : 1.75} />

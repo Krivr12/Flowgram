@@ -38,13 +38,35 @@ export const AdminLayout = () => {
   const [eventName, setEventName]       = useState(null)
   const [drawerOpen, setDrawerOpen]     = useState(false)
   const [desktopDropdownOpen, setDesktopDropdownOpen] = useState(false)
-  const [isDarkMode, setIsDarkMode]     = useState(false)
+  const [isDarkMode, setIsDarkMode]     = useState(() => {
+    const saved = localStorage.getItem('admin_dark_mode')
+    return saved ? JSON.parse(saved) : false
+  })
   const navigate = useNavigate()
   const location = useLocation()
   const matches  = useMatches()
 
   const eventMatch = matches.find((m) => m.params?.eventId)
   const eventId    = eventMatch?.params?.eventId ?? null
+
+  // Apply / remove `dark` class on <html> so all dark: utilities work globally
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+    localStorage.setItem('admin_dark_mode', JSON.stringify(isDarkMode))
+  }, [isDarkMode])
+
+  // Remove dark class when leaving admin layout
+  useEffect(() => {
+    return () => {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [])
+
+  const toggleDarkMode = () => setIsDarkMode((prev) => !prev)
 
   useEffect(() => {
     const loadUser = async () => {
@@ -59,7 +81,6 @@ export const AdminLayout = () => {
 
   useEffect(() => {
     if (!eventId) {
-      // Fall back to localStorage-stored event when no eventId in URL (e.g. on /admin dashboard)
       const storedId = localStorage.getItem('selected_event_id')
       if (!storedId) { setEventName(null); return }
       const loadStored = async () => {
@@ -97,18 +118,28 @@ export const AdminLayout = () => {
 
   const isAdmin = userProfile?.role === 'ADMIN'
 
-  return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+  // Colour tokens — derived from isDarkMode so inline styles stay consistent
+  const bg       = isDarkMode ? '#1a222d' : '#f8fafc'
+  const cardBg   = isDarkMode ? '#252F3E' : '#ffffff'
+  const border   = isDarkMode ? 'rgba(100,116,139,0.3)' : '#e2e8f0'
+  const textMain = isDarkMode ? '#e2e8f0' : '#334155'
+  const textSub  = isDarkMode ? '#94a3b8' : '#64748b'
+  const hoverBg  = isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'
+  const hoverBgStrong = isDarkMode ? '#2d3748' : '#f8fafc'
 
+  return (
+    <div
+      className="min-h-screen flex flex-col transition-colors duration-200"
+      style={{ backgroundColor: bg }}
+    >
       {/* ══════════════════════════════════════
           DESKTOP TOP HEADER (≥769px)
-          CSS class: display:none on mobile, display:flex on desktop
       ══════════════════════════════════════ */}
       <header
         className="admin-layout-desktop-header"
         style={{
           height: `${NAVBAR_H}px`,
-          backgroundColor: '#f8fafc',
+          backgroundColor: bg,
           borderBottom: 'none',
           boxShadow: 'none',
           position: 'sticky',
@@ -126,18 +157,17 @@ export const AdminLayout = () => {
           <Link
             to="/admin"
             style={{
-              fontSize: '15px', fontWeight: '700', color: '#0f172a',
+              fontSize: '15px', fontWeight: '700', color: isDarkMode ? '#fff' : '#0f172a',
               textDecoration: 'none', letterSpacing: '-0.01em', whiteSpace: 'nowrap',
             }}
           >
             Flowgram
           </Link>
-          {/* Only show event title when NOT on the Select Event page (/admin) */}
           {eventName && location.pathname !== '/admin' && (
             <>
               <span style={{ color: '#9ca3af', fontSize: '20px', lineHeight: 1, userSelect: 'none' }}>•</span>
               <span style={{
-                fontSize: '14px', fontWeight: '600', color: '#475569',
+                fontSize: '14px', fontWeight: '600', color: textSub,
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '280px',
               }}>
                 {eventName}
@@ -155,7 +185,7 @@ export const AdminLayout = () => {
               padding: '6px 12px 6px 6px', borderRadius: '8px',
               border: 'none', background: 'transparent', cursor: 'pointer',
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.07)'}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBg}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <div style={{
@@ -166,7 +196,7 @@ export const AdminLayout = () => {
               {getInitials(userProfile?.full_name)}
             </div>
             <span style={{
-              fontSize: '14px', fontWeight: '500', color: '#334155',
+              fontSize: '14px', fontWeight: '500', color: textMain,
               maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>
               {userProfile?.full_name || 'Admin'}
@@ -182,56 +212,55 @@ export const AdminLayout = () => {
               <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setDesktopDropdownOpen(false)} />
               <div style={{
                 position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: '240px',
-                backgroundColor: '#fff', borderRadius: '12px',
-                boxShadow: '0 10px 40px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0',
+                backgroundColor: cardBg, borderRadius: '12px',
+                boxShadow: isDarkMode ? '0 10px 40px rgba(0,0,0,0.4)' : '0 10px 40px rgba(0,0,0,0.12)',
+                border: `1px solid ${border}`,
                 zIndex: 50, overflow: 'hidden',
               }}>
-                <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
-                  <p style={{ fontSize: '13px', fontWeight: '600', color: '#0f172a', margin: 0 }}>
+                {/* User info header */}
+                <div style={{
+                  padding: '12px 16px',
+                  borderBottom: `1px solid ${border}`,
+                  backgroundColor: isDarkMode ? '#1e2a38' : '#f8fafc',
+                }}>
+                  <p style={{ fontSize: '13px', fontWeight: '600', color: isDarkMode ? '#e2e8f0' : '#0f172a', margin: 0 }}>
                     {userProfile?.full_name || 'Admin'}
                   </p>
-                  <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <p style={{ fontSize: '12px', color: textSub, margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {userProfile?.email || ''}
                   </p>
                 </div>
 
                 {/* Settings */}
                 <button
-                  onClick={() => {
-                    setDesktopDropdownOpen(false)
-                    navigate('/admin/settings')
-                  }}
+                  onClick={() => { setDesktopDropdownOpen(false); navigate('/admin/account') }}
                   style={{
                     width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
-                    padding: '10px 16px', fontSize: '13px', color: '#334155',
-                    background: 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9',
+                    padding: '10px 16px', fontSize: '13px', color: isDarkMode ? '#cbd5e1' : '#334155',
+                    background: 'transparent', border: 'none', borderBottom: `1px solid ${border}`,
                     cursor: 'pointer', textAlign: 'left',
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBgStrong}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
-                  <Settings size={14} color="#64748b" />
+                  <Settings size={14} color={textSub} />
                   Settings
                 </button>
 
                 {/* Theme Toggle */}
                 <button
-                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  onClick={toggleDarkMode}
                   style={{
                     width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
-                    padding: '10px 16px', fontSize: '13px', color: '#334155',
-                    background: 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9',
+                    padding: '10px 16px', fontSize: '13px', color: isDarkMode ? '#cbd5e1' : '#334155',
+                    background: 'transparent', border: 'none', borderBottom: `1px solid ${border}`,
                     cursor: 'pointer', textAlign: 'left',
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBgStrong}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
-                  {isDarkMode ? (
-                    <Moon size={14} color="#64748b" />
-                  ) : (
-                    <Sun size={14} color="#64748b" />
-                  )}
-                  {isDarkMode ? 'Dark Mode' : 'Light Mode'}
+                  {isDarkMode ? <Sun size={14} color="#fbbf24" /> : <Moon size={14} color={textSub} />}
+                  {isDarkMode ? 'Switch to Light' : 'Switch to Dark'}
                 </button>
 
                 {isAdmin && (
@@ -239,14 +268,14 @@ export const AdminLayout = () => {
                     onClick={handleSwitchToUserView}
                     style={{
                       width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
-                      padding: '10px 16px', fontSize: '13px', color: '#334155',
-                      background: 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9',
+                      padding: '10px 16px', fontSize: '13px', color: isDarkMode ? '#cbd5e1' : '#334155',
+                      background: 'transparent', border: 'none', borderBottom: `1px solid ${border}`,
                       cursor: 'pointer', textAlign: 'left',
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBgStrong}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
-                    <MonitorSmartphone size={14} color="#64748b" />
+                    <MonitorSmartphone size={14} color={textSub} />
                     Switch to User View
                   </button>
                 )}
@@ -257,7 +286,7 @@ export const AdminLayout = () => {
                     padding: '10px 16px', fontSize: '13px', color: '#dc2626',
                     background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(220,38,38,0.1)' : '#fef2f2'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
                   <LogOut size={14} />
@@ -271,13 +300,12 @@ export const AdminLayout = () => {
 
       {/* ══════════════════════════════════════
           MOBILE TOP HEADER (<769px)
-          CSS class: display:flex on mobile, display:none on desktop
       ══════════════════════════════════════ */}
       <header
         className="admin-layout-mobile-header"
         style={{
           height: `${NAVBAR_H}px`,
-          backgroundColor: '#f8fafc',
+          backgroundColor: bg,
           borderBottom: 'none',
           boxShadow: 'none',
           position: 'fixed',
@@ -291,7 +319,6 @@ export const AdminLayout = () => {
           gap: '10px',
         }}
       >
-        {/* Avatar button — opens drawer */}
         <button
           onClick={() => setDrawerOpen(true)}
           style={{
@@ -305,12 +332,11 @@ export const AdminLayout = () => {
           {getInitials(userProfile?.full_name)}
         </button>
 
-        {/* Event title next to avatar — hidden on Select Event page */}
         {eventName && location.pathname !== '/admin' && (
           <>
             <span style={{ color: '#9ca3af', fontSize: '18px', lineHeight: 1, userSelect: 'none' }}>•</span>
             <span style={{
-              fontSize: '13px', fontWeight: '600', color: '#475569',
+              fontSize: '13px', fontWeight: '600', color: textSub,
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               maxWidth: 'calc(100vw - 120px)',
             }}>
@@ -321,15 +347,12 @@ export const AdminLayout = () => {
       </header>
 
       {/* ══════════════════════════════════════
-          MOBILE SLIDING DRAWER (<769px)
-          Backdrop + left-sliding panel with user info and actions
+          MOBILE BACKDROP
       ══════════════════════════════════════ */}
       <div
         className="admin-layout-mobile-sidebar-backdrop"
         style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 60,
+          position: 'fixed', inset: 0, zIndex: 60,
           backgroundColor: 'rgba(0, 0, 0, 0.4)',
           opacity: drawerOpen ? 1 : 0,
           pointerEvents: drawerOpen ? 'auto' : 'none',
@@ -339,190 +362,102 @@ export const AdminLayout = () => {
         aria-hidden="true"
       />
 
-      {/* Drawer panel */}
+      {/* ══════════════════════════════════════
+          MOBILE DRAWER
+      ══════════════════════════════════════ */}
       <aside
         className="admin-layout-mobile-sidebar"
         style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          height: '100vh',
-          width: '288px',
-          backgroundColor: '#ffffff',
-          zIndex: 60,
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+          position: 'fixed', top: 0, left: 0, height: '100vh', width: '288px',
+          backgroundColor: cardBg, zIndex: 60, display: 'flex', flexDirection: 'column',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)',
           transform: drawerOpen ? 'translateX(0)' : 'translateX(-100%)',
           transition: 'transform 0.3s ease-in-out',
         }}
         aria-label="Mobile menu"
       >
-        {/* Drawer header — User info + Close button */}
+        {/* Drawer header */}
         <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '16px',
-          borderBottom: '1px solid #f3f4f6',
-          flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '16px', borderBottom: `1px solid ${border}`, flexShrink: 0,
         }}>
-          {/* Left: User avatar + name/email */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
             <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: '#2563eb',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontSize: '14px',
-              fontWeight: '700',
-              flexShrink: 0,
+              width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#2563eb',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontSize: '14px', fontWeight: '700', flexShrink: 0,
             }}>
               {getInitials(userProfile?.full_name)}
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
               <p style={{
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#0f172a',
-                margin: 0,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
+                fontSize: '14px', fontWeight: '600', color: isDarkMode ? '#e2e8f0' : '#0f172a',
+                margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 {userProfile?.full_name || 'Admin'}
               </p>
               <p style={{
-                fontSize: '12px',
-                color: '#64748b',
-                margin: '2px 0 0 0',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
+                fontSize: '12px', color: textSub, margin: '2px 0 0 0',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 {userProfile?.email || ''}
               </p>
             </div>
           </div>
-
-          {/* Right: Close button — inside panel */}
           <button
             onClick={() => setDrawerOpen(false)}
             style={{
-              padding: '6px',
-              borderRadius: '6px',
-              border: 'none',
-              backgroundColor: 'transparent',
-              cursor: 'pointer',
-              color: '#94a3b8',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
+              padding: '6px', borderRadius: '6px', border: 'none',
+              backgroundColor: 'transparent', cursor: 'pointer', color: '#94a3b8',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#f1f5f9'
-              e.currentTarget.style.color = '#64748b'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent'
-              e.currentTarget.style.color = '#94a3b8'
-            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = hoverBgStrong; e.currentTarget.style.color = textSub }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#94a3b8' }}
             aria-label="Close menu"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Drawer body — Navigation links */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
-          padding: '16px',
-          flex: 1,
-        }}>
-          {/* Settings link */}
+        {/* Drawer body */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '12px', flex: 1 }}>
           <button
-            onClick={() => {
-              setDrawerOpen(false)
-              navigate('/admin/settings')
-            }}
+            onClick={() => { setDrawerOpen(false); navigate('/admin/account') }}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              fontSize: '13px',
-              fontWeight: '500',
-              padding: '8px 12px',
-              borderRadius: '6px',
-              color: '#64748b',
-              backgroundColor: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              textAlign: 'left',
-              transition: 'background-color 0.15s',
+              display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', fontWeight: '500',
+              padding: '10px 12px', borderRadius: '8px', color: isDarkMode ? '#cbd5e1' : '#64748b',
+              backgroundColor: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBgStrong}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
-            <Settings size={18} />
+            <Settings size={18} color={textSub} />
             Settings
           </button>
 
-          {/* Theme Toggle */}
           <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
+            onClick={toggleDarkMode}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              fontSize: '13px',
-              fontWeight: '500',
-              padding: '8px 12px',
-              borderRadius: '6px',
-              color: '#64748b',
-              backgroundColor: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              textAlign: 'left',
-              transition: 'background-color 0.15s',
+              display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', fontWeight: '500',
+              padding: '10px 12px', borderRadius: '8px', color: isDarkMode ? '#fbbf24' : '#64748b',
+              backgroundColor: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBgStrong}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
-            {isDarkMode ? (
-              <Moon size={18} />
-            ) : (
-              <Sun size={18} />
-            )}
-            {isDarkMode ? 'Dark Mode' : 'Light Mode'}
+            {isDarkMode ? <Sun size={18} color="#fbbf24" /> : <Moon size={18} color={textSub} />}
+            {isDarkMode ? 'Switch to Light' : 'Switch to Dark'}
           </button>
 
-          {/* Switch to User View */}
           {isAdmin && (
             <button
               onClick={handleSwitchToUserView}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                fontSize: '13px',
-                fontWeight: '500',
-                padding: '8px 12px',
-                borderRadius: '6px',
-                color: '#2563eb',
-                backgroundColor: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                textAlign: 'left',
-                transition: 'background-color 0.15s',
+                display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', fontWeight: '500',
+                padding: '10px 12px', borderRadius: '8px', color: isDarkMode ? '#42b4ff' : '#2563eb',
+                backgroundColor: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBgStrong}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               <MonitorSmartphone size={18} />
@@ -531,26 +466,14 @@ export const AdminLayout = () => {
           )}
         </div>
 
-        {/* Drawer footer — Logout button */}
-        <div style={{
-          padding: '16px',
-          borderTop: '1px solid #f3f4f6',
-          flexShrink: 0,
-        }}>
+        {/* Drawer footer */}
+        <div style={{ padding: '16px', borderTop: `1px solid ${border}`, flexShrink: 0 }}>
           <button
             onClick={handleLogout}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontSize: '13px',
-              fontWeight: '500',
-              color: '#dc2626',
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              textAlign: 'left',
-              width: '100%',
+              display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '500',
+              color: '#dc2626', background: 'transparent', border: 'none', cursor: 'pointer',
+              textAlign: 'left', width: '100%',
             }}
             onMouseEnter={(e) => e.currentTarget.style.color = '#b91c1c'}
             onMouseLeave={(e) => e.currentTarget.style.color = '#dc2626'}
@@ -563,59 +486,36 @@ export const AdminLayout = () => {
 
       {/* ══════════════════════════════════════
           PAGE CONTENT
-          Flex: 1 to fill available space between header and bottom nav
       ══════════════════════════════════════ */}
       <main
         className="admin-layout-page-content"
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          width: '100%',
-        }}
+        style={{ flex: 1, overflowY: 'auto', width: '100%' }}
       >
-        {/* Centered container */}
-        <div style={{
-          maxWidth: '1100px',
-          margin: '0 auto',
-          width: '100%',
-          padding: '40px 32px',
-        }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%', padding: '40px 32px' }}>
           <Outlet />
         </div>
       </main>
 
       {/* ══════════════════════════════════════
-          MOBILE BOTTOM NAV  (<769px)
-          CSS class: flex on mobile, hidden on desktop
-          Fixed sticky positioning prevents scrolling out of view
+          MOBILE BOTTOM NAV (<769px)
       ══════════════════════════════════════ */}
       {location.pathname !== '/admin' && (
         <nav
           className="admin-layout-mobile-bottom-nav"
           style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            backgroundColor: '#ffffff',
-            borderTop: '1px solid #e5e7eb',
-            height: '64px',
-            zIndex: 50,
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-around',
+            position: 'fixed', bottom: 0, left: 0, right: 0,
+            backgroundColor: cardBg,
+            borderTop: `1px solid ${border}`,
+            height: '64px', zIndex: 50,
+            display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around',
           }}
           aria-label="Admin mobile navigation"
         >
-          {/* Mobile nav items with Lucide React icons */}
           {ADMIN_NAV_ITEMS.map((item) => {
             const Icon = item.icon
             const currentPath = location.pathname
             const basePath = eventId ? `/admin/events/${eventId}` : '/admin'
             const itemPath = item.path === null ? '/admin' : basePath + item.path
-
-            // "Events" item is active only when on /admin, others use normal matching
             const isItemActive = item.path === null
               ? currentPath === '/admin'
               : currentPath === itemPath || (item.path === '' && currentPath === basePath)
@@ -624,39 +524,22 @@ export const AdminLayout = () => {
               <a
                 key={item.label}
                 href={itemPath}
-                onClick={(e) => {
-                  e.preventDefault()
-                  navigate(itemPath)
-                }}
+                onClick={(e) => { e.preventDefault(); navigate(itemPath) }}
                 style={{
-                  flex: 1,
-                  padding: '8px 0',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '2px',
-                  textAlign: 'center',
-                  fontSize: '11px',
-                  fontWeight: '500',
-                  color: isItemActive ? '#2196F3' : '#4b5563',
-                  textDecoration: 'none',
-                  cursor: 'pointer',
-                  transition: 'color 0.2s',
+                  flex: 1, padding: '8px 0', display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center', gap: '2px',
+                  textAlign: 'center', fontSize: '11px', fontWeight: '500',
+                  color: isItemActive ? '#2196F3' : (isDarkMode ? '#94a3b8' : '#4b5563'),
+                  textDecoration: 'none', cursor: 'pointer', transition: 'color 0.2s',
                 }}
               >
-                <Icon 
-                  size={20} 
-                  strokeWidth={isItemActive ? 2.25 : 1.75}
-                  style={{ color: 'currentColor' }}
-                />
+                <Icon size={20} strokeWidth={isItemActive ? 2.25 : 1.75} style={{ color: 'currentColor' }} />
                 <span>{item.label}</span>
               </a>
             )
           })}
         </nav>
       )}
-
     </div>
   )
 }

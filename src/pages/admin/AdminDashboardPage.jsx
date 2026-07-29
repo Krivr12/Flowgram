@@ -10,7 +10,18 @@ export const AdminDashboardPage = () => {
   const [error, setError] = useState('')
   const [menuOpen, setMenuOpen] = useState(null)
   const [deleting, setDeleting] = useState(null)
+  const [isDarkMode, setIsDarkMode] = useState(() =>
+    document.documentElement.classList.contains('dark')
+  )
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     loadEvents()
@@ -48,9 +59,6 @@ export const AdminDashboardPage = () => {
       timeZone: 'UTC',
     })
 
-  // The AdminLayout already provides the centered max-width container.
-  // No inner container wrapper needed here.
-
   return (
     <div>
 
@@ -62,7 +70,7 @@ export const AdminDashboardPage = () => {
         marginBottom: '32px',
       }}>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+          <h1 style={{ fontSize: '24px', fontWeight: '700', color: isDarkMode ? '#fff' : '#0f172a', margin: 0 }}>
             Select Event
           </h1>
         </div>
@@ -72,7 +80,7 @@ export const AdminDashboardPage = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            backgroundColor: '#FF9900',
+            backgroundColor: '#2563eb',
             color: '#fff',
             fontWeight: '600',
             fontSize: '14px',
@@ -83,8 +91,8 @@ export const AdminDashboardPage = () => {
             boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
             flexShrink: 0,
           }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e68a00'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FF9900'}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
         >
           <Plus size={16} />
           New Event
@@ -154,10 +162,10 @@ export const AdminDashboardPage = () => {
           }}>
             <Calendar size={28} color="#94a3b8" />
           </div>
-          <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#0f172a', margin: '0 0 6px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '600', color: isDarkMode ? '#fff' : '#0f172a', margin: '0 0 6px' }}>
             No events yet
           </h2>
-          <p style={{ fontSize: '14px', color: '#64748b', maxWidth: '340px', margin: '0 0 24px' }}>
+          <p style={{ fontSize: '14px', color: isDarkMode ? '#94a3b8' : '#64748b', maxWidth: '340px', margin: '0 0 24px' }}>
             Create your first event to start managing speakers, segments, and notifications.
           </p>
           <button
@@ -214,7 +222,23 @@ export const AdminDashboardPage = () => {
 // ── Separated card component for cleaner logic ──
 const EventCard = ({ event, menuOpen, deleting, onNavigate, onEdit, onMenuToggle, onMenuClose, onDelete, formatDate }) => {
   const [hovered, setHovered] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(() =>
+    document.documentElement.classList.contains('dark')
+  )
   const isMenuOpen = menuOpen === event.id
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const bgColor = isDarkMode ? '#252F3E' : '#ffffff'
+  const borderColor = isDarkMode 
+    ? (hovered ? 'rgba(100, 116, 139, 0.5)' : 'rgba(100, 116, 139, 0.3)')
+    : (hovered ? '#cbd5e1' : '#f3f4f6')
 
   return (
     <div
@@ -223,9 +247,9 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onEdit, onMenuToggle
       onMouseLeave={() => setHovered(false)}
       style={{
         position: 'relative',
-        backgroundColor: '#ffffff',
+        backgroundColor: bgColor,
         borderRadius: '12px',
-        border: hovered ? '1px solid #cbd5e1' : '1px solid #f3f4f6',
+        border: `1px solid ${borderColor}`,
         boxShadow: hovered ? '0 4px 16px rgba(0,0,0,0.08)' : '0 1px 3px rgba(0,0,0,0.04)',
         overflow: 'hidden',
         cursor: 'pointer',
@@ -235,7 +259,7 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onEdit, onMenuToggle
         transition: 'box-shadow 0.15s, border-color 0.15s',
       }}
     >
-      {/* Three-dot menu — positioned inside card, only visible on hover */}
+      {/* Three-dot menu */}
       <div style={{ position: 'absolute', top: '14px', right: '14px', zIndex: 1 }}>
         <button
           onClick={(e) => {
@@ -246,11 +270,11 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onEdit, onMenuToggle
             padding: '6px',
             borderRadius: '6px',
             border: 'none',
-            background: isMenuOpen ? '#f1f5f9' : 'transparent',
+            background: isMenuOpen ? (isDarkMode ? '#334155' : '#f1f5f9') : 'transparent',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            color: '#252F3E',
+            color: isDarkMode ? '#cbd5e1' : '#252F3E',
           }}
         >
           <MoreVertical size={15} />
@@ -258,7 +282,6 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onEdit, onMenuToggle
 
         {isMenuOpen && (
           <>
-            {/* Backdrop to close menu when clicking outside */}
             <div
               style={{ position: 'fixed', inset: 0, zIndex: 10 }}
               onClick={(e) => {
@@ -271,10 +294,10 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onEdit, onMenuToggle
               right: 0,
               top: 'calc(100% + 4px)',
               width: '160px',
-              backgroundColor: '#fff',
+              backgroundColor: isDarkMode ? '#334155' : '#fff',
               borderRadius: '10px',
               boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-              border: '1px solid #e2e8f0',
+              border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
               zIndex: 20,
               overflow: 'hidden',
             }}>
@@ -292,16 +315,16 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onEdit, onMenuToggle
                   gap: '8px',
                   padding: '9px 14px',
                   fontSize: '13px',
-                  color: '#374151',
+                  color: isDarkMode ? '#cbd5e1' : '#374151',
                   background: 'transparent',
                   border: 'none',
-                  borderBottom: '1px solid #f1f5f9',
+                  borderBottom: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #f1f5f9',
                   cursor: 'pointer',
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? '#475569' : '#f8fafc'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                <Pencil size={13} color="#64748b" />
+                <Pencil size={13} color={isDarkMode ? '#94a3b8' : '#64748b'} />
                 Edit Event
               </button>
 
@@ -322,7 +345,7 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onEdit, onMenuToggle
                   cursor: 'pointer',
                   opacity: deleting === event.id ? 0.5 : 1,
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(220,38,38,0.15)' : '#fef2f2'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
                 <Trash2 size={13} />
@@ -335,11 +358,11 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onEdit, onMenuToggle
 
       {/* Card body */}
       <div style={{ flex: 1, padding: '20px 20px', minWidth: 0 }}>
-        {/* Title — Navy Blue, bold */}
+        {/* Title */}
         <h3 style={{
           fontSize: '17px',
           fontWeight: '800',
-          color: '#252F3E',
+          color: isDarkMode ? '#fff' : '#252F3E',
           margin: '0 0 8px',
           lineHeight: 1.3,
           paddingRight: '24px',
@@ -349,8 +372,8 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onEdit, onMenuToggle
 
         {/* Date */}
         {event.start_date && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '13px', color: '#64748b', marginBottom: '6px', fontWeight: '500' }}>
-            <Calendar size={13} color="#94a3b8" style={{ flexShrink: 0 }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '13px', color: isDarkMode ? '#cbd5e1' : '#64748b', marginBottom: '6px', fontWeight: '500' }}>
+            <Calendar size={13} color={isDarkMode ? '#94a3b8' : '#94a3b8'} style={{ flexShrink: 0 }} />
             <span>
               {formatDate(event.start_date)}
               {event.end_date && <> — {formatDate(event.end_date)}</>}
@@ -360,8 +383,8 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onEdit, onMenuToggle
 
         {/* Venue */}
         {event.venue && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '13px', color: '#94a3b8', fontWeight: '500' }}>
-            <MapPin size={13} color="#94a3b8" style={{ flexShrink: 0 }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '13px', color: isDarkMode ? '#cbd5e1' : '#94a3b8', fontWeight: '500' }}>
+            <MapPin size={13} color={isDarkMode ? '#94a3b8' : '#94a3b8'} style={{ flexShrink: 0 }} />
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {event.venue}
             </span>
@@ -371,4 +394,3 @@ const EventCard = ({ event, menuOpen, deleting, onNavigate, onEdit, onMenuToggle
     </div>
   )
 }
-

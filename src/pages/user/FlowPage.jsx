@@ -83,7 +83,7 @@ const isSegmentOngoing = (segment) => {
 
 // ─── Segment Card (timeline) ──────────────────────────────────────────────────
 
-const SegmentCard = ({ segment, isConcurrent, isUserPick, onConcurrentClick, onCardClick }) => {
+const SegmentCard = ({ segment, isConcurrent, isUserPick, onConcurrentClick, onCardClick, isDarkMode }) => {
   const capBadge = getCapacityBadge(segment.capacity_status)
   const statusBadge = getStatusBadge(segment.segment_status)
 
@@ -91,22 +91,22 @@ const SegmentCard = ({ segment, isConcurrent, isUserPick, onConcurrentClick, onC
     <div
       onClick={() => onCardClick(segment)}
       style={{
-        backgroundColor: '#fff',
-        border: '1px solid #e2e8f0',
+        backgroundColor: isDarkMode ? '#252F3E' : '#fff',
+        border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
         borderRadius: '14px',
         padding: '18px',
         cursor: 'pointer',
-        transition: 'all 0.2s',
+        transition: 'all 0.2s, background-color 0.2s, border-color 0.2s',
         position: 'relative',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.12)'
-        e.currentTarget.style.borderColor = '#cbd5e1'
+        e.currentTarget.style.boxShadow = isDarkMode ? '0 6px 20px rgba(0,0,0,0.3)' : '0 6px 20px rgba(0,0,0,0.12)'
+        e.currentTarget.style.borderColor = isDarkMode ? 'rgba(100,116,139,0.5)' : '#cbd5e1'
         e.currentTarget.style.transform = 'translateY(-2px)'
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.boxShadow = 'none'
-        e.currentTarget.style.borderColor = '#e2e8f0'
+        e.currentTarget.style.borderColor = isDarkMode ? 'rgba(100,116,139,0.3)' : '#e2e8f0'
         e.currentTarget.style.transform = 'translateY(0)'
       }}
     >
@@ -121,7 +121,7 @@ const SegmentCard = ({ segment, isConcurrent, isUserPick, onConcurrentClick, onC
             display: 'flex',
             alignItems: 'center',
             gap: '4px',
-            background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+            background: isDarkMode ? '#2563eb' : 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
             border: 'none',
             cursor: 'pointer',
             fontSize: '11px',
@@ -129,35 +129,35 @@ const SegmentCard = ({ segment, isConcurrent, isUserPick, onConcurrentClick, onC
             color: '#fff',
             padding: '6px 10px',
             borderRadius: '8px',
-            boxShadow: '0 2px 8px rgba(249, 115, 22, 0.3)',
+            boxShadow: isDarkMode ? '0 2px 8px rgba(37, 99, 235, 0.3)' : '0 2px 8px rgba(249, 115, 22, 0.3)',
             transition: 'all 0.15s',
             letterSpacing: '0.02em',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-1px)'
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(249, 115, 22, 0.4)'
+            e.currentTarget.style.boxShadow = isDarkMode ? '0 4px 12px rgba(37, 99, 235, 0.4)' : '0 4px 12px rgba(249, 115, 22, 0.4)'
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)'
-            e.currentTarget.style.boxShadow = '0 2px 8px rgba(249, 115, 22, 0.3)'
+            e.currentTarget.style.boxShadow = isDarkMode ? '0 2px 8px rgba(37, 99, 235, 0.3)' : '0 2px 8px rgba(249, 115, 22, 0.3)'
           }}
         >
           Concurrent <ChevronRight size={13} strokeWidth={2.5} />
         </button>
       )}
 
-      <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: '0 0 10px', lineHeight: 1.3, paddingRight: isConcurrent ? '110px' : '0' }}>
+      <h3 style={{ fontSize: '16px', fontWeight: '700', color: isDarkMode ? '#e2e8f0' : '#0f172a', margin: '0 0 10px', lineHeight: 1.3, paddingRight: isConcurrent ? '110px' : '0', transition: 'color 0.2s' }}>
         {segment.title}
       </h3>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', fontSize: '12px', color: '#64748b', marginBottom: '12px' }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '5px', backgroundColor: '#f8fafc', padding: '5px 10px', borderRadius: '8px', fontWeight: '600' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', fontSize: '12px', color: isDarkMode ? '#94a3b8' : '#64748b', marginBottom: '12px', transition: 'color 0.2s' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '5px', backgroundColor: isDarkMode ? 'rgba(100,116,139,0.1)' : '#f8fafc', padding: '5px 10px', borderRadius: '8px', fontWeight: '600', transition: 'background-color 0.2s' }}>
           <Clock size={13} />
           {formatTime(segment.start_time)}
           {segment.end_time && <> → {formatTime(segment.end_time)}</>}
         </span>
         {segment.room_name && (
-          <span style={{ display: 'flex', alignItems: 'center', gap: '5px', backgroundColor: '#f8fafc', padding: '5px 10px', borderRadius: '8px', fontWeight: '600' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '5px', backgroundColor: isDarkMode ? 'rgba(100,116,139,0.1)' : '#f8fafc', padding: '5px 10px', borderRadius: '8px', fontWeight: '600', transition: 'background-color 0.2s' }}>
             <MapPin size={13} /> {segment.room_name}
           </span>
         )}
@@ -282,6 +282,17 @@ export const FlowPage = () => {
   const [currentUser, setCurrentUser]           = useState(null)
   const [pickedSegments, setPickedSegments]     = useState({}) // { "HH:MM": segmentId }
   const [ongoingSpeakers, setOngoingSpeakers]   = useState([]) // speakers for ongoing segment
+  const [isDarkMode, setIsDarkMode]             = useState(() =>
+    document.documentElement.classList.contains('dark')
+  )
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     const init = async () => {
@@ -415,7 +426,7 @@ export const FlowPage = () => {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: '#94a3b8', fontSize: '15px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: isDarkMode ? '#94a3b8' : '#64748b', fontSize: '15px', transition: 'color 0.2s' }}>
         Loading your schedule...
       </div>
     )
@@ -423,15 +434,15 @@ export const FlowPage = () => {
 
   if (!event) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: '#64748b', fontSize: '15px', gap: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: isDarkMode ? '#94a3b8' : '#94a3b8', fontSize: '15px', gap: '12px', transition: 'color 0.2s' }}>
         <p>No event selected</p>
-        <p style={{ fontSize: '13px', color: '#94a3b8' }}>Please select an event from your dashboard</p>
+        <p style={{ fontSize: '13px', color: isDarkMode ? '#64748b' : '#64748b', transition: 'color 0.2s' }}>Please select an event from your dashboard</p>
       </div>
     )
   }
 
   return (
-    <div style={{ padding: '0', minHeight: '100vh', backgroundColor: '#fafbfc' }}>
+    <div style={{ padding: '0', minHeight: '100vh', backgroundColor: isDarkMode ? '#1a222d' : '#f8fafc', transition: 'background-color 0.2s' }}>
       {/* Main content container */}
       <div style={{ padding: '16px 16px 80px' }}>
 
@@ -439,9 +450,9 @@ export const FlowPage = () => {
         {error && (
           <div
             style={{
-              backgroundColor: '#fee2e2',
-              border: '1px solid #fca5a5',
-              color: '#991b1b',
+              backgroundColor: isDarkMode ? 'rgba(220, 38, 38, 0.1)' : 'rgba(220, 38, 38, 0.1)',
+              border: isDarkMode ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid rgba(220, 38, 38, 0.3)',
+              color: isDarkMode ? '#fca5a5' : '#fca5a5',
               padding: '14px 16px',
               borderRadius: '12px',
               fontSize: '13px',
@@ -449,12 +460,13 @@ export const FlowPage = () => {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
+              transition: 'background-color 0.2s, border-color 0.2s, color 0.2s',
             }}
           >
             {error}
             <button
               onClick={() => setError('')}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#991b1b', fontSize: '20px', lineHeight: 1 }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: isDarkMode ? '#fca5a5' : '#fca5a5', fontSize: '20px', lineHeight: 1, transition: 'color 0.2s' }}
             >
               ×
             </button>
@@ -488,8 +500,8 @@ export const FlowPage = () => {
             {ongoingSegments.length > 1 && <div style={{ height: `${(ongoingSegments.length - 1) * 8}px` }} />}
           </div>
         ) : (
-          <div style={{ marginBottom: '32px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '20px', textAlign: 'center' }}>
-            <p style={{ fontSize: '14px', color: '#64748b', margin: 0, fontStyle: 'italic' }}>
+          <div style={{ marginBottom: '32px', backgroundColor: isDarkMode ? 'rgba(100, 116, 139, 0.1)' : 'rgba(30, 41, 59, 0.5)', border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '14px', padding: '20px', textAlign: 'center', transition: 'background-color 0.2s, border-color 0.2s' }}>
+            <p style={{ fontSize: '14px', color: isDarkMode ? '#94a3b8' : '#94a3b8', margin: 0, fontStyle: 'italic', transition: 'color 0.2s' }}>
               No ongoing segment at the moment
             </p>
           </div>
@@ -497,13 +509,13 @@ export const FlowPage = () => {
 
         {/* ── Timeline Feed ── */}
         <div>
-          <h2 style={{ fontSize: '13px', fontWeight: '800', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px', paddingLeft: '4px' }}>
+          <h2 style={{ fontSize: '13px', fontWeight: '800', color: isDarkMode ? '#e2e8f0' : '#0f172a', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px', paddingLeft: '4px', transition: 'color 0.2s' }}>
             Schedule
           </h2>
 
           {segments.length === 0 ? (
-            <div style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '40px 20px', textAlign: 'center' }}>
-              <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>
+            <div style={{ backgroundColor: isDarkMode ? 'rgba(100, 116, 139, 0.1)' : 'rgba(30, 41, 59, 0.5)', border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '14px', padding: '40px 20px', textAlign: 'center', transition: 'background-color 0.2s, border-color 0.2s' }}>
+              <p style={{ fontSize: '14px', color: isDarkMode ? '#94a3b8' : '#94a3b8', margin: 0, transition: 'color 0.2s' }}>
                 No segments scheduled yet
               </p>
             </div>
@@ -520,11 +532,11 @@ export const FlowPage = () => {
                   <div key={key}>
                     {/* Time header */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', paddingLeft: '4px' }}>
-                      <span style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>
+                      <span style={{ fontSize: '15px', fontWeight: '800', color: isDarkMode ? '#e2e8f0' : '#0f172a', transition: 'color 0.2s' }}>
                         {formatTimeHeader(key)}
                       </span>
                       {isConcurrent && (
-                        <span style={{ fontSize: '11px', color: '#f97316', backgroundColor: '#fff7ed', padding: '4px 9px', borderRadius: '6px', fontWeight: '700', letterSpacing: '0.02em' }}>
+                        <span style={{ fontSize: '11px', color: isDarkMode ? '#2563eb' : '#f97316', backgroundColor: isDarkMode ? 'rgba(37, 99, 235, 0.1)' : 'rgba(249, 115, 22, 0.1)', padding: '4px 9px', borderRadius: '6px', fontWeight: '700', letterSpacing: '0.02em', border: isDarkMode ? '1px solid rgba(37, 99, 235, 0.3)' : '1px solid rgba(249, 115, 22, 0.3)', transition: 'color 0.2s, background-color 0.2s, border-color 0.2s' }}>
                           {segs.length} Sessions
                         </span>
                       )}
@@ -537,6 +549,7 @@ export const FlowPage = () => {
                       isUserPick={!!pickedSegId}
                       onConcurrentClick={() => openPicker(key, segs)}
                       onCardClick={handleSegmentClick}
+                      isDarkMode={isDarkMode}
                     />
                   </div>
                 )

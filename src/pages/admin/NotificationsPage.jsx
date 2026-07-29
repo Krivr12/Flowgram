@@ -9,6 +9,9 @@ const NOTIFICATION_POLL_INTERVAL = 15000 // 15 seconds
 
 export const NotificationsPage = () => {
   const { eventId } = useParams()
+  const [isDarkMode, setIsDarkMode] = useState(() =>
+    document.documentElement.classList.contains('dark')
+  )
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -20,9 +23,16 @@ export const NotificationsPage = () => {
   const pollIntervalRef = useRef(null)
 
   useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
     if (eventId) {
       loadNotifications()
-      // Set up polling: fetch immediately, then every 15 seconds
       pollIntervalRef.current = setInterval(() => loadNotifications(), NOTIFICATION_POLL_INTERVAL)
     }
 
@@ -59,7 +69,6 @@ export const NotificationsPage = () => {
     e.preventDefault()
     setError('')
 
-    // Validate form inputs
     if (!formData.title.trim() || !formData.message.trim()) {
       setToast({ type: 'error', message: 'Please fill in both title and message' })
       return
@@ -70,11 +79,9 @@ export const NotificationsPage = () => {
       const result = await createNotification(eventId, formData.title, formData.message)
 
       if (result.success) {
-        // Only add to list if the notification has an id
         if (result.data && result.data.id) {
           setNotifications([result.data, ...notifications])
         } else {
-          // Reload notifications if the response doesn't have an id
           await loadNotifications()
         }
         setFormData({ title: '', message: '' })
@@ -110,20 +117,20 @@ export const NotificationsPage = () => {
 
       {/* Header with Announce button */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-        <h1 className="text-xl font-bold text-[#252F3E] text-left mt-4 mb-4" style={{ margin: 0 }}>
+        <h1 style={{ fontSize: '20px', fontWeight: '700', color: isDarkMode ? '#e2e8f0' : '#252F3E', margin: 0 }}>
           Notifications
         </h1>
         <button
           onClick={() => setShowModal(true)}
           style={{
             display: 'flex', alignItems: 'center', gap: '6px',
-            backgroundColor: '#FF9900', color: '#fff',
+            backgroundColor: isDarkMode ? '#2563eb' : '#FF9900', color: '#fff',
             fontWeight: '600', fontSize: '14px',
             padding: '10px 20px', borderRadius: '9999px',
             border: 'none', cursor: 'pointer', flexShrink: 0,
           }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e68a00'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FF9900'}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? '#1d4ed8' : '#e68a00'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? '#2563eb' : '#FF9900'}
         >
           <Plus size={16} /> Announce
         </button>
@@ -133,9 +140,9 @@ export const NotificationsPage = () => {
       {error && (
         <div
           style={{
-            backgroundColor: '#fee2e2',
-            border: '1px solid #fca5a5',
-            color: '#991b1b',
+            backgroundColor: isDarkMode ? 'rgba(220, 38, 38, 0.1)' : '#fee2e2',
+            border: isDarkMode ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid #fca5a5',
+            color: isDarkMode ? '#fca5a5' : '#991b1b',
             padding: '16px',
             borderRadius: '8px',
             fontSize: '13px',
@@ -153,7 +160,7 @@ export const NotificationsPage = () => {
       {/* Sent Notifications Section */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', color: isDarkMode ? '#e2e8f0' : '#0f172a', margin: 0 }}>
             Sent Notifications
           </h2>
           <button
@@ -166,20 +173,20 @@ export const NotificationsPage = () => {
               width: '36px',
               height: '36px',
               borderRadius: '6px',
-              border: '1px solid #e2e8f0',
-              backgroundColor: '#fff',
+              border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0',
+              backgroundColor: isDarkMode ? '#252F3E' : '#fff',
               cursor: isRefreshing ? 'not-allowed' : 'pointer',
               transition: 'all 0.15s',
               opacity: isRefreshing ? 0.6 : 1,
             }}
-            onMouseEnter={(e) => !isRefreshing && (e.currentTarget.style.backgroundColor = '#f1f5f9')}
-            onMouseLeave={(e) => !isRefreshing && (e.currentTarget.style.backgroundColor = '#fff')}
+            onMouseEnter={(e) => !isRefreshing && (e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(100, 116, 139, 0.1)' : '#f1f5f9')}
+            onMouseLeave={(e) => !isRefreshing && (e.currentTarget.style.backgroundColor = isDarkMode ? '#252F3E' : '#fff')}
             title="Refresh notifications"
             aria-label="Refresh notifications"
           >
             <RefreshCw
               size={16}
-              color="#64748b"
+              color={isDarkMode ? '#64748b' : '#64748b'}
               style={{
                 animation: isRefreshing ? 'spin 1s linear infinite' : 'none',
               }}
@@ -211,9 +218,9 @@ export const NotificationsPage = () => {
               justifyContent: 'center',
               textAlign: 'center',
               padding: '60px 24px',
-              backgroundColor: '#fff',
+              backgroundColor: isDarkMode ? '#252F3E' : '#fff',
               borderRadius: '12px',
-              border: '1px solid #e2e8f0',
+              border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0',
             }}
           >
             <div
@@ -221,16 +228,16 @@ export const NotificationsPage = () => {
                 width: '48px',
                 height: '48px',
                 borderRadius: '10px',
-                backgroundColor: '#f1f5f9',
+                backgroundColor: isDarkMode ? 'rgba(100, 116, 139, 0.2)' : '#f1f5f9',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: '12px',
               }}
             >
-              <Bell size={24} color="#94a3b8" />
+              <Bell size={24} color={isDarkMode ? '#64748b' : '#94a3b8'} />
             </div>
-            <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>
+            <p style={{ fontSize: '14px', color: isDarkMode ? '#94a3b8' : '#64748b', margin: 0 }}>
               No notifications sent yet
             </p>
           </div>
@@ -261,7 +268,7 @@ export const NotificationsPage = () => {
         >
           <div
             style={{
-              backgroundColor: '#fff',
+              backgroundColor: isDarkMode ? '#252F3E' : '#fff',
               borderRadius: '14px',
               padding: '28px',
               width: '100%',
@@ -272,7 +279,7 @@ export const NotificationsPage = () => {
           >
             {/* Modal Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '700', color: isDarkMode ? '#e2e8f0' : '#0f172a', margin: 0 }}>
                 Send Announcement
               </h2>
               <button
@@ -282,7 +289,7 @@ export const NotificationsPage = () => {
                   border: 'none',
                   background: 'none',
                   cursor: 'pointer',
-                  color: '#94a3b8',
+                  color: isDarkMode ? '#64748b' : '#94a3b8',
                   display: 'flex',
                 }}
               >
@@ -299,7 +306,7 @@ export const NotificationsPage = () => {
                     display: 'block',
                     fontSize: '13px',
                     fontWeight: '600',
-                    color: '#374151',
+                    color: isDarkMode ? '#cbd5e1' : '#374151',
                     marginBottom: '6px',
                   }}
                 >
@@ -316,14 +323,16 @@ export const NotificationsPage = () => {
                     width: '100%',
                     padding: '10px 12px',
                     borderRadius: '8px',
-                    border: '1px solid #e2e8f0',
+                    border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0',
                     fontSize: '13px',
                     outline: 'none',
                     boxSizing: 'border-box',
                     transition: 'border-color 0.15s',
+                    color: isDarkMode ? '#e2e8f0' : '#0f172a',
+                    backgroundColor: isDarkMode ? '#252F3E' : '#fff',
                   }}
-                  onFocus={(e) => (e.target.style.borderColor = '#FF9900')}
-                  onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
+                  onFocus={(e) => (e.target.style.borderColor = isDarkMode ? '#2563eb' : '#FF9900')}
+                  onBlur={(e) => (e.target.style.borderColor = isDarkMode ? 'rgba(100, 116, 139, 0.3)' : '#e2e8f0')}
                 />
               </div>
 
@@ -334,7 +343,7 @@ export const NotificationsPage = () => {
                     display: 'block',
                     fontSize: '13px',
                     fontWeight: '600',
-                    color: '#374151',
+                    color: isDarkMode ? '#cbd5e1' : '#374151',
                     marginBottom: '6px',
                   }}
                 >
@@ -350,16 +359,18 @@ export const NotificationsPage = () => {
                     width: '100%',
                     padding: '10px 12px',
                     borderRadius: '8px',
-                    border: '1px solid #e2e8f0',
+                    border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0',
                     fontSize: '13px',
                     outline: 'none',
                     boxSizing: 'border-box',
                     fontFamily: 'inherit',
                     resize: 'vertical',
                     transition: 'border-color 0.15s',
+                    color: isDarkMode ? '#e2e8f0' : '#0f172a',
+                    backgroundColor: isDarkMode ? '#252F3E' : '#fff',
                   }}
-                  onFocus={(e) => (e.target.style.borderColor = '#FF9900')}
-                  onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
+                  onFocus={(e) => (e.target.style.borderColor = isDarkMode ? '#2563eb' : '#FF9900')}
+                  onBlur={(e) => (e.target.style.borderColor = isDarkMode ? 'rgba(100, 116, 139, 0.3)' : '#e2e8f0')}
                 />
               </div>
 
@@ -372,14 +383,14 @@ export const NotificationsPage = () => {
                     padding: '10px 20px',
                     fontSize: '13px',
                     fontWeight: '500',
-                    color: '#475569',
+                    color: isDarkMode ? '#cbd5e1' : '#475569',
                     backgroundColor: 'transparent',
-                    border: '1px solid #e2e8f0',
+                    border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0',
                     borderRadius: '9999px',
                     cursor: 'pointer',
                     transition: 'background-color 0.15s',
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(100, 116, 139, 0.1)' : '#f8fafc'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
                   Cancel
@@ -396,7 +407,7 @@ export const NotificationsPage = () => {
                     fontSize: '13px',
                     fontWeight: '600',
                     color: submitting || !formData.title.trim() || !formData.message.trim() ? '#9ca3af' : '#fff',
-                    backgroundColor: submitting || !formData.title.trim() || !formData.message.trim() ? '#d1d5db' : '#FF9900',
+                    backgroundColor: submitting || !formData.title.trim() || !formData.message.trim() ? '#d1d5db' : isDarkMode ? '#2563eb' : '#FF9900',
                     border: 'none',
                     borderRadius: '9999px',
                     cursor: submitting || !formData.title.trim() || !formData.message.trim() ? 'not-allowed' : 'pointer',
@@ -404,12 +415,12 @@ export const NotificationsPage = () => {
                   }}
                   onMouseEnter={(e) => {
                     if (!submitting && formData.title.trim() && formData.message.trim()) {
-                      e.currentTarget.style.backgroundColor = '#e68a00'
+                      e.currentTarget.style.backgroundColor = isDarkMode ? '#1d4ed8' : '#e68a00'
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!submitting && formData.title.trim() && formData.message.trim()) {
-                      e.currentTarget.style.backgroundColor = '#FF9900'
+                      e.currentTarget.style.backgroundColor = isDarkMode ? '#2563eb' : '#FF9900'
                     } else {
                       e.currentTarget.style.backgroundColor = '#d1d5db'
                     }

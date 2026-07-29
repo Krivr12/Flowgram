@@ -26,36 +26,44 @@ const EMPTY_FORM = {
 }
 
 // ── Field component — keeps the JSX below clean ───────────────────────────────
-const Field = ({ label, error, children }) => (
-  <div>
-    <label style={{
-      display: 'block',
-      fontSize: '13px',
-      fontWeight: '600',
-      color: '#374151',
-      marginBottom: '6px',
-    }}>
-      {label}
-    </label>
-    {children}
-    {error && (
-      <p style={{ fontSize: '12px', color: '#dc2626', marginTop: '4px' }}>{error}</p>
-    )}
-  </div>
-)
-
-const inputStyle = {
-  width: '100%',
-  padding: '10px 14px',
-  fontSize: '14px',
-  color: '#0f172a',
-  backgroundColor: '#fff',
-  border: '1px solid #e2e8f0',
-  borderRadius: '8px',
-  outline: 'none',
-  boxSizing: 'border-box',
-  transition: 'border-color 0.15s',
+const Field = ({ label, error, children }) => {
+  const isDarkMode = document.documentElement.classList.contains('dark')
+  return (
+    <div>
+      <label className="dark:text-slate-300" style={{
+        display: 'block',
+        fontSize: '13px',
+        fontWeight: '600',
+        color: isDarkMode ? '#cbd5e1' : '#374151',
+        marginBottom: '6px',
+      }}>
+        {label}
+      </label>
+      {children}
+      {error && (
+        <p style={{ fontSize: '12px', color: '#dc2626', marginTop: '4px' }}>{error}</p>
+      )}
+    </div>
+  )
 }
+
+const getInputStyle = () => {
+  const isDarkMode = document.documentElement.classList.contains('dark')
+  return {
+    width: '100%',
+    padding: '10px 14px',
+    fontSize: '14px',
+    color: isDarkMode ? '#e2e8f0' : '#0f172a',
+    backgroundColor: isDarkMode ? '#1e293b' : '#fff',
+    border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0',
+    borderRadius: '8px',
+    outline: 'none',
+    boxSizing: 'border-box',
+    transition: 'border-color 0.15s',
+  }
+}
+
+const inputStyle = getInputStyle()
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
@@ -71,6 +79,9 @@ export const AdminEventFormPage = () => {
   const [errors,        setErrors]        = useState({})
   const [serverError,   setServerError]   = useState('')
   const [focusedField,  setFocusedField]  = useState(null)
+
+  // Detect dark mode from parent
+  const isDarkMode = document.documentElement.classList.contains('dark')
 
   // ── Load existing event in edit mode ─────────────────────────────────────
   useEffect(() => {
@@ -193,15 +204,15 @@ export const AdminEventFormPage = () => {
       </button>
 
       {/* ── Page heading ── */}
-      <h1 style={{
+      <h1 className="dark:text-white" style={{
         fontSize: '24px',
         fontWeight: '700',
-        color: '#252F3E',
+        color: isDarkMode ? '#fff' : '#252F3E',
         margin: '0 0 8px',
       }}>
         {isEditMode ? 'Edit Event' : 'New Event'}
       </h1>
-      <p style={{ fontSize: '14px', color: '#64748b', margin: '0 0 32px' }}>
+      <p className="dark:text-slate-400" style={{ fontSize: '14px', color: isDarkMode ? '#94a3b8' : '#64748b', margin: '0 0 32px' }}>
         {isEditMode
           ? 'Update the event details below.'
           : 'Fill in the details to create a new event.'}
@@ -223,9 +234,9 @@ export const AdminEventFormPage = () => {
       )}
 
       {/* ── Form card ── */}
-      <div style={{
-        backgroundColor: '#ffffff',
-        border: '1px solid #f3f4f6',
+      <div className="dark:bg-[#252F3E] dark:border-slate-700" style={{
+        backgroundColor: isDarkMode ? '#252F3E' : '#ffffff',
+        border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #f3f4f6',
         borderRadius: '16px',
         boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
         padding: '32px',

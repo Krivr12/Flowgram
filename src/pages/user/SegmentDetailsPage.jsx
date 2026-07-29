@@ -17,7 +17,7 @@ const formatTime = (timeStr) => {
 
 // ─── Speaker Modal (bottom-sheet on mobile, centered on desktop) ──────────────
 
-const SpeakerModal = ({ speaker, onClose }) => {
+const SpeakerModal = ({ speaker, onClose, isDarkMode }) => {
   if (!speaker) return null
 
   const initials = speaker.full_name
@@ -29,7 +29,7 @@ const SpeakerModal = ({ speaker, onClose }) => {
 
   return (
     <div className="speaker-modal-overlay" onClick={onClose}>
-      <div className="speaker-modal-panel" onClick={(e) => e.stopPropagation()}>
+      <div className="speaker-modal-panel" onClick={(e) => e.stopPropagation()} style={{ backgroundColor: isDarkMode ? '#252F3E' : '#fff', transition: 'background-color 0.2s' }}>
 
         {/* ── Close Button ── */}
         <button
@@ -43,7 +43,7 @@ const SpeakerModal = ({ speaker, onClose }) => {
             height: '34px',
             borderRadius: '50%',
             border: 'none',
-            backgroundColor: '#f1f5f9',
+            backgroundColor: isDarkMode ? 'rgba(100,116,139,0.1)' : '#f1f5f9',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -51,10 +51,10 @@ const SpeakerModal = ({ speaker, onClose }) => {
             flexShrink: 0,
             transition: 'background-color 0.15s',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e2e8f0')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(100,116,139,0.2)' : '#e2e8f0')}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(100,116,139,0.1)' : '#f1f5f9')}
         >
-          <X size={16} strokeWidth={2.5} color="#64748b" />
+          <X size={16} strokeWidth={2.5} color={isDarkMode ? '#94a3b8' : '#64748b'} />
         </button>
 
         {/* ── Profile Picture ── */}
@@ -64,15 +64,16 @@ const SpeakerModal = ({ speaker, onClose }) => {
               width: '96px',
               height: '96px',
               borderRadius: '50%',
-              backgroundColor: '#dbeafe',
+              backgroundColor: isDarkMode ? 'rgba(37, 99, 235, 0.1)' : '#dbeafe',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '30px',
               fontWeight: '700',
-              color: '#1d4ed8',
+              color: isDarkMode ? '#60a5fa' : '#1d4ed8',
               overflow: 'hidden',
               flexShrink: 0,
+              transition: 'background-color 0.2s, color 0.2s',
             }}
           >
             {speaker.profile_picture_url ? (
@@ -92,10 +93,11 @@ const SpeakerModal = ({ speaker, onClose }) => {
           style={{
             fontSize: '22px',
             fontWeight: '800',
-            color: '#0f172a',
+            color: isDarkMode ? '#e2e8f0' : '#0f172a',
             margin: '0 0 6px',
             textAlign: 'center',
             lineHeight: 1.3,
+            transition: 'color 0.2s',
           }}
         >
           {speaker.full_name}
@@ -106,10 +108,11 @@ const SpeakerModal = ({ speaker, onClose }) => {
           <p
             style={{
               fontSize: '14px',
-              color: '#64748b',
+              color: isDarkMode ? '#94a3b8' : '#64748b',
               margin: '0 0 24px',
               textAlign: 'center',
               lineHeight: 1.5,
+              transition: 'color 0.2s',
             }}
           >
             {[speaker.role, speaker.company].filter(Boolean).join(' · ')}
@@ -123,15 +126,16 @@ const SpeakerModal = ({ speaker, onClose }) => {
               style={{
                 fontSize: '11px',
                 fontWeight: '800',
-                color: '#94a3b8',
+                color: isDarkMode ? '#64748b' : '#94a3b8',
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
                 marginBottom: '10px',
+                transition: 'color 0.2s',
               }}
             >
               About
             </p>
-            <p style={{ fontSize: '15px', color: '#475569', lineHeight: 1.75, margin: 0 }}>
+            <p style={{ fontSize: '15px', color: isDarkMode ? '#cbd5e1' : '#475569', lineHeight: 1.75, margin: 0, transition: 'color 0.2s' }}>
               {speaker.description}
             </p>
           </div>
@@ -189,6 +193,17 @@ export const SegmentDetailsPage = () => {
   const [loading, setLoading]             = useState(true)
   const [error, setError]                 = useState('')
   const [selectedSpeaker, setSelectedSpeaker] = useState(null)
+  const [isDarkMode, setIsDarkMode] = useState(() =>
+    document.documentElement.classList.contains('dark')
+  )
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     const loadSegment = async () => {
@@ -215,8 +230,9 @@ export const SegmentDetailsPage = () => {
           alignItems: 'center',
           justifyContent: 'center',
           minHeight: '60vh',
-          color: '#94a3b8',
+          color: isDarkMode ? '#94a3b8' : '#94a3b8',
           fontSize: '15px',
+          transition: 'color 0.2s',
         }}
       >
         Loading segment details...
@@ -233,9 +249,10 @@ export const SegmentDetailsPage = () => {
           alignItems: 'center',
           justifyContent: 'center',
           minHeight: '60vh',
-          color: '#64748b',
+          color: isDarkMode ? '#94a3b8' : '#64748b',
           fontSize: '15px',
           gap: '12px',
+          transition: 'color 0.2s',
         }}
       >
         <p style={{ color: '#dc2626' }}>{error || 'Segment not found'}</p>
@@ -244,12 +261,13 @@ export const SegmentDetailsPage = () => {
           style={{
             padding: '10px 20px',
             borderRadius: '8px',
-            border: '1px solid #e2e8f0',
-            backgroundColor: '#fff',
-            color: '#0f172a',
+            border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
+            backgroundColor: isDarkMode ? '#252F3E' : '#fff',
+            color: isDarkMode ? '#e2e8f0' : '#0f172a',
             fontSize: '13px',
             fontWeight: '600',
             cursor: 'pointer',
+            transition: 'background-color 0.2s, border-color 0.2s, color 0.2s',
           }}
         >
           Go Back
@@ -272,18 +290,18 @@ export const SegmentDetailsPage = () => {
             padding: '6px 0',
             background: 'none',
             border: 'none',
-            color: '#64748b',
+            color: isDarkMode ? '#94a3b8' : '#64748b',
             fontSize: '14px',
             fontWeight: '600',
             cursor: 'pointer',
             transition: 'color 0.15s, transform 0.15s',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.color = '#0f172a'
+            e.currentTarget.style.color = isDarkMode ? '#e2e8f0' : '#0f172a'
             e.currentTarget.style.transform = 'translateX(-3px)'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.color = '#64748b'
+            e.currentTarget.style.color = isDarkMode ? '#94a3b8' : '#64748b'
             e.currentTarget.style.transform = 'translateX(0)'
           }}
         >
@@ -300,9 +318,10 @@ export const SegmentDetailsPage = () => {
           style={{
             fontSize: '28px',
             fontWeight: '800',
-            color: '#0f172a',
+            color: isDarkMode ? '#e2e8f0' : '#0f172a',
             margin: '0 0 16px',
             lineHeight: 1.3,
+            transition: 'color 0.2s',
           }}
         >
           {segment.title}
@@ -317,10 +336,11 @@ export const SegmentDetailsPage = () => {
               gap: '7px',
               padding: '8px 14px',
               borderRadius: '8px',
-              backgroundColor: '#f1f5f9',
+              backgroundColor: isDarkMode ? 'rgba(100,116,139,0.1)' : '#f1f5f9',
               fontSize: '13px',
               fontWeight: '600',
-              color: '#475569',
+              color: isDarkMode ? '#94a3b8' : '#475569',
+              transition: 'background-color 0.2s, color 0.2s',
             }}
           >
             <Clock size={14} />
@@ -336,10 +356,11 @@ export const SegmentDetailsPage = () => {
                 gap: '7px',
                 padding: '8px 14px',
                 borderRadius: '8px',
-                backgroundColor: '#f1f5f9',
+                backgroundColor: isDarkMode ? 'rgba(100,116,139,0.1)' : '#f1f5f9',
                 fontSize: '13px',
                 fontWeight: '600',
-                color: '#475569',
+                color: isDarkMode ? '#94a3b8' : '#475569',
+                transition: 'background-color 0.2s, color 0.2s',
               }}
             >
               <MapPin size={14} />
@@ -350,7 +371,7 @@ export const SegmentDetailsPage = () => {
 
         {/* Description */}
         {segment.description && (
-          <p style={{ fontSize: '15px', color: '#475569', lineHeight: 1.75, margin: 0 }}>
+          <p style={{ fontSize: '15px', color: isDarkMode ? '#cbd5e1' : '#475569', lineHeight: 1.75, margin: 0, transition: 'color 0.2s' }}>
             {segment.description}
           </p>
         )}
@@ -363,10 +384,11 @@ export const SegmentDetailsPage = () => {
             style={{
               fontSize: '13px',
               fontWeight: '800',
-              color: '#94a3b8',
+              color: isDarkMode ? '#64748b' : '#94a3b8',
               textTransform: 'uppercase',
               letterSpacing: '0.08em',
               marginBottom: '14px',
+              transition: 'color 0.2s',
             }}
           >
             Speakers
@@ -382,20 +404,20 @@ export const SegmentDetailsPage = () => {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '14px 16px',
-                  border: '1px solid #e2e8f0',
+                  border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
                   borderRadius: '12px',
-                  backgroundColor: '#fff',
+                  backgroundColor: isDarkMode ? '#252F3E' : '#fff',
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
+                  transition: 'all 0.2s, background-color 0.2s, border-color 0.2s',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#f8fafc'
-                  e.currentTarget.style.borderColor = '#cbd5e1'
-                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'
+                  e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(100,116,139,0.1)' : '#f8fafc'
+                  e.currentTarget.style.borderColor = isDarkMode ? 'rgba(100,116,139,0.5)' : '#cbd5e1'
+                  e.currentTarget.style.boxShadow = isDarkMode ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.06)'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#fff'
-                  e.currentTarget.style.borderColor = '#e2e8f0'
+                  e.currentTarget.style.backgroundColor = isDarkMode ? '#252F3E' : '#fff'
+                  e.currentTarget.style.borderColor = isDarkMode ? 'rgba(100,116,139,0.3)' : '#e2e8f0'
                   e.currentTarget.style.boxShadow = 'none'
                 }}
               >
@@ -407,7 +429,7 @@ export const SegmentDetailsPage = () => {
                       width: '44px',
                       height: '44px',
                       borderRadius: '50%',
-                      backgroundColor: '#dbeafe',
+                      backgroundColor: isDarkMode ? 'rgba(37, 99, 235, 0.1)' : '#dbeafe',
                       overflow: 'hidden',
                       flexShrink: 0,
                       display: 'flex',
@@ -415,7 +437,8 @@ export const SegmentDetailsPage = () => {
                       justifyContent: 'center',
                       fontSize: '14px',
                       fontWeight: '700',
-                      color: '#1d4ed8',
+                      color: isDarkMode ? '#60a5fa' : '#1d4ed8',
+                      transition: 'background-color 0.2s, color 0.2s',
                     }}
                   >
                     {speaker.profile_picture_url ? (
@@ -439,15 +462,16 @@ export const SegmentDetailsPage = () => {
                       style={{
                         fontSize: '15px',
                         fontWeight: '700',
-                        color: '#0f172a',
+                        color: isDarkMode ? '#e2e8f0' : '#0f172a',
                         margin: '0 0 3px',
                         lineHeight: 1.3,
+                        transition: 'color 0.2s',
                       }}
                     >
                       {speaker.full_name}
                     </p>
                     {(speaker.role || speaker.company) && (
-                      <p style={{ fontSize: '13px', color: '#64748b', margin: 0, fontStyle: 'italic' }}>
+                      <p style={{ fontSize: '13px', color: isDarkMode ? '#94a3b8' : '#64748b', margin: 0, fontStyle: 'italic', transition: 'color 0.2s' }}>
                         {[speaker.role, speaker.company].filter(Boolean).join(' · ')}
                       </p>
                     )}
@@ -455,7 +479,7 @@ export const SegmentDetailsPage = () => {
                 </div>
 
                 {/* Info icon */}
-                <Info size={17} color="#94a3b8" strokeWidth={2} style={{ flexShrink: 0 }} />
+                <Info size={17} color={isDarkMode ? '#64748b' : '#94a3b8'} strokeWidth={2} style={{ flexShrink: 0, transition: 'color 0.2s' }} />
               </div>
             ))}
           </div>
@@ -467,6 +491,7 @@ export const SegmentDetailsPage = () => {
         <SpeakerModal
           speaker={selectedSpeaker}
           onClose={() => setSelectedSpeaker(null)}
+          isDarkMode={isDarkMode}
         />
       )}
     </div>

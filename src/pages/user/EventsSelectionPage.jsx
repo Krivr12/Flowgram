@@ -27,6 +27,17 @@ export const EventsSelectionPage = () => {
   const [events, setEvents]   = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState('')
+  const [isDarkMode, setIsDarkMode] = useState(() =>
+    document.documentElement.classList.contains('dark')
+  )
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     loadEvents()
@@ -54,7 +65,7 @@ export const EventsSelectionPage = () => {
 
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#252F3E', textAlign: 'left', marginBottom: '16px', marginTop: '8px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: isDarkMode ? '#e2e8f0' : '#0f172a', textAlign: 'left', marginBottom: '16px', marginTop: '8px', transition: 'color 0.2s' }}>
           Select Event
         </h1>
       </div>
@@ -62,13 +73,14 @@ export const EventsSelectionPage = () => {
       {/* Error */}
       {error && (
         <div style={{
-          backgroundColor: '#fee2e2',
-          border: '1px solid #fca5a5',
-          color: '#991b1b',
+          backgroundColor: isDarkMode ? 'rgba(220, 38, 38, 0.1)' : '#fee2e2',
+          border: isDarkMode ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid #fca5a5',
+          color: isDarkMode ? '#fca5a5' : '#991b1b',
           padding: '16px',
           borderRadius: '8px',
           fontSize: '14px',
           marginBottom: '24px',
+          transition: 'background-color 0.2s, border-color 0.2s, color 0.2s',
         }}>
           {error}
         </div>
@@ -76,14 +88,14 @@ export const EventsSelectionPage = () => {
 
       {/* Loading */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: '60px 24px', color: '#64748b', fontSize: '14px' }}>
+        <div style={{ textAlign: 'center', padding: '60px 24px', color: isDarkMode ? '#94a3b8' : '#64748b', fontSize: '14px', transition: 'color 0.2s' }}>
           Loading events...
         </div>
       )}
 
       {/* Empty */}
       {!loading && events.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '60px 24px', color: '#64748b', fontSize: '14px' }}>
+        <div style={{ textAlign: 'center', padding: '60px 24px', color: isDarkMode ? '#94a3b8' : '#64748b', fontSize: '14px', transition: 'color 0.2s' }}>
           No events available yet.
         </div>
       )}
@@ -95,22 +107,22 @@ export const EventsSelectionPage = () => {
             <div
               key={event.id}
               style={{
-                backgroundColor: '#fff',
-                border: '1px solid #e2e8f0',
+                backgroundColor: isDarkMode ? '#252F3E' : '#fff',
+                border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
                 borderRadius: '12px',
                 display: 'flex',
                 alignItems: 'center',
                 overflow: 'hidden',
                 cursor: 'pointer',
-                transition: 'all 0.15s',
+                transition: 'all 0.15s, background-color 0.2s, border-color 0.2s',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'
-                e.currentTarget.style.borderColor = '#cbd5e1'
+                e.currentTarget.style.boxShadow = isDarkMode ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(0,0,0,0.08)'
+                e.currentTarget.style.borderColor = isDarkMode ? 'rgba(100,116,139,0.5)' : '#cbd5e1'
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.boxShadow = 'none'
-                e.currentTarget.style.borderColor = '#e2e8f0'
+                e.currentTarget.style.borderColor = isDarkMode ? 'rgba(100,116,139,0.3)' : '#e2e8f0'
               }}
             >
               {/* ── Clickable main body → selects event & goes to Flow ── */}
@@ -126,9 +138,10 @@ export const EventsSelectionPage = () => {
                 <h3 style={{
                   fontSize: '18px',
                   fontWeight: '800',
-                  color: '#0f172a',
+                  color: isDarkMode ? '#e2e8f0' : '#0f172a',
                   margin: '0 0 8px',
                   lineHeight: 1.3,
+                  transition: 'color 0.2s',
                 }}>
                   {event.title}
                 </h3>
@@ -137,9 +150,10 @@ export const EventsSelectionPage = () => {
                 {event.start_date && (
                   <p style={{
                     fontSize: '13px',
-                    color: '#64748b',
+                    color: isDarkMode ? '#94a3b8' : '#64748b',
                     margin: '0 0 6px',
                     fontWeight: '500',
+                    transition: 'color 0.2s',
                   }}>
                     {formatEventDate(event.start_date)}
                   </p>
@@ -148,8 +162,8 @@ export const EventsSelectionPage = () => {
                 {/* Venue */}
                 {event.venue && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <MapPin size={13} color="#94a3b8" style={{ flexShrink: 0 }} />
-                    <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '500' }}>
+                    <MapPin size={13} color={isDarkMode ? '#94a3b8' : '#94a3b8'} style={{ flexShrink: 0, transition: 'color 0.2s' }} />
+                    <span style={{ fontSize: '13px', color: isDarkMode ? '#94a3b8' : '#94a3b8', fontWeight: '500', transition: 'color 0.2s' }}>
                       {event.venue}
                     </span>
                   </div>
@@ -172,21 +186,21 @@ export const EventsSelectionPage = () => {
                   justifyContent: 'center',
                   background: 'none',
                   border: 'none',
-                  borderLeft: '1px solid #f1f5f9',
+                  borderLeft: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #f1f5f9',
                   cursor: 'pointer',
-                  color: '#94a3b8',
-                  transition: 'background-color 0.15s, color 0.15s',
+                  color: isDarkMode ? '#64748b' : '#94a3b8',
+                  transition: 'background-color 0.15s, color 0.15s, border-color 0.2s',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#f8fafc'
-                  e.currentTarget.style.color = '#475569'
+                  e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(100,116,139,0.1)' : '#f8fafc'
+                  e.currentTarget.style.color = isDarkMode ? '#cbd5e1' : '#475569'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent'
-                  e.currentTarget.style.color = '#94a3b8'
+                  e.currentTarget.style.color = isDarkMode ? '#64748b' : '#94a3b8'
                 }}
               >
-                <Info size={17} color="#94a3b8" strokeWidth={2} />
+                <Info size={17} color="currentColor" strokeWidth={2} />
               </button>
             </div>
           ))}

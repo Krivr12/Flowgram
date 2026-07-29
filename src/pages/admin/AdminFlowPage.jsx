@@ -249,6 +249,19 @@ export const AdminFlowPage = () => {
   // Whether the event status is being saved
   const [updatingEventStatus, setUpdatingEventStatus] = useState(false)
 
+  // Detect dark mode — AdminLayout applies 'dark' class to <html>
+  const [isDarkMode, setIsDarkMode] = useState(() =>
+    document.documentElement.classList.contains('dark')
+  )
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
   // ── Confirmation modal state ────────────────────────────────────────────────
   // pendingStatusUpdate shape:
   //   { type: 'segment-status', segmentId, value }
@@ -381,7 +394,7 @@ export const AdminFlowPage = () => {
 
       {/* ── Page header ── */}
       <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', color: isDarkMode ? '#fff' : '#0f172a', margin: 0 }}>
           Manage Flow
         </h1>
       </div>
@@ -491,7 +504,7 @@ export const AdminFlowPage = () => {
 
       {/* ── Schedule section ── */}
       <div>
-        <h2 style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a', marginBottom: '20px' }}>
+        <h2 style={{ fontSize: '15px', fontWeight: '700', color: isDarkMode ? '#fff' : '#0f172a', marginBottom: '20px' }}>
           Schedule
         </h2>
 
@@ -508,11 +521,11 @@ export const AdminFlowPage = () => {
             style={{
               textAlign: 'center',
               padding: '60px 24px',
-              color: '#64748b',
+              color: isDarkMode ? '#94a3b8' : '#64748b',
               fontSize: '14px',
-              backgroundColor: '#fff',
+              backgroundColor: isDarkMode ? '#252F3E' : '#fff',
               borderRadius: '12px',
-              border: '1px solid #e2e8f0',
+              border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0',
             }}
           >
             No segments scheduled for this event yet.
@@ -527,7 +540,7 @@ export const AdminFlowPage = () => {
               style={{
                 fontSize: '13px',
                 fontWeight: '700',
-                color: '#0f172a',
+                color: isDarkMode ? '#fff' : '#0f172a',
                 marginTop: '28px',
                 marginBottom: '10px',
                 display: 'flex',
@@ -540,8 +553,8 @@ export const AdminFlowPage = () => {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '5px',
-                  backgroundColor: '#f1f5f9',
-                  color: '#334155',
+                  backgroundColor: isDarkMode ? '#334155' : '#f1f5f9',
+                  color: isDarkMode ? '#cbd5e1' : '#334155',
                   padding: '4px 10px',
                   borderRadius: '6px',
                   fontSize: '12px',
@@ -549,7 +562,7 @@ export const AdminFlowPage = () => {
                   letterSpacing: '0.02em',
                 }}
               >
-                <Clock size={11} color="#64748b" />
+                <Clock size={11} color={isDarkMode ? '#94a3b8' : '#64748b'} />
                 {label || 'Unscheduled'}
               </span>
               {groupSegs.length > 1 && (
@@ -568,8 +581,8 @@ export const AdminFlowPage = () => {
                   <div
                     key={segment.id}
                     style={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #e2e8f0',
+                      backgroundColor: isDarkMode ? '#252F3E' : '#fff',
+                      border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0',
                       borderRadius: '12px',
                       padding: '16px',
                       boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
@@ -580,11 +593,11 @@ export const AdminFlowPage = () => {
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)'
-                      e.currentTarget.style.borderColor = '#cbd5e1'
+                      e.currentTarget.style.borderColor = isDarkMode ? 'rgba(100, 116, 139, 0.5)' : '#cbd5e1'
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'
-                      e.currentTarget.style.borderColor = '#e2e8f0'
+                      e.currentTarget.style.borderColor = isDarkMode ? 'rgba(100, 116, 139, 0.3)' : '#e2e8f0'
                     }}
                   >
                     {/* Title */}
@@ -592,7 +605,7 @@ export const AdminFlowPage = () => {
                       style={{
                         fontSize: '14px',
                         fontWeight: '700',
-                        color: '#0f172a',
+                        color: isDarkMode ? '#fff' : '#0f172a',
                         margin: 0,
                         lineHeight: '1.3',
                       }}
@@ -609,15 +622,15 @@ export const AdminFlowPage = () => {
                           alignItems: 'center',
                           gap: '4px',
                           fontSize: '12px',
-                          color: '#64748b',
+                          color: isDarkMode ? '#94a3b8' : '#64748b',
                           fontWeight: '500',
                         }}
                       >
-                        <Clock size={11} color="#64748b" />
+                        <Clock size={11} color={isDarkMode ? '#94a3b8' : '#64748b'} />
                         {formatTime(segment.start_time)}
                         {segment.end_time && (
                           <>
-                            <span style={{ color: '#cbd5e1', margin: '0 1px' }}>→</span>
+                            <span style={{ color: isDarkMode ? '#64748b' : '#cbd5e1', margin: '0 1px' }}>→</span>
                             {formatTime(segment.end_time)}
                           </>
                         )}
@@ -631,11 +644,11 @@ export const AdminFlowPage = () => {
                             alignItems: 'center',
                             gap: '4px',
                             fontSize: '12px',
-                            color: '#64748b',
+                            color: isDarkMode ? '#94a3b8' : '#64748b',
                             fontWeight: '500',
                           }}
                         >
-                          <MapPin size={11} color="#64748b" />
+                          <MapPin size={11} color={isDarkMode ? '#94a3b8' : '#64748b'} />
                           {segment.room_name}
                         </span>
                       )}
@@ -668,7 +681,7 @@ export const AdminFlowPage = () => {
                         gap: '8px',
                         flexWrap: 'wrap',
                         paddingTop: '8px',
-                        borderTop: '1px solid #f1f5f9',
+                        borderTop: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #f1f5f9',
                         marginTop: 'auto',
                       }}
                       onMouseDown={(e) => e.stopPropagation()}

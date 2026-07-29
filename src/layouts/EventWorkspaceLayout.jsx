@@ -21,8 +21,21 @@ export const EventWorkspaceLayout = () => {
   const location = useLocation()
   const [sidebarExpanded, setSidebarExpanded] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth <= MOBILE_BREAKPOINT)
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('admin_dark_mode')
+    return saved ? JSON.parse(saved) : false
+  })
 
   const basePath = `/admin/events/${eventId}`
+
+  // Monitor dark mode changes
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     const handleResize = () => {
@@ -44,8 +57,15 @@ export const EventWorkspaceLayout = () => {
   // On desktop, sidebar toggles between collapsed and expanded
   const sidebarW = isMobile ? 0 : (sidebarExpanded ? EXPANDED_W : COLLAPSED_W)
 
-  // Mobile nav items are now rendered via React in AdminLayout's bottom nav
-  // This useEffect is no longer needed, but we keep the state management for active paths
+  // Theme colors
+  const sidebarBg = isDarkMode ? '#252F3E' : '#ffffff'
+  const sidebarBorder = isDarkMode ? 'rgba(100, 116, 139, 0.3)' : '#e2e8f0'
+  const activeBg = isDarkMode ? 'rgba(249, 115, 22, 0.1)' : '#f0fdf4'
+  const hoverBg = isDarkMode ? 'rgba(100, 116, 139, 0.1)' : '#f8fafc'
+  const inactiveColor = isDarkMode ? '#94a3b8' : '#94a3b8'
+  const inactiveTextColor = isDarkMode ? '#cbd5e1' : '#64748b'
+  const activeTextColor = isDarkMode ? '#e2e8f0' : '#0f172a'
+  const activeIcon = isDarkMode ? '#fbbf24' : '#f97316'
 
   return (
     <>
@@ -61,9 +81,9 @@ export const EventWorkspaceLayout = () => {
           top: `${NAVBAR_H}px`,
           bottom: 0,
           width: `${sidebarW}px`,
-          backgroundColor: '#ffffff',
-          borderRight: '1px solid #e2e8f0',
-          transition: 'width 0.2s ease',
+          backgroundColor: sidebarBg,
+          borderRight: `1px solid ${sidebarBorder}`,
+          transition: 'width 0.2s ease, background-color 0.2s ease, border-color 0.2s ease',
           zIndex: 30,
           flexDirection: 'column',
           overflow: 'hidden',
@@ -87,16 +107,16 @@ export const EventWorkspaceLayout = () => {
                   padding: '10px 0',
                   paddingLeft: sidebarExpanded ? '14px' : '0',
                   justifyContent: sidebarExpanded ? 'flex-start' : 'center',
-                  background: active ? '#f0fdf4' : 'transparent',
+                  background: active ? activeBg : 'transparent',
                   border: 'none',
-                  borderLeft: active ? '3px solid #f97316' : '3px solid transparent',
+                  borderLeft: active ? `3px solid ${activeIcon}` : '3px solid transparent',
                   cursor: 'pointer',
-                  transition: 'background 0.15s',
+                  transition: 'background 0.15s, border-color 0.15s',
                   position: 'relative',
                   overflow: 'hidden',
                 }}
                 onMouseEnter={(e) => {
-                  if (!active) e.currentTarget.style.backgroundColor = '#f8fafc'
+                  if (!active) e.currentTarget.style.backgroundColor = hoverBg
                 }}
                 onMouseLeave={(e) => {
                   if (!active) e.currentTarget.style.backgroundColor = 'transparent'
@@ -104,19 +124,19 @@ export const EventWorkspaceLayout = () => {
               >
                 <Icon
                   size={18}
-                  color={active ? '#f97316' : '#94a3b8'}
-                  style={{ flexShrink: 0 }}
+                  color={active ? activeIcon : inactiveColor}
+                  style={{ flexShrink: 0, transition: 'color 0.15s' }}
                 />
                 {/* Label — only visible when expanded */}
                 <span style={{
                   fontSize: '13px',
                   fontWeight: active ? '600' : '400',
-                  color: active ? '#0f172a' : '#64748b',
+                  color: active ? activeTextColor : inactiveTextColor,
                   whiteSpace: 'nowrap',
                   opacity: sidebarExpanded ? 1 : 0,
                   maxWidth: sidebarExpanded ? '160px' : '0px',
                   overflow: 'hidden',
-                  transition: 'opacity 0.15s ease, max-width 0.2s ease',
+                  transition: 'opacity 0.15s ease, max-width 0.2s ease, color 0.15s ease',
                 }}>
                   {item.label}
                 </span>
@@ -134,7 +154,6 @@ export const EventWorkspaceLayout = () => {
           marginLeft: `${sidebarW}px`,
           transition: 'margin-left 0.2s ease',
           minHeight: `calc(100vh - ${NAVBAR_H}px)`,
-          backgroundColor: '#f8fafc',
           paddingBottom: isMobile ? '64px' : '0',
         }}
       >
