@@ -157,6 +157,8 @@ export const NotificationItem = ({ notification }) => {
                 WebkitBoxOrient: 'vertical',
                 WebkitLineClamp: isExpanded ? 'unset' : 2,
                 overflow: isExpanded ? 'visible' : 'hidden',
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word',
               }}
             >
               {formatted.message}
