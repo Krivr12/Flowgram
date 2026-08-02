@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Clock, MapPin, ChevronRight, ListFilter, Zap } from 'lucide-react'
+import { Clock, MapPin, ChevronRight, ListFilter, Zap, ArrowRight } from 'lucide-react'
 import { getEventById } from '../../services/events'
 import { getSegmentsByEventId } from '../../services/segments'
 import { supabase, getCurrentUser } from '../../services/supabase'
@@ -625,9 +625,53 @@ export const FlowPage = () => {
 
   if (!event) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: isDarkMode ? '#94a3b8' : '#94a3b8', fontSize: '15px', gap: '12px', transition: 'color 0.2s' }}>
-        <p>No event selected</p>
-        <p style={{ fontSize: '13px', color: isDarkMode ? '#64748b' : '#64748b', transition: 'color 0.2s' }}>Please select an event from your dashboard</p>
+      <div style={{ maxWidth: '100%', paddingTop: '16px', paddingBottom: '80px' }}>
+        <div style={{ marginBottom: '28px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: isDarkMode ? '#e2e8f0' : '#0f172a', textAlign: 'left', marginBottom: '16px', marginTop: '8px', transition: 'color 0.2s' }}>
+            Flow
+          </h1>
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            padding: '80px 24px',
+          }}
+        >
+          <Zap size={32} color={isDarkMode ? '#64748b' : '#cbd5e1'} style={{ marginBottom: '16px', transition: 'color 0.2s' }} />
+          <h2 style={{ fontSize: '17px', fontWeight: '700', color: isDarkMode ? '#e2e8f0' : '#0f172a', margin: '0 0 8px', transition: 'color 0.2s' }}>
+            No event selected
+          </h2>
+          <p style={{ fontSize: '14px', color: isDarkMode ? '#94a3b8' : '#64748b', maxWidth: '300px', margin: '0 0 24px', transition: 'color 0.2s' }}>
+            Select an event first to see your personalized schedule.
+          </p>
+          <button
+            onClick={() => navigate('/app/events')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              backgroundColor: isDarkMode ? '#1B77CF' : '#FFA100',
+              color: '#fff',
+              border: 'none',
+              padding: '11px 22px',
+              borderRadius: '24px',
+              fontSize: '13px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'background-color 0.15s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = isDarkMode ? '#155fa3' : '#e89100')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = isDarkMode ? '#1B77CF' : '#FFA100')}
+          >
+            Browse Events
+            <ArrowRight size={15} />
+          </button>
+        </div>
       </div>
     )
   }
