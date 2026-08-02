@@ -545,6 +545,31 @@ export const UserLayout = () => {
                     </p>
                   </div>
 
+                  {/* Settings */}
+                  <button
+                    onClick={() => { setDropdownOpen(false); navigate('/app/account') }}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '10px 16px',
+                      fontSize: '13px',
+                      color: isDarkMode ? '#cbd5e1' : '#334155',
+                      background: 'transparent',
+                      border: 'none',
+                      borderBottom: `1px solid ${border}`,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'background-color 0.15s, color 0.2s',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBgStrong}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <Settings size={14} color={textSub} />
+                    Settings
+                  </button>
+
                   {/* Theme Toggle */}
                   <button
                     onClick={toggleDarkMode}
