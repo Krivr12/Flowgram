@@ -89,7 +89,7 @@ export const LandingPage = () => {
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e89100')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFA100')}
         >
-          Sign In
+          Get Started
         </Link>
 
       </div>

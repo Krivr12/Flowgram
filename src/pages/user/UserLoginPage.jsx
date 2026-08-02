@@ -131,8 +131,8 @@ export const UserLoginPage = () => {
 
         {/* Logo + heading */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <Link to="/" style={{ textDecoration: 'none' }}>
-            <img src="/flowgram_logo.png" alt="Flowgram" style={{ width: '48px', height: '48px', borderRadius: '10px', marginBottom: '12px' }} />
+          <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
+            <img src="/flowgram_logo.png" alt="Flowgram" style={{ width: '48px', height: '48px', borderRadius: '10px', marginBottom: '12px', display: 'block' }} />
           </Link>
           <p style={{ fontSize: '14px', color: '#64748b', marginTop: '0' }}>{headings[view]}</p>
         </div>

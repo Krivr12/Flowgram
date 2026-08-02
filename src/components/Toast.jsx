@@ -26,16 +26,20 @@ export const Toast = ({ type = 'success', title, message, onClose, duration = 50
       <div
         style={{
           position: 'fixed',
-          top: '24px',
-          right: '24px',
+          top: '16px',
+          left: '16px',
+          right: '16px',
           zIndex: 9999,
-          animation: 'toastSlideIn 0.3s ease-out',
+          display: 'flex',
+          justifyContent: 'center',
+          animation: 'toastSlideDown 0.3s ease-out',
+          pointerEvents: 'none',
         }}
       >
         <style>{`
-          @keyframes toastSlideIn {
-            from { transform: translateX(420px); opacity: 0; }
-            to   { transform: translateX(0);     opacity: 1; }
+          @keyframes toastSlideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to   { transform: translateY(0);     opacity: 1; }
           }
         `}</style>
 
@@ -44,14 +48,15 @@ export const Toast = ({ type = 'success', title, message, onClose, duration = 50
             backgroundColor: '#fff',
             border: '1px solid #e2e8f0',
             borderLeft: '4px solid #FFA100',
-            borderRadius: '10px',
-            padding: '16px 18px',
+            borderRadius: '12px',
+            padding: '14px 16px',
             display: 'flex',
             alignItems: 'flex-start',
-            gap: '14px',
+            gap: '12px',
             boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-            maxWidth: '380px',
-            width: '380px',
+            width: '100%',
+            maxWidth: '400px',
+            pointerEvents: 'auto',
           }}
         >
           {/* Icon */}
@@ -71,7 +76,7 @@ export const Toast = ({ type = 'success', title, message, onClose, duration = 50
           </div>
 
           {/* Content */}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ flex: 1, minWidth: 0, overflow: 'visible' }}>
             {title && (
               <p
                 style={{
@@ -80,6 +85,7 @@ export const Toast = ({ type = 'success', title, message, onClose, duration = 50
                   color: '#0f172a',
                   margin: '0 0 4px',
                   lineHeight: '1.3',
+                  wordBreak: 'break-word',
                 }}
               >
                 {title}
@@ -92,6 +98,7 @@ export const Toast = ({ type = 'success', title, message, onClose, duration = 50
                   color: '#475569',
                   margin: 0,
                   lineHeight: '1.5',
+                  wordBreak: 'break-word',
                 }}
               >
                 {message}
@@ -146,16 +153,20 @@ export const Toast = ({ type = 'success', title, message, onClose, duration = 50
     <div
       style={{
         position: 'fixed',
-        top: '24px',
-        right: '24px',
+        top: '16px',
+        left: '16px',
+        right: '16px',
         zIndex: 9999,
-        animation: 'toastSlideIn 0.3s ease-out',
+        display: 'flex',
+        justifyContent: 'center',
+        animation: 'toastSlideDown 0.3s ease-out',
+        pointerEvents: 'none',
       }}
     >
       <style>{`
-        @keyframes toastSlideIn {
-          from { transform: translateX(420px); opacity: 0; }
-          to   { transform: translateX(0);     opacity: 1; }
+        @keyframes toastSlideDown {
+          from { transform: translateY(-100%); opacity: 0; }
+          to   { transform: translateY(0);     opacity: 1; }
         }
       `}</style>
 
@@ -164,13 +175,15 @@ export const Toast = ({ type = 'success', title, message, onClose, duration = 50
           backgroundColor: bgColor,
           border: `1px solid ${borderColor}`,
           color: textColor,
-          padding: '16px 20px',
-          borderRadius: '10px',
+          padding: '14px 16px',
+          borderRadius: '12px',
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          width: '100%',
           maxWidth: '400px',
+          pointerEvents: 'auto',
         }}
       >
         {isSuccess ? (
@@ -179,7 +192,7 @@ export const Toast = ({ type = 'success', title, message, onClose, duration = 50
           <AlertCircle size={20} color={iconColor} style={{ flexShrink: 0 }} />
         )}
 
-        <div style={{ flex: 1, fontSize: '14px', fontWeight: '500', lineHeight: '1.4' }}>
+        <div style={{ flex: 1, fontSize: '14px', fontWeight: '500', lineHeight: '1.4', wordBreak: 'break-word' }}>
           {message}
         </div>
 
