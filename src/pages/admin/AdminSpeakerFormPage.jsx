@@ -399,7 +399,7 @@ export const AdminSpeakerFormPage = () => {
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
                 <Trash2 size={14} />
-                Delete Speaker
+                <span style={{ display: 'none' }} className="delete-button-text">Delete Speaker</span>
               </button>
             )}
 

@@ -462,7 +462,7 @@ export const AdminSegmentFormPage = () => {
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
                 <Trash2 size={14} />
-                Delete Segment
+                <span style={{ display: 'none' }} className="delete-button-text">Delete Segment</span>
               </button>
             )}
             

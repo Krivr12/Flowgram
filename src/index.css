@@ -266,3 +266,11 @@ html.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   filter: invert(0) brightness(1.2);
   cursor: pointer;
 }
+
+/* ── Mobile Delete Button Text Hiding ── */
+/* On mobile (< 768px): hide delete button text, show only icon */
+@media (max-width: 768px) {
+  .delete-button-text {
+    display: none !important;
+  }
+}
