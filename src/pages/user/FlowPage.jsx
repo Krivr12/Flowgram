@@ -488,9 +488,7 @@ export const FlowPage = () => {
   }
 
   return (
-    <div style={{ padding: '0', minHeight: '100vh', backgroundColor: isDarkMode ? '#1a222d' : '#f8fafc', transition: 'background-color 0.2s' }}>
-      {/* Main content container */}
-      <div style={{ padding: '16px 16px 80px' }}>
+    <div style={{ paddingBottom: '40px', margin: '-40px -16px 0', padding: '16px 16px 40px', minHeight: 'calc(100vh - 64px)', backgroundColor: isDarkMode ? '#1a222d' : '#f8fafc', transition: 'background-color 0.2s' }}>
 
         {/* Error banner */}
         {error && (
@@ -592,7 +590,6 @@ export const FlowPage = () => {
             </div>
           )}
         </div>
-      </div>
 
       {/* ── Modals ── */}
     </div>

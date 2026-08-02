@@ -7,18 +7,23 @@ import { createEvent, updateEvent, getEventById } from '../../services/events'
 
 /**
  * Convert a timestamp from Supabase to the "YYYY-MM-DDTHH:mm" format
- * that <input type="datetime-local"> expects (in local time).
+ * that <input type="datetime-local"> expects.
+ *
+ * Flowgram treats all event/segment times as venue wall-clock time: the time
+ * the admin types is the time attendees see, regardless of either party's
+ * browser timezone. Stored values are therefore read back with getUTC* so no
+ * offset shifting occurs. This matches AdminSegmentFormPage and every display
+ * formatter (which all use `timeZone: 'UTC'`).
  */
-const isoToLocalInput = (isoStr) => {
+const isoToDatetimeLocal = (isoStr) => {
   if (!isoStr) return ''
   const d = new Date(isoStr)
   if (isNaN(d.getTime())) return ''
-  // Build local YYYY-MM-DDTHH:mm string
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  const hours = String(d.getHours()).padStart(2, '0')
-  const minutes = String(d.getMinutes()).padStart(2, '0')
+  const year = d.getUTCFullYear()
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(d.getUTCDate()).padStart(2, '0')
+  const hours = String(d.getUTCHours()).padStart(2, '0')
+  const minutes = String(d.getUTCMinutes()).padStart(2, '0')
   return `${year}-${month}-${day}T${hours}:${minutes}`
 }
 
@@ -57,7 +62,7 @@ const getInputStyle = () => {
   return {
     width: '100%',
     padding: '10px 14px',
-    fontSize: '14px',
+    fontSize: '16px',
     color: isDarkMode ? '#e2e8f0' : '#0f172a',
     backgroundColor: isDarkMode ? '#1e293b' : '#fff',
     border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0',
@@ -98,8 +103,8 @@ export const AdminEventFormPage = () => {
           title:       result.data.title       || '',
           description: result.data.description || '',
           venue:       result.data.venue        || '',
-          start_date:  isoToLocalInput(result.data.start_date),
-          end_date:    isoToLocalInput(result.data.end_date),
+          start_date:  isoToDatetimeLocal(result.data.start_date),
+          end_date:    isoToDatetimeLocal(result.data.end_date),
         }
         setInitialValues(mapped)
         setForm(mapped)
@@ -153,13 +158,15 @@ export const AdminEventFormPage = () => {
 
     setSubmitting(true)
 
-    // Convert datetime-local values to ISO strings for Supabase
+    // Send the raw datetime-local value so the time is stored as typed.
+    // Using new Date(...).toISOString() here would shift by the admin's UTC
+    // offset (e.g. 8:00 AM in Manila would save and display as 12:00 AM).
     const payload = {
       title:       form.title.trim(),
       description: form.description.trim(),
       venue:       form.venue.trim(),
-      start_date:  form.start_date ? new Date(form.start_date).toISOString() : null,
-      end_date:    form.end_date ? new Date(form.end_date).toISOString() : null,
+      start_date:  form.start_date || null,
+      end_date:    form.end_date || null,
     }
 
     const result = isEditMode
@@ -353,6 +360,7 @@ export const AdminEventFormPage = () => {
                       boxShadow: focusedField === 'start_date' && !errors.start_date
                         ? '0 0 0 3px rgba(255,153,0,0.15)'
                         : 'none',
+                      colorScheme: isDarkMode ? 'dark' : 'light',
                     }}
                   />
                 </Field>
@@ -366,6 +374,7 @@ export const AdminEventFormPage = () => {
                     onChange={handleChange('end_date')}
                     onFocus={() => setFocusedField('end_date')}
                     onBlur={() => setFocusedField(null)}
+                    min={form.start_date || undefined}
                     style={{
                       ...inputStyle,
                       borderColor: errors.end_date
@@ -374,9 +383,17 @@ export const AdminEventFormPage = () => {
                       boxShadow: focusedField === 'end_date' && !errors.end_date
                         ? '0 0 0 3px rgba(255,153,0,0.15)'
                         : 'none',
+                      colorScheme: isDarkMode ? 'dark' : 'light',
                     }}
                   />
                 </Field>
+
+                <style>{`
+                  input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+                    cursor: pointer;
+                    filter: ${isDarkMode ? 'invert(0.8) brightness(1.3)' : 'invert(0.6)'};
+                  }
+                `}</style>
               </div>
             </div>
 

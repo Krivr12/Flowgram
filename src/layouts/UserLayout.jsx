@@ -64,7 +64,7 @@ export const UserLayout = () => {
   })
   const dropdownRef                         = useRef(null)
   const notifPollIntervalRef                = useRef(null)
-  const lastSeenNotifIdRef                  = useRef(localStorage.getItem('flowgram_last_seen_notif_id')) // prevents re-showing already-seen notifications
+  const lastSeenNotifIdRef                  = useRef(null) // per-event; set in setupNotificationPolling
   const navigate                            = useNavigate()
   const location                            = useLocation()
 
@@ -170,8 +170,9 @@ export const UserLayout = () => {
           setHasNewNotif(true)
           localStorage.setItem('flowgram_has_new_notif', 'true')
 
-          // Only show toast popup if this isn't the first poll (avoid toasting stale data on load)
-          if (lastSeenNotifIdRef.current !== null) {
+          // Only show toast popup if this isn't the first poll for this event
+          // (avoid toasting stale notifications when switching events or on initial load)
+          if (lastSeenNotifIdRef.current !== null && lastSeenNotifIdRef.current !== '__seed__') {
             setNotifToast({
               title: latestNotif.title || 'New Announcement',
               message: latestNotif.message || '',
@@ -179,7 +180,7 @@ export const UserLayout = () => {
           }
 
           lastSeenNotifIdRef.current = latestNotif.id
-          localStorage.setItem('flowgram_last_seen_notif_id', latestNotif.id)
+          localStorage.setItem(`flowgram_last_seen_notif_id_${selectedEventId}`, latestNotif.id)
         }
       }
     } catch (err) {
@@ -193,8 +194,15 @@ export const UserLayout = () => {
       clearInterval(notifPollIntervalRef.current)
     }
 
-    // Reset seen-id so the first poll of a new event silently seeds the ref
-    lastSeenNotifIdRef.current = localStorage.getItem('flowgram_last_seen_notif_id')
+    // Load the last-seen ID for the CURRENT event (per-event tracking)
+    const selectedEventId = localStorage.getItem('selected_event_id')
+    const storedId = selectedEventId
+      ? localStorage.getItem(`flowgram_last_seen_notif_id_${selectedEventId}`)
+      : null
+
+    // Use '__seed__' as a sentinel for "first poll of this event session" — 
+    // this prevents showing a toast for existing notifications when switching events
+    lastSeenNotifIdRef.current = storedId || '__seed__'
 
     // Fetch immediately on mount
     fetchNotifications()
@@ -321,7 +329,7 @@ export const UserLayout = () => {
         }}>
 
           {/* LEFT: Logo + Mobile Avatar Button */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, overflow: 'hidden' }}>
             {/* Mobile avatar button — opens sidebar (shows only <768px) */}
             <button
               onClick={() => setSidebarOpen(true)}
@@ -355,6 +363,7 @@ export const UserLayout = () => {
                 color: isDarkMode ? '#fff' : '#0f172a',
                 letterSpacing: '-0.01em',
                 whiteSpace: 'nowrap',
+                flexShrink: 0,
               }}
             >
               Flowgram
@@ -363,17 +372,17 @@ export const UserLayout = () => {
             {/* Event Title — appears after logo/avatar */}
             {eventTitle && !location.pathname.includes('/events') && (
               <>
-                <span style={{ color: '#cbd5e1', fontSize: '20px', lineHeight: 1, userSelect: 'none' }}>
+                <span style={{ color: '#cbd5e1', fontSize: '20px', lineHeight: 1, userSelect: 'none', flexShrink: 0 }} className="user-layout-desktop-logo">
                   •
                 </span>
                 <span style={{
-                  fontSize: '15px',
+                  fontSize: '14px',
                   fontWeight: '600',
                   color: textSub,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  maxWidth: '340px',
+                  minWidth: 0,
                   transition: 'color 0.2s',
                 }}>
                   {eventTitle}

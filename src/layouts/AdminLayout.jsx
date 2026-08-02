@@ -195,23 +195,26 @@ export const AdminLayout = () => {
         }}
       >
         {/* Left: Breadcrumb */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, overflow: 'hidden' }}>
           <Link
             to="/admin"
             style={{
               fontSize: '15px', fontWeight: '700', color: isDarkMode ? '#fff' : '#0f172a',
-              textDecoration: 'none', letterSpacing: '-0.01em', whiteSpace: 'nowrap',
+              textDecoration: 'none', letterSpacing: '-0.01em', whiteSpace: 'nowrap', flexShrink: 0,
             }}
           >
             Flowgram
           </Link>
           {eventName && location.pathname !== '/admin' && (
-            <span style={{
-              fontSize: '14px', fontWeight: '600', color: textSub,
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '280px',
-            }}>
-              {eventName}
-            </span>
+            <>
+              <span style={{ color: textSub, fontSize: '14px', flexShrink: 0 }}>›</span>
+              <span style={{
+                fontSize: '14px', fontWeight: '600', color: textSub,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0,
+              }}>
+                {eventName}
+              </span>
+            </>
           )}
         </div>
 
@@ -375,7 +378,7 @@ export const AdminLayout = () => {
           <span style={{
             fontSize: '13px', fontWeight: '600', color: textSub,
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            maxWidth: 'calc(100vw - 120px)',
+            minWidth: 0, flex: 1,
           }}>
             {eventName}
           </span>

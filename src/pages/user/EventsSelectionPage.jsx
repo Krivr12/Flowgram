@@ -22,6 +22,21 @@ const formatEventDate = (dateStr) => {
   return `${datePart} | ${timePart}`
 }
 
+// Status badge styles
+const EVENT_STATUS_BADGE = {
+  UPCOMING:  { bg: '#eff6ff', text: '#1d4ed8', label: 'Upcoming' },
+  STARTED:   { bg: '#fef3c7', text: '#b45309', label: 'Started' },
+  FINISHED:  { bg: '#dcfce7', text: '#166534', label: 'Finished' },
+  CANCELLED: { bg: '#fee2e2', text: '#991b1b', label: 'Cancelled' },
+}
+
+const EVENT_STATUS_BADGE_DARK = {
+  UPCOMING:  { bg: 'rgba(99,179,237,0.15)', text: '#93c5fd', label: 'Upcoming' },
+  STARTED:   { bg: 'rgba(251,191,36,0.15)', text: '#fcd34d', label: 'Started' },
+  FINISHED:  { bg: 'rgba(52,211,153,0.15)', text: '#6ee7b7', label: 'Finished' },
+  CANCELLED: { bg: 'rgba(239,68,68,0.15)',  text: '#fca5a5', label: 'Cancelled' },
+}
+
 export const EventsSelectionPage = () => {
   const navigate = useNavigate()
   const [events, setEvents]   = useState([])
@@ -41,6 +56,13 @@ export const EventsSelectionPage = () => {
 
   useEffect(() => {
     loadEvents()
+  }, [])
+
+  // Refetch events when window regains focus (ensures fresh data)
+  useEffect(() => {
+    const handleFocus = () => loadEvents()
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
   }, [])
 
   const loadEvents = async () => {
@@ -146,12 +168,12 @@ export const EventsSelectionPage = () => {
                   {event.title}
                 </h3>
 
-                {/* Date */}
+                {/* Start Date */}
                 {event.start_date && (
                   <p style={{
                     fontSize: '13px',
                     color: isDarkMode ? '#94a3b8' : '#64748b',
-                    margin: '0 0 6px',
+                    margin: '0 0 4px',
                     fontWeight: '500',
                     transition: 'color 0.2s',
                   }}>
@@ -159,15 +181,49 @@ export const EventsSelectionPage = () => {
                   </p>
                 )}
 
+                {/* End Date */}
+                {event.end_date && (
+                  <p style={{
+                    fontSize: '13px',
+                    color: isDarkMode ? '#94a3b8' : '#64748b',
+                    margin: '0 0 6px',
+                    fontWeight: '500',
+                    transition: 'color 0.2s',
+                  }}>
+                    → {formatEventDate(event.end_date)}
+                  </p>
+                )}
+
                 {/* Venue */}
                 {event.venue && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '2px' }}>
                     <MapPin size={13} color={isDarkMode ? '#94a3b8' : '#94a3b8'} style={{ flexShrink: 0, transition: 'color 0.2s' }} />
                     <span style={{ fontSize: '13px', color: isDarkMode ? '#94a3b8' : '#94a3b8', fontWeight: '500', transition: 'color 0.2s' }}>
                       {event.venue}
                     </span>
                   </div>
                 )}
+
+                {/* Status Badge */}
+                {event.event_status && (() => {
+                  const badge = isDarkMode
+                    ? (EVENT_STATUS_BADGE_DARK[event.event_status] || EVENT_STATUS_BADGE_DARK['UPCOMING'])
+                    : (EVENT_STATUS_BADGE[event.event_status] || EVENT_STATUS_BADGE['UPCOMING'])
+                  return (
+                    <span style={{
+                      display: 'inline-block',
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      backgroundColor: badge.bg,
+                      color: badge.text,
+                      marginTop: '10px',
+                    }}>
+                      {badge.label}
+                    </span>
+                  )
+                })()}
               </div>
 
               {/* ── Info icon → navigates to EventDetailsPage ── */}

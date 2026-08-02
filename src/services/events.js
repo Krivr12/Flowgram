@@ -1,11 +1,11 @@
 import { supabase } from './supabase'
 
-// Get all events
+// Get all events (nearest start_date first)
 export const getAllEvents = async () => {
   const { data, error } = await supabase
     .from('events')
     .select('*')
-    .order('start_date', { ascending: false })
+    .order('start_date', { ascending: true })
 
   if (error) {
     console.error('Error fetching events:', error.message)

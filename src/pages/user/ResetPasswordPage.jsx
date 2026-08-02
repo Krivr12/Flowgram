@@ -30,7 +30,7 @@ export const ResetPasswordPage = () => {
     border: '1px solid #e2e8f0',
     borderRadius: '8px',
     outline: 'none',
-    fontSize: '14px',
+    fontSize: '16px',
     color: '#0f172a',
     backgroundColor: '#fff',
     boxSizing: 'border-box',

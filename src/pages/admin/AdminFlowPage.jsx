@@ -65,6 +65,13 @@ const CAPACITY_STYLE = {
 
 const EVENT_STATUS_OPTIONS = ['UPCOMING', 'STARTED', 'FINISHED', 'CANCELLED']
 
+const EVENT_STATUS_LABEL = {
+  UPCOMING:  'Upcoming',
+  STARTED:   'Started',
+  FINISHED:  'Finished',
+  CANCELLED: 'Cancelled',
+}
+
 const EVENT_STATUS_STYLE = {
   UPCOMING:  { bg: 'rgba(99,179,237,0.18)',  text: '#7fb8e6' },
   STARTED:   { bg: 'rgba(251,191,36,0.18)',  text: '#fcd34d' },
@@ -482,7 +489,7 @@ export const AdminFlowPage = () => {
               }}
             >
               {EVENT_STATUS_OPTIONS.map((opt) => (
-                <option key={opt} value={opt} style={{ backgroundColor: '#1e2a3a', color: '#e2e8f0' }}>{opt}</option>
+                <option key={opt} value={opt} style={{ backgroundColor: '#1e2a3a', color: '#e2e8f0' }}>{EVENT_STATUS_LABEL[opt]}</option>
               ))}
             </select>
             {updatingEventStatus && <span style={{ fontSize: '11px', color: '#64748b' }}>Saving…</span>}

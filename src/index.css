@@ -245,6 +245,14 @@ body {
   }
 }
 
+/* ── Prevent iOS auto-zoom on input focus ── */
+/* iOS Safari zooms in when font-size < 16px on focused inputs */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
 /* ── Datetime Input Calendar Icon Theming ── */
 /* Light mode: light gray calendar icon */
 input[type="datetime-local"] {

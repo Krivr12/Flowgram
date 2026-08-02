@@ -58,7 +58,7 @@ const EMPTY_FORM = {
 const getInputStyle = (isDarkMode) => ({
   width: '100%',
   padding: '10px 14px',
-  fontSize: '14px',
+  fontSize: '16px',
   color: isDarkMode ? '#e2e8f0' : '#0f172a',
   backgroundColor: isDarkMode ? '#252F3E' : '#fff',
   border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0',
