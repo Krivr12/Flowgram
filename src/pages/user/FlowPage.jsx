@@ -57,22 +57,18 @@ const STATUS_BADGE = {
 const getStatusBadge = (status) => STATUS_BADGE[status] ?? STATUS_BADGE['Not Started']
 
 // ─── Determine if segment is ongoing ──────────────────────────────────────────
-// Checks EITHER the explicit status field OR falls back to time-based detection
+// Priority: Explicit admin-set "Ongoing" status takes absolute control
+// This allows admins to show/hide segments regardless of actual time
 
 const isSegmentOngoing = (segment) => {
-  // Prefer the admin-set status field (case-insensitive)
+  // PRIORITY 1: Explicit "Ongoing" status (case-insensitive) - absolute control
   if (segment.segment_status && segment.segment_status.trim().toLowerCase() === 'ongoing') {
     return true
   }
 
-  // Fallback: time-based check when no explicit status is set
-  const now = new Date()
-  const start = segment.start_time ? new Date(segment.start_time) : null
-  const end = segment.end_time ? new Date(segment.end_time) : null
-
-  if (!start) return false
-  if (!end) return now >= start
-  return now >= start && now < end
+  // If NOT explicitly marked as "Ongoing", return false
+  // This ensures only admin-controlled status determines "Happening Now" visibility
+  return false
 }
 
 // ─── Segment Detail Drawer (bottom sheet) ─────────────────────────────────────
@@ -182,8 +178,9 @@ const SegmentCard = ({ segment, isConcurrent, isUserPick, onConcurrentClick, onC
 // ─── Ongoing dark card ────────────────────────────────────────────────────────
 
 const OngoingCard = ({ segment, speakers, onCardClick, style }) => {
-  const displaySpeakers = speakers.slice(0, 2)
-  const remainingCount = speakers.length - 2
+  const segmentSpeakers = speakers[segment.id] || []
+  const displaySpeakers = segmentSpeakers.slice(0, 2)
+  const remainingCount = segmentSpeakers.length - 2
 
   return (
     <div
@@ -245,7 +242,7 @@ const OngoingCard = ({ segment, speakers, onCardClick, style }) => {
       </h3>
 
       {/* ── Speakers ── */}
-      {speakers.length > 0 && (
+      {segmentSpeakers.length > 0 && (
         <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {displaySpeakers.map((sp) => (
@@ -281,7 +278,7 @@ export const FlowPage = () => {
   const [error, setError]                       = useState('')
   const [currentUser, setCurrentUser]           = useState(null)
   const [pickedSegments, setPickedSegments]     = useState({}) // { "HH:MM": segmentId }
-  const [ongoingSpeakers, setOngoingSpeakers]   = useState([]) // speakers for ongoing segment
+  const [ongoingSpeakers, setOngoingSpeakers]   = useState({}) // { segmentId: [speakers] }
   const [isDarkMode, setIsDarkMode]             = useState(() =>
     document.documentElement.classList.contains('dark')
   )
@@ -365,26 +362,64 @@ export const FlowPage = () => {
   }, [segments])
 
   // ── Ongoing segments logic ────────────────────────────────────────────────
+  // BULLETPROOF RULE: Show user's picked ongoing segments
+  // - If segment has concurrent alternatives → Check if user picked it
+  // - If segment has NO concurrent alternatives → Always show it (auto-picked)
 
   const ongoingSegments = useMemo(() => {
+    // Step 1: Get all segments marked as "Ongoing"
     const ongoing = segments.filter(isSegmentOngoing)
-    if (ongoing.length === 0) return []
-
-    // Check if user has a pick for the current time slot
-    const ongoingTimeKeys = [...new Set(ongoing.map(s => getTimeKey(s.start_time)))]
     
-    for (const timeKey of ongoingTimeKeys) {
-      const pickedSegId = pickedSegments[timeKey]
-      if (pickedSegId) {
-        const pickedSeg = ongoing.find(s => s.id === pickedSegId)
-        if (pickedSeg) return [pickedSeg] // Only show user's pick
-      }
+    if (ongoing.length === 0) {
+      console.log('🔍 No ongoing segments found')
+      return []
     }
 
-    return ongoing // Show all ongoing if no pick exists
+    // Step 2: Build a map of time slots to segment counts
+    const timeSlotMap = new Map()
+    segments.forEach(seg => {
+      const timeKey = getTimeKey(seg.start_time)
+      if (!timeSlotMap.has(timeKey)) {
+        timeSlotMap.set(timeKey, [])
+      }
+      timeSlotMap.get(timeKey).push(seg.id)
+    })
+
+    // Step 3: Get user's picked segment IDs
+    const userPickedIds = Object.values(pickedSegments).filter(Boolean)
+    const pickedTimeKeys = Object.keys(pickedSegments)
+    
+    console.log('🔍 All ongoing segments:', ongoing.map(s => ({ 
+      id: s.id, 
+      title: s.title, 
+      time: getTimeKey(s.start_time) 
+    })))
+    console.log('🔍 User picked segments (IDs):', userPickedIds)
+    console.log('🔍 Time keys with picks:', pickedTimeKeys)
+    
+    // Step 4: Filter ongoing segments
+    const userOngoingSegments = ongoing.filter(seg => {
+      const timeKey = getTimeKey(seg.start_time)
+      const segmentsAtThisTime = timeSlotMap.get(timeKey) || []
+      const isConcurrent = segmentsAtThisTime.length > 1
+      
+      if (isConcurrent) {
+        // Concurrent segment - check if user picked THIS specific one
+        const isPicked = userPickedIds.includes(seg.id)
+        console.log(`  ⚡ Concurrent segment "${seg.title}": picked=${isPicked}`)
+        return isPicked
+      } else {
+        // Non-concurrent segment - always include (auto-picked)
+        console.log(`  ✨ Non-concurrent segment "${seg.title}": auto-included`)
+        return true
+      }
+    })
+    
+    console.log('✅ Final ongoing segments to display:', userOngoingSegments.length)
+    return userOngoingSegments
   }, [segments, pickedSegments])
 
-  // Fetch speakers for the ongoing segment
+  // Fetch speakers for ALL ongoing segments
   useEffect(() => {
     if (ongoingSegments.length === 0) {
       setOngoingSpeakers([])
@@ -393,14 +428,25 @@ export const FlowPage = () => {
     
     let cancelled = false
     const fetchOngoingSpeakers = async () => {
-      const segmentId = ongoingSegments[0].id
+      // Fetch speakers for all ongoing segments
+      const segmentIds = ongoingSegments.map(seg => seg.id)
       const { data, error } = await supabase
         .from('segment_speakers')
-        .select('speaker_id, speakers(id, full_name, role, company)')
-        .eq('segment_id', segmentId)
+        .select('segment_id, speaker_id, speakers(id, full_name, role, company)')
+        .in('segment_id', segmentIds)
       
       if (!cancelled && !error && data) {
-        setOngoingSpeakers(data.map((r) => r.speakers).filter(Boolean))
+        // Group speakers by segment_id
+        const speakersBySegment = {}
+        data.forEach((r) => {
+          if (r.speakers) {
+            if (!speakersBySegment[r.segment_id]) {
+              speakersBySegment[r.segment_id] = []
+            }
+            speakersBySegment[r.segment_id].push(r.speakers)
+          }
+        })
+        setOngoingSpeakers(speakersBySegment)
       }
     }
     fetchOngoingSpeakers()
@@ -476,28 +522,17 @@ export const FlowPage = () => {
         {/* ── "Happening Now" Section ── */}
         {ongoingSegments.length > 0 ? (
           <div style={{ marginBottom: '32px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
-              {ongoingSegments.map((seg, idx) => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {ongoingSegments.map((seg) => (
                 <OngoingCard
                   key={seg.id}
                   segment={seg}
                   speakers={ongoingSpeakers}
                   onCardClick={handleSegmentClick}
-                  style={
-                    ongoingSegments.length > 1
-                      ? {
-                          position: idx === 0 ? 'relative' : 'absolute',
-                          top: idx === 0 ? 0 : `${idx * 8}px`,
-                          left: idx === 0 ? 0 : `${idx * 8}px`,
-                          right: idx === 0 ? 0 : `${idx * 8}px`,
-                          zIndex: ongoingSegments.length - idx,
-                        }
-                      : {}
-                  }
+                  style={{}}
                 />
               ))}
             </div>
-            {ongoingSegments.length > 1 && <div style={{ height: `${(ongoingSegments.length - 1) * 8}px` }} />}
           </div>
         ) : (
           <div style={{ marginBottom: '32px', backgroundColor: isDarkMode ? 'rgba(100, 116, 139, 0.1)' : 'rgba(30, 41, 59, 0.5)', border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '14px', padding: '20px', textAlign: 'center', transition: 'background-color 0.2s, border-color 0.2s' }}>

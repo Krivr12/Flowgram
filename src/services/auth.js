@@ -26,7 +26,6 @@ export const signupWithEmail = async (email, password, fullName) => {
           id: data.user.id,
           email: data.user.email,
           full_name: fullName,
-          is_verified: false, // unverified until email link is clicked
         },
       ])
 
