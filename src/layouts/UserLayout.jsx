@@ -54,13 +54,17 @@ export const UserLayout = () => {
   const [eventTitle, setEventTitle]         = useState(null)
   // ── Notification toast ──────────────────────────────────────────
   const [notifToast, setNotifToast]         = useState(null) // { title, message }
+  const [hasNewNotif, setHasNewNotif]       = useState(() => {
+    // Check if there's an unread marker from a previous session
+    return localStorage.getItem('flowgram_has_new_notif') === 'true'
+  })
   const [isDarkMode, setIsDarkMode]         = useState(() => {
     const saved = localStorage.getItem('user_dark_mode')
     return saved ? JSON.parse(saved) : false
   })
   const dropdownRef                         = useRef(null)
   const notifPollIntervalRef                = useRef(null)
-  const lastSeenNotifIdRef                  = useRef(null) // prevents re-showing already-seen notifications
+  const lastSeenNotifIdRef                  = useRef(localStorage.getItem('flowgram_last_seen_notif_id')) // prevents re-showing already-seen notifications
   const navigate                            = useNavigate()
   const location                            = useLocation()
 
@@ -160,16 +164,22 @@ export const UserLayout = () => {
       if (data && data.length > 0) {
         const latestNotif = data[0]
 
-        // Only show toast if this is a notification we haven't seen yet
+        // Only act if this is a notification we haven't seen yet
         if (latestNotif.id !== lastSeenNotifIdRef.current) {
-          // On the very first poll, just record the id silently — don't toast stale data
+          // Always show the red dot for unseen notifications
+          setHasNewNotif(true)
+          localStorage.setItem('flowgram_has_new_notif', 'true')
+
+          // Only show toast popup if this isn't the first poll (avoid toasting stale data on load)
           if (lastSeenNotifIdRef.current !== null) {
             setNotifToast({
               title: latestNotif.title || 'New Announcement',
               message: latestNotif.message || '',
             })
           }
+
           lastSeenNotifIdRef.current = latestNotif.id
+          localStorage.setItem('flowgram_last_seen_notif_id', latestNotif.id)
         }
       }
     } catch (err) {
@@ -184,7 +194,7 @@ export const UserLayout = () => {
     }
 
     // Reset seen-id so the first poll of a new event silently seeds the ref
-    lastSeenNotifIdRef.current = null
+    lastSeenNotifIdRef.current = localStorage.getItem('flowgram_last_seen_notif_id')
 
     // Fetch immediately on mount
     fetchNotifications()
@@ -206,6 +216,11 @@ export const UserLayout = () => {
   // Re-setup polling when the user navigates (covers switching events on /app/events)
   useEffect(() => {
     setupNotificationPolling()
+    // Clear red dot when visiting notifications page
+    if (location.pathname === '/app/notifications') {
+      setHasNewNotif(false)
+      localStorage.setItem('flowgram_has_new_notif', 'false')
+    }
   }, [location.pathname, setupNotificationPolling])
 
   // Setup polling when localStorage changes from another tab
@@ -869,7 +884,17 @@ export const UserLayout = () => {
                   transition: 'all 0.2s, color 0.2s',
                 }}
               >
-                <Icon size={20} strokeWidth={isActive ? 2.25 : 1.75} />
+                <div style={{ position: 'relative', display: 'inline-flex' }}>
+                  <Icon size={20} strokeWidth={isActive ? 2.25 : 1.75} />
+                  {label === 'Notifications' && hasNewNotif && (
+                    <span style={{
+                      position: 'absolute', top: '-2px', right: '-2px',
+                      width: '8px', height: '8px', borderRadius: '50%',
+                      backgroundColor: '#ef4444',
+                      border: `2px solid ${isDarkMode ? '#1a222d' : cardBg}`,
+                    }} />
+                  )}
+                </div>
                 <span>{label}</span>
               </a>
             )

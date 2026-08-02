@@ -11,19 +11,19 @@ import {
 
 const formatRelativeTime = (dateStr) => {
   if (!dateStr) return ''
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins  = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days  = Math.floor(diff / 86400000)
+  const date = new Date(dateStr)
+  const diff = Date.now() - date.getTime()
+  const mins = Math.floor(diff / 60000)
 
+  // First 10 minutes: show relative time
   if (mins < 1)   return 'just now'
-  if (mins < 60)  return `${mins}m ago`
-  if (hours < 24) return `${hours}h ago`
-  if (days < 7)   return `${days}d ago`
+  if (mins <= 10) return `${mins}m ago`
 
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
+  // After 10 minutes: show the actual time it was sent
+  return date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
   })
 }
 

@@ -11,6 +11,7 @@ export const AdminDashboardPage = () => {
   const [menuOpen, setMenuOpen] = useState(null)
   const [deleting, setDeleting] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null) // { id, title }
+  const [successMsg, setSuccessMsg] = useState('')
   const [isDarkMode, setIsDarkMode] = useState(() =>
     document.documentElement.classList.contains('dark')
   )
@@ -60,6 +61,7 @@ export const AdminDashboardPage = () => {
     const result = await deleteEvent(eventId)
     if (result.success) {
       setEvents((prev) => prev.filter((ev) => ev.id !== eventId))
+      setSuccessMsg('Event deleted!')
     } else {
       setError(result.error)
     }
@@ -145,6 +147,21 @@ export const AdminDashboardPage = () => {
           fontSize: '14px',
         }}>
           {error}
+        </div>
+      )}
+
+      {/* ── Success Banner ── */}
+      {successMsg && (
+        <div style={{
+          marginBottom: '24px',
+          backgroundColor: '#f0fdf4',
+          border: '1px solid #86efac',
+          color: '#166534',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          fontSize: '14px',
+        }}>
+          {successMsg}
         </div>
       )}
 

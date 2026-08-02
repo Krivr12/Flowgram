@@ -93,6 +93,7 @@ export const AdminSegmentFormPage = () => {
   const [form, setForm]                   = useState(EMPTY_FORM)
   const [errors, setErrors]               = useState({})
   const [serverError, setServerError]     = useState('')
+  const [successMsg, setSuccessMsg]       = useState('')
   const [loading, setLoading]             = useState(true)
   const [submitting, setSubmitting]       = useState(false)
   const [focusedField, setFocusedField]   = useState(null)
@@ -265,7 +266,8 @@ export const AdminSegmentFormPage = () => {
     } else {
       for (const sp of assignedSpeakers) await addSpeakerToSegment(actualSegmentId, sp.id)
     }
-    navigate(`/admin/events/${eventId}/segments`)
+    setSuccessMsg(isEditMode ? 'Segment updated!' : 'Segment added!')
+    setTimeout(() => navigate(`/admin/events/${eventId}/segments`), 1000)
   }
 
   const handleBack = () => navigate(`/admin/events/${eventId}/segments`)
@@ -274,7 +276,8 @@ export const AdminSegmentFormPage = () => {
     setDeleting(true)
     const result = await deleteSegment(segmentId)
     if (result.success) {
-      navigate(`/admin/events/${eventId}/segments`)
+      setSuccessMsg('Segment deleted!')
+      setTimeout(() => navigate(`/admin/events/${eventId}/segments`), 1000)
     } else {
       setServerError(result.error || 'Failed to delete segment.')
       setDeleting(false)
@@ -334,6 +337,12 @@ export const AdminSegmentFormPage = () => {
       {serverError && (
         <div style={{ backgroundColor: isDarkMode ? 'rgba(220, 38, 38, 0.1)' : '#fef2f2', border: isDarkMode ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid #fecaca', color: isDarkMode ? '#fca5a5' : '#dc2626', padding: '12px 16px', borderRadius: '8px', fontSize: '14px', marginBottom: '24px' }}>
           {serverError}
+        </div>
+      )}
+
+      {successMsg && (
+        <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #86efac', color: '#166534', padding: '12px 16px', borderRadius: '8px', fontSize: '14px', marginBottom: '24px' }}>
+          {successMsg}
         </div>
       )}
 
@@ -409,8 +418,9 @@ export const AdminSegmentFormPage = () => {
 
             <Field label="Capacity Status" required isDarkMode={isDarkMode}>
               <select value={form.capacity_status} onChange={handleChange('capacity_status')} onFocus={() => setFocusedField('capacity_status')} onBlur={() => setFocusedField(null)} style={{ ...inputStyle, borderColor: fieldBorder('capacity_status'), boxShadow: fieldShadow('capacity_status') }}>
-                <option value="VACANT">Vacant</option>
-                <option value="MODERATE">Moderate</option>
+                <option value="VACANT">Open</option>
+                <option value="FILLING">Filling Up</option>
+                <option value="ALMOST FULL">Almost Full</option>
                 <option value="FULL">Full</option>
               </select>
             </Field>
@@ -451,33 +461,35 @@ export const AdminSegmentFormPage = () => {
           </div>
 
           {/* ── Actions ── */}
-          <div style={{ display: 'flex', gap: '12px', marginTop: '32px', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '32px' }}>
+            {/* Cancel + Save row */}
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button type="button" onClick={handleBack}
+                style={{ padding: '12px 20px', fontSize: '14px', fontWeight: '500', color: isDarkMode ? '#cbd5e1' : '#374151', backgroundColor: 'transparent', border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0', borderRadius: '9999px', cursor: 'pointer', transition: 'background-color 0.15s', whiteSpace: 'nowrap' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(100, 116, 139, 0.1)' : '#f8fafc'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >Cancel</button>
+              <button type="submit" disabled={!canSubmit || isBusy}
+                style={{ flex: 1, padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: submitColor, backgroundColor: submitBg, border: 'none', borderRadius: '9999px', cursor: canSubmit && !isBusy ? 'pointer' : 'not-allowed', transition: 'background-color 0.2s', whiteSpace: 'nowrap' }}
+                onMouseEnter={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#155fa3' }}
+                onMouseLeave={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#1B77CF' }}
+              >{submitLabel}</button>
+            </div>
+
+            {/* Delete — separate row */}
             {isEditMode && (
               <button
                 type="button"
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={deleting}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 16px', fontSize: '14px', fontWeight: '500', color: '#dc2626', backgroundColor: 'transparent', border: isDarkMode ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid #fecaca', borderRadius: '9999px', cursor: 'pointer', transition: 'background-color 0.15s', opacity: deleting ? 0.5 : 1 }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px 16px', fontSize: '13px', fontWeight: '500', color: '#dc2626', backgroundColor: 'transparent', border: isDarkMode ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid #fecaca', borderRadius: '9999px', cursor: 'pointer', transition: 'background-color 0.15s', opacity: deleting ? 0.5 : 1, width: '100%' }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(220, 38, 38, 0.1)' : '#fef2f2'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
                 <Trash2 size={14} />
-                <span style={{ display: 'none' }} className="delete-button-text">Delete Segment</span>
+                Delete Segment
               </button>
             )}
-            
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button type="button" onClick={handleBack}
-                style={{ padding: '10px 20px', fontSize: '14px', fontWeight: '500', color: isDarkMode ? '#cbd5e1' : '#374151', backgroundColor: 'transparent', border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0', borderRadius: '9999px', cursor: 'pointer', transition: 'background-color 0.15s' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(100, 116, 139, 0.1)' : '#f8fafc'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >Cancel</button>
-              <button type="submit" disabled={!canSubmit || isBusy}
-                style={{ padding: '10px 24px', fontSize: '14px', fontWeight: '600', color: submitColor, backgroundColor: submitBg, border: 'none', borderRadius: '9999px', cursor: canSubmit && !isBusy ? 'pointer' : 'not-allowed', transition: 'background-color 0.2s', minWidth: '140px' }}
-                onMouseEnter={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#155fa3' }}
-                onMouseLeave={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#1B77CF' }}
-              >{submitLabel}</button>
-            </div>
           </div>
         </form>
       </div>

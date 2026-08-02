@@ -26,6 +26,8 @@ export const AdminSegmentsPage = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [segmentSpeakerCounts, setSegmentSpeakerCounts] = useState({})
+  const [segmentSpeakerNames, setSegmentSpeakerNames] = useState({}) // { segmentId: ['Name1', 'Name2'] }
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -52,16 +54,19 @@ export const AdminSegmentsPage = () => {
 
   const loadSpeakerCounts = async (segs) => {
     const counts = {}
+    const names = {}
     await Promise.all(
       segs.map(async (seg) => {
         const { data } = await supabase
           .from('segment_speakers')
-          .select('id')
+          .select('speakers(full_name)')
           .eq('segment_id', seg.id)
         counts[seg.id] = data ? data.length : 0
+        names[seg.id] = data ? data.map((d) => d.speakers?.full_name).filter(Boolean) : []
       })
     )
     setSegmentSpeakerCounts(counts)
+    setSegmentSpeakerNames(names)
   }
 
   const goToNew  = () => navigate(`/admin/events/${eventId}/segments/new`)
@@ -89,6 +94,37 @@ export const AdminSegmentsPage = () => {
         >
           <Plus size={16} /> New Segment
         </button>
+      </div>
+
+      {/* ── Search ── */}
+      <div style={{ marginBottom: '16px', position: 'relative' }}>
+        <input
+          type="text"
+          placeholder="Search segments..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '10px 14px 10px 36px',
+            borderRadius: '8px',
+            border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
+            backgroundColor: isDarkMode ? '#252F3E' : '#fff',
+            color: isDarkMode ? '#e2e8f0' : '#0f172a',
+            fontSize: '14px',
+            outline: 'none',
+            boxSizing: 'border-box',
+            transition: 'border-color 0.15s',
+          }}
+          onFocus={(e) => (e.target.style.borderColor = '#1B77CF')}
+          onBlur={(e) => (e.target.style.borderColor = isDarkMode ? 'rgba(100,116,139,0.3)' : '#e2e8f0')}
+        />
+        <svg
+          style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}
+          width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+        >
+          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
       </div>
 
       {/* ── Error ── */}
@@ -125,7 +161,15 @@ export const AdminSegmentsPage = () => {
       {!loading && segments.length > 0 && (
         <div>
           {Object.entries(
-            segments.reduce((acc, segment) => {
+            segments
+              .filter((seg) => {
+                if (!searchQuery.trim()) return true
+                const q = searchQuery.toLowerCase()
+                const titleMatch = seg.title?.toLowerCase().includes(q)
+                const speakerMatch = (segmentSpeakerNames[seg.id] || []).some((name) => name.toLowerCase().includes(q))
+                return titleMatch || speakerMatch
+              })
+              .reduce((acc, segment) => {
               const timeKey = segment.start_time || '__no_time__'
               if (!acc[timeKey]) {
                 acc[timeKey] = { time: segment.start_time, segments: [] }
@@ -150,7 +194,13 @@ export const AdminSegmentsPage = () => {
 
                 {/* Cards for this time group */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {group.segments.map((segment) => (
+                  {group.segments
+                    .sort((a, b) => {
+                      const aIs15 = a.room_name?.includes('15') ? 0 : 1
+                      const bIs15 = b.room_name?.includes('15') ? 0 : 1
+                      return aIs15 - bIs15
+                    })
+                    .map((segment) => (
                     <SegmentCard
                       key={segment.id}
                       segment={segment}

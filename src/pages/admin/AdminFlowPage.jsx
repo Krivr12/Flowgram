@@ -555,7 +555,13 @@ export const AdminFlowPage = () => {
 
           {/* Cards */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {groupSegs.map((seg) => (
+            {[...groupSegs]
+              .sort((a, b) => {
+                const aIs15 = a.room_name?.includes('15') ? 0 : 1
+                const bIs15 = b.room_name?.includes('15') ? 0 : 1
+                return aIs15 - bIs15
+              })
+              .map((seg) => (
               <SegmentCard
                 key={seg.id}
                 segment={seg}

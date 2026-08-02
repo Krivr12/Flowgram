@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { Outlet, Link, useNavigate, useMatches, useLocation } from 'react-router-dom'
 import {
   LogOut,
@@ -15,6 +15,7 @@ import {
   Moon,
 } from 'lucide-react'
 import { getCurrentUser, getUserProfile, logout } from '../services/supabase'
+import { supabase } from '../services/supabase'
 import { getEventById } from '../services/events'
 
 const NAVBAR_H = 64
@@ -38,6 +39,9 @@ export const AdminLayout = () => {
   const [eventName, setEventName]       = useState(null)
   const [drawerOpen, setDrawerOpen]     = useState(false)
   const [desktopDropdownOpen, setDesktopDropdownOpen] = useState(false)
+  const [hasNewNotif, setHasNewNotif]   = useState(false)
+  const notifPollRef                    = useRef(null)
+  const lastNotifIdRef                  = useRef(null)
   const [isDarkMode, setIsDarkMode]     = useState(() => {
     const saved = localStorage.getItem('admin_dark_mode')
     return saved ? JSON.parse(saved) : false
@@ -97,6 +101,44 @@ export const AdminLayout = () => {
     }
     loadEvent()
   }, [eventId, location.pathname])
+
+  // ── Notification polling for red dot ──────────────────────────────────────
+  const pollNotifications = useCallback(async () => {
+    const eid = eventId
+    if (!eid) return
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('id')
+        .eq('event_id', eid)
+        .order('created_at', { ascending: false })
+        .limit(1)
+      if (error || !data || data.length === 0) return
+      const latestId = data[0].id
+      if (lastNotifIdRef.current === null) {
+        lastNotifIdRef.current = latestId
+      } else if (latestId !== lastNotifIdRef.current) {
+        setHasNewNotif(true)
+        lastNotifIdRef.current = latestId
+      }
+    } catch {}
+  }, [eventId])
+
+  useEffect(() => {
+    if (!eventId) return
+    lastNotifIdRef.current = null
+    setHasNewNotif(false)
+    pollNotifications()
+    notifPollRef.current = setInterval(pollNotifications, 15000)
+    return () => { if (notifPollRef.current) clearInterval(notifPollRef.current) }
+  }, [eventId, pollNotifications])
+
+  // Clear red dot when visiting notifications page
+  useEffect(() => {
+    if (location.pathname.endsWith('/notifications')) {
+      setHasNewNotif(false)
+    }
+  }, [location.pathname])
 
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? 'hidden' : ''
@@ -534,7 +576,17 @@ export const AdminLayout = () => {
                   width: '60px',
                 }}
               >
-                <Icon size={20} strokeWidth={isItemActive ? 2.25 : 1.75} style={{ color: 'currentColor' }} />
+                <div style={{ position: 'relative', display: 'inline-flex' }}>
+                  <Icon size={20} strokeWidth={isItemActive ? 2.25 : 1.75} style={{ color: 'currentColor' }} />
+                  {item.label === 'Notifications' && hasNewNotif && (
+                    <span style={{
+                      position: 'absolute', top: '-2px', right: '-2px',
+                      width: '8px', height: '8px', borderRadius: '50%',
+                      backgroundColor: '#ef4444',
+                      border: `2px solid ${isDarkMode ? '#252F3E' : '#fff'}`,
+                    }} />
+                  )}
+                </div>
                 <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>
               </a>
             )
