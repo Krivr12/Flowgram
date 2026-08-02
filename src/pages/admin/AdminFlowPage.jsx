@@ -46,7 +46,7 @@ const CAPACITY_OPTIONS = ['VACANT', 'FILLING', 'FULL', 'AT CAPACITY']
 const CAPACITY_STYLE = {
   VACANT:        { bg: '#f0fdf4', text: '#15803d', dot: '#22c55e' },
   FILLING:       { bg: '#fffbeb', text: '#b45309', dot: '#f59e0b' },
-  FULL:          { bg: '#fff7ed', text: '#c2410c', dot: '#f97316' },
+  FULL:          { bg: '#fff7ed', text: '#c2410c', dot: '#FFA100' },
   'AT CAPACITY': { bg: '#fee2e2', text: '#991b1b', dot: '#ef4444' },
 }
 
@@ -55,7 +55,7 @@ const CAPACITY_STYLE = {
 const EVENT_STATUS_OPTIONS = ['UPCOMING', 'STARTED', 'FINISHED', 'CANCELLED']
 
 const EVENT_STATUS_STYLE = {
-  UPCOMING:  { bg: 'rgba(99,179,237,0.18)',  text: '#93c5fd', dot: '#60a5fa' },
+  UPCOMING:  { bg: 'rgba(99,179,237,0.18)',  text: '#7fb8e6', dot: '#60a5fa' },
   STARTED:   { bg: 'rgba(251,191,36,0.18)',  text: '#fcd34d', dot: '#fbbf24' },
   FINISHED:  { bg: 'rgba(52,211,153,0.18)',  text: '#6ee7b7', dot: '#34d399' },
   CANCELLED: { bg: 'rgba(239,68,68,0.18)',   text: '#fca5a5', dot: '#ef4444' },
@@ -397,6 +397,9 @@ export const AdminFlowPage = () => {
         <h1 style={{ fontSize: '24px', fontWeight: '700', color: isDarkMode ? '#fff' : '#0f172a', margin: 0 }}>
           Manage Flow
         </h1>
+        <p style={{ fontSize: '13px', color: isDarkMode ? '#94a3b8' : '#64748b', marginTop: '6px', lineHeight: 1.5 }}>
+          Control the live status of your event and its sessions. Changes here are reflected in real time for all attendees.
+        </p>
       </div>
 
       {/* ── Error banner ── */}
@@ -478,7 +481,7 @@ export const AdminFlowPage = () => {
                 borderRadius: '7px',
                 border: '1px solid rgba(255,255,255,0.15)',
                 backgroundColor: EVENT_STATUS_STYLE[event.event_status || 'UPCOMING']?.bg ?? 'rgba(99,179,237,0.18)',
-                color: EVENT_STATUS_STYLE[event.event_status || 'UPCOMING']?.text ?? '#93c5fd',
+                color: EVENT_STATUS_STYLE[event.event_status || 'UPCOMING']?.text ?? '#7fb8e6',
                 fontSize: '12px',
                 fontWeight: '700',
                 cursor: updatingEventStatus ? 'not-allowed' : 'pointer',

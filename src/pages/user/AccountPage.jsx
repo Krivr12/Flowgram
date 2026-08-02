@@ -306,7 +306,7 @@ export const AccountPage = () => {
             style={{
               width: '100%',
               padding: '11px 16px',
-              backgroundColor: saving ? (isDarkMode ? '#475569' : '#cbd5e1') : (isDarkMode ? '#2563eb' : '#2563eb'),
+              backgroundColor: saving ? (isDarkMode ? '#475569' : '#cbd5e1') : (isDarkMode ? '#1B77CF' : '#1B77CF'),
               color: '#fff',
               border: 'none',
               borderRadius: '10px',
@@ -319,8 +319,8 @@ export const AccountPage = () => {
               gap: '8px',
               transition: 'background-color 0.15s',
             }}
-            onMouseEnter={(e) => { if (!saving) e.target.style.backgroundColor = isDarkMode ? '#1d4ed8' : '#1d4ed8' }}
-            onMouseLeave={(e) => { if (!saving) e.target.style.backgroundColor = isDarkMode ? '#2563eb' : '#2563eb' }}
+            onMouseEnter={(e) => { if (!saving) e.target.style.backgroundColor = isDarkMode ? '#155fa3' : '#155fa3' }}
+            onMouseLeave={(e) => { if (!saving) e.target.style.backgroundColor = isDarkMode ? '#1B77CF' : '#1B77CF' }}
             aria-label={saving ? 'Saving changes...' : 'Save changes'}
           >
             {saving ? (

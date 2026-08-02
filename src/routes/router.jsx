@@ -7,6 +7,7 @@ import { EventWorkspaceLayout } from '../layouts/EventWorkspaceLayout'
 import { LandingPage } from '../pages/public/LandingPage'
 import { AuthCallbackPage } from '../pages/public/AuthCallbackPage'
 import { UserLoginPage } from '../pages/user/UserLoginPage'
+import { ResetPasswordPage } from '../pages/user/ResetPasswordPage'
 import { FlowPage } from '../pages/user/FlowPage'
 import { SegmentDetailsPage } from '../pages/user/SegmentDetailsPage'
 import { ConcurrentPickerPage } from '../pages/user/ConcurrentPickerPage'
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
   { path: '/login', element: <UserLoginPage /> },
   { path: '/auth/callback', element: <AuthCallbackPage /> },
+  { path: '/reset-password', element: <ResetPasswordPage /> },
 
   // ── User/Attendee App ──
   {

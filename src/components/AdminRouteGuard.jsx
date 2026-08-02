@@ -55,7 +55,7 @@ export const AdminRouteGuard = ({ children }) => {
           <p className="text-gray-600 mb-6">{error}</p>
           <a
             href="/login"
-            className="inline-block px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            className="inline-block px-6 py-2 bg-primary-blue text-white rounded-lg hover:bg-primary-blue/90"
           >
             Back to Login
           </a>

@@ -190,7 +190,7 @@ export const AdminLayout = () => {
           >
             <div style={{
               width: '32px', height: '32px', borderRadius: '50%',
-              backgroundColor: '#2563eb', display: 'flex', alignItems: 'center',
+              backgroundColor: '#1B77CF', display: 'flex', alignItems: 'center',
               justifyContent: 'center', color: '#fff', fontSize: '12px', fontWeight: '700', flexShrink: 0,
             }}>
               {getInitials(userProfile?.full_name)}
@@ -323,7 +323,7 @@ export const AdminLayout = () => {
           onClick={() => setDrawerOpen(true)}
           style={{
             width: '36px', height: '36px', borderRadius: '50%',
-            backgroundColor: '#2563eb', display: 'flex', alignItems: 'center',
+            backgroundColor: '#1B77CF', display: 'flex', alignItems: 'center',
             justifyContent: 'center', color: '#fff', fontSize: '13px',
             fontWeight: '700', border: 'none', cursor: 'pointer', flexShrink: 0,
           }}
@@ -383,7 +383,7 @@ export const AdminLayout = () => {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
             <div style={{
-              width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#2563eb',
+              width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#1B77CF',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#fff', fontSize: '14px', fontWeight: '700', flexShrink: 0,
             }}>
@@ -454,7 +454,7 @@ export const AdminLayout = () => {
               onClick={handleSwitchToUserView}
               style={{
                 display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', fontWeight: '500',
-                padding: '10px 12px', borderRadius: '8px', color: isDarkMode ? '#42b4ff' : '#2563eb',
+                padding: '10px 12px', borderRadius: '8px', color: isDarkMode ? '#42b4ff' : '#1B77CF',
                 backgroundColor: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
               }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBgStrong}
@@ -529,7 +529,7 @@ export const AdminLayout = () => {
                   flex: 1, padding: '8px 0', display: 'flex', flexDirection: 'column',
                   alignItems: 'center', justifyContent: 'center', gap: '2px',
                   textAlign: 'center', fontSize: '11px', fontWeight: '500',
-                  color: isItemActive ? '#2196F3' : (isDarkMode ? '#94a3b8' : '#4b5563'),
+                  color: isItemActive ? '#1B77CF' : (isDarkMode ? '#94a3b8' : '#4b5563'),
                   textDecoration: 'none', cursor: 'pointer', transition: 'color 0.2s',
                 }}
               >

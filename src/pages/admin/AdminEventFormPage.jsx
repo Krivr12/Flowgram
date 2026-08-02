@@ -175,7 +175,7 @@ export const AdminEventFormPage = () => {
   }
 
   // ── Submit button styles ──────────────────────────────────────────────────
-  const submitBg = canSubmit && !submitting ? '#FF9900' : '#d1d5db'
+  const submitBg = canSubmit && !submitting ? '#FFA100' : '#d1d5db'
   const submitCursor = canSubmit && !submitting ? 'pointer' : 'not-allowed'
 
   return (
@@ -258,7 +258,7 @@ export const AdminEventFormPage = () => {
                   ...inputStyle,
                   borderColor: errors.title
                     ? '#fca5a5'
-                    : focusedField === 'title' ? '#FF9900' : '#e2e8f0',
+                    : focusedField === 'title' ? '#FFA100' : '#e2e8f0',
                   boxShadow: focusedField === 'title' && !errors.title
                     ? '0 0 0 3px rgba(255,153,0,0.15)'
                     : 'none',
@@ -281,7 +281,7 @@ export const AdminEventFormPage = () => {
                   lineHeight: '1.6',
                   borderColor: errors.description
                     ? '#fca5a5'
-                    : focusedField === 'description' ? '#FF9900' : '#e2e8f0',
+                    : focusedField === 'description' ? '#FFA100' : '#e2e8f0',
                   boxShadow: focusedField === 'description' && !errors.description
                     ? '0 0 0 3px rgba(255,153,0,0.15)'
                     : 'none',
@@ -302,7 +302,7 @@ export const AdminEventFormPage = () => {
                   ...inputStyle,
                   borderColor: errors.venue
                     ? '#fca5a5'
-                    : focusedField === 'venue' ? '#FF9900' : '#e2e8f0',
+                    : focusedField === 'venue' ? '#FFA100' : '#e2e8f0',
                   boxShadow: focusedField === 'venue' && !errors.venue
                     ? '0 0 0 3px rgba(255,153,0,0.15)'
                     : 'none',
@@ -324,7 +324,7 @@ export const AdminEventFormPage = () => {
                       ...inputStyle,
                       borderColor: errors.start_date
                         ? '#fca5a5'
-                        : focusedField === 'start_date' ? '#FF9900' : '#e2e8f0',
+                        : focusedField === 'start_date' ? '#FFA100' : '#e2e8f0',
                       boxShadow: focusedField === 'start_date' && !errors.start_date
                         ? '0 0 0 3px rgba(255,153,0,0.15)'
                         : 'none',
@@ -345,7 +345,7 @@ export const AdminEventFormPage = () => {
                       ...inputStyle,
                       borderColor: errors.end_date
                         ? '#fca5a5'
-                        : focusedField === 'end_date' ? '#FF9900' : '#e2e8f0',
+                        : focusedField === 'end_date' ? '#FFA100' : '#e2e8f0',
                       boxShadow: focusedField === 'end_date' && !errors.end_date
                         ? '0 0 0 3px rgba(255,153,0,0.15)'
                         : 'none',
@@ -400,10 +400,10 @@ export const AdminEventFormPage = () => {
                 minWidth: '140px',
               }}
               onMouseEnter={(e) => {
-                if (canSubmit && !submitting) e.currentTarget.style.backgroundColor = '#e68a00'
+                if (canSubmit && !submitting) e.currentTarget.style.backgroundColor = '#e89100'
               }}
               onMouseLeave={(e) => {
-                if (canSubmit && !submitting) e.currentTarget.style.backgroundColor = '#FF9900'
+                if (canSubmit && !submitting) e.currentTarget.style.backgroundColor = '#FFA100'
               }}
             >
               {submitting

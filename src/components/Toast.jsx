@@ -43,7 +43,7 @@ export const Toast = ({ type = 'success', title, message, onClose, duration = 50
           style={{
             backgroundColor: '#fff',
             border: '1px solid #e2e8f0',
-            borderLeft: '4px solid #f97316',
+            borderLeft: '4px solid #FFA100',
             borderRadius: '10px',
             padding: '16px 18px',
             display: 'flex',
@@ -67,7 +67,7 @@ export const Toast = ({ type = 'success', title, message, onClose, duration = 50
               flexShrink: 0,
             }}
           >
-            <Bell size={18} color="#f97316" />
+            <Bell size={18} color="#FFA100" />
           </div>
 
           {/* Content */}

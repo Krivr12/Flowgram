@@ -134,7 +134,7 @@ export const ConnectModal = ({ onClose }) => {
 
           {/* Avatar removed */}
 
-          <p style={{ fontSize: '11px', fontWeight: '700', color: '#f97316', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px' }}>
+          <p style={{ fontSize: '11px', fontWeight: '700', color: '#FFA100', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px' }}>
             My Networking Card
           </p>
 
@@ -238,13 +238,13 @@ export const ConnectModal = ({ onClose }) => {
                   alignItems: 'center',
                   gap: '6px',
                   fontSize: '13px',
-                  color: '#2563eb',
+                  color: '#1B77CF',
                   fontWeight: '600',
                   textDecoration: 'none',
                   transition: 'color 0.15s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#1d4ed8')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#2563eb')}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#155fa3')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#1B77CF')}
               >
                 <ExternalLink size={13} />
                 Open LinkedIn
@@ -284,7 +284,7 @@ export const ConnectModal = ({ onClose }) => {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  backgroundColor: '#f97316',
+                  backgroundColor: '#FFA100',
                   color: '#fff',
                   border: 'none',
                   padding: '11px 22px',
@@ -294,8 +294,8 @@ export const ConnectModal = ({ onClose }) => {
                   cursor: 'pointer',
                   transition: 'background-color 0.15s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#ea580c')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f97316')}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e89100')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFA100')}
               >
                 <UserCircle size={15} />
                 Go to Account Settings

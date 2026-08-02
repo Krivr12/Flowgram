@@ -124,13 +124,13 @@ export const NotificationsPage = () => {
           onClick={() => setShowModal(true)}
           style={{
             display: 'flex', alignItems: 'center', gap: '6px',
-            backgroundColor: isDarkMode ? '#2563eb' : '#FF9900', color: '#fff',
+            backgroundColor: isDarkMode ? '#1B77CF' : '#FFA100', color: '#fff',
             fontWeight: '600', fontSize: '14px',
             padding: '10px 20px', borderRadius: '9999px',
             border: 'none', cursor: 'pointer', flexShrink: 0,
           }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? '#1d4ed8' : '#e68a00'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? '#2563eb' : '#FF9900'}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? '#155fa3' : '#e89100'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? '#1B77CF' : '#FFA100'}
         >
           <Plus size={16} /> Announce
         </button>
@@ -331,7 +331,7 @@ export const NotificationsPage = () => {
                     color: isDarkMode ? '#e2e8f0' : '#0f172a',
                     backgroundColor: isDarkMode ? '#252F3E' : '#fff',
                   }}
-                  onFocus={(e) => (e.target.style.borderColor = isDarkMode ? '#2563eb' : '#FF9900')}
+                  onFocus={(e) => (e.target.style.borderColor = isDarkMode ? '#1B77CF' : '#FFA100')}
                   onBlur={(e) => (e.target.style.borderColor = isDarkMode ? 'rgba(100, 116, 139, 0.3)' : '#e2e8f0')}
                 />
               </div>
@@ -369,7 +369,7 @@ export const NotificationsPage = () => {
                     color: isDarkMode ? '#e2e8f0' : '#0f172a',
                     backgroundColor: isDarkMode ? '#252F3E' : '#fff',
                   }}
-                  onFocus={(e) => (e.target.style.borderColor = isDarkMode ? '#2563eb' : '#FF9900')}
+                  onFocus={(e) => (e.target.style.borderColor = isDarkMode ? '#1B77CF' : '#FFA100')}
                   onBlur={(e) => (e.target.style.borderColor = isDarkMode ? 'rgba(100, 116, 139, 0.3)' : '#e2e8f0')}
                 />
               </div>
@@ -407,7 +407,7 @@ export const NotificationsPage = () => {
                     fontSize: '13px',
                     fontWeight: '600',
                     color: submitting || !formData.title.trim() || !formData.message.trim() ? '#9ca3af' : '#fff',
-                    backgroundColor: submitting || !formData.title.trim() || !formData.message.trim() ? '#d1d5db' : isDarkMode ? '#2563eb' : '#FF9900',
+                    backgroundColor: submitting || !formData.title.trim() || !formData.message.trim() ? '#d1d5db' : isDarkMode ? '#1B77CF' : '#FFA100',
                     border: 'none',
                     borderRadius: '9999px',
                     cursor: submitting || !formData.title.trim() || !formData.message.trim() ? 'not-allowed' : 'pointer',
@@ -415,12 +415,12 @@ export const NotificationsPage = () => {
                   }}
                   onMouseEnter={(e) => {
                     if (!submitting && formData.title.trim() && formData.message.trim()) {
-                      e.currentTarget.style.backgroundColor = isDarkMode ? '#1d4ed8' : '#e68a00'
+                      e.currentTarget.style.backgroundColor = isDarkMode ? '#155fa3' : '#e89100'
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!submitting && formData.title.trim() && formData.message.trim()) {
-                      e.currentTarget.style.backgroundColor = isDarkMode ? '#2563eb' : '#FF9900'
+                      e.currentTarget.style.backgroundColor = isDarkMode ? '#1B77CF' : '#FFA100'
                     } else {
                       e.currentTarget.style.backgroundColor = '#d1d5db'
                     }

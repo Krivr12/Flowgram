@@ -48,13 +48,13 @@ export const SpeakersPage = () => {
           onClick={goToNew}
           style={{
             display: 'flex', alignItems: 'center', gap: '6px',
-            backgroundColor: '#f97316', color: '#fff',
+            backgroundColor: '#FFA100', color: '#fff',
             fontWeight: '600', fontSize: '14px',
             padding: '10px 20px', borderRadius: '9999px',
             border: 'none', cursor: 'pointer', flexShrink: 0,
           }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#ea580c'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f97316'}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e89100'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFA100'}
         >
           <Plus size={16} /> Add Speaker
         </button>
@@ -83,7 +83,7 @@ export const SpeakersPage = () => {
           <p style={{ fontSize: '14px', color: isDarkMode ? '#94a3b8' : '#64748b', margin: '0 0 24px' }}>Add the first speaker for this event.</p>
           <button
             onClick={goToNew}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#f97316', color: '#fff', fontWeight: '600', fontSize: '14px', padding: '10px 20px', borderRadius: '9999px', border: 'none', cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FFA100', color: '#fff', fontWeight: '600', fontSize: '14px', padding: '10px 20px', borderRadius: '9999px', border: 'none', cursor: 'pointer' }}
           >
             <Plus size={16} /> Add Speaker
           </button>
@@ -133,8 +133,8 @@ const SpeakerCard = ({ speaker, onClick }) => {
   const subtextColor = isDarkMode ? '#cbd5e1' : '#6b7280'
   const avatarBg = isDarkMode ? 'rgba(100, 116, 139, 0.2)' : '#f1f5f9'
   const chevronColor = isDarkMode 
-    ? (hovered ? '#2563eb' : 'rgba(255, 255, 255, 0.2)')
-    : (hovered ? '#f97316' : '#cbd5e1')
+    ? (hovered ? '#1B77CF' : 'rgba(255, 255, 255, 0.2)')
+    : (hovered ? '#FFA100' : '#cbd5e1')
 
   return (
     <div

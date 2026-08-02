@@ -315,7 +315,7 @@ export const UserLayout = () => {
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: '#2563eb',
+                backgroundColor: '#1B77CF',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#fff',
@@ -409,7 +409,7 @@ export const UserLayout = () => {
                   style={{
                     fontSize: '13px',
                     fontWeight: '500',
-                    color: isActive ? '#2563eb' : textSub,
+                    color: isActive ? '#1B77CF' : textSub,
                     textDecoration: 'none',
                     cursor: 'pointer',
                     transition: 'color 0.15s',
@@ -449,7 +449,7 @@ export const UserLayout = () => {
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: '#2563eb',
+                backgroundColor: '#1B77CF',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -640,7 +640,7 @@ export const UserLayout = () => {
             width: '40px',
             height: '40px',
             borderRadius: '50%',
-            backgroundColor: '#2563eb',
+            backgroundColor: '#1B77CF',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -695,8 +695,8 @@ export const UserLayout = () => {
               fontWeight: '500',
               padding: '8px 12px',
               borderRadius: '6px',
-              color: isActive ? '#2563eb' : textSub,
-              backgroundColor: isActive ? (isDarkMode ? 'rgba(37, 99, 235, 0.1)' : '#dbeafe') : 'transparent',
+              color: isActive ? '#1B77CF' : textSub,
+              backgroundColor: isActive ? (isDarkMode ? 'rgba(27, 119, 207, 0.1)' : '#e0f0ff') : 'transparent',
               textDecoration: 'none',
               cursor: 'pointer',
               transition: 'all 0.15s, color 0.2s, background-color 0.2s',
@@ -835,7 +835,7 @@ export const UserLayout = () => {
                     cursor: 'pointer',
                     transition: 'color 0.2s',
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#2196F3')}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#1B77CF')}
                   onMouseLeave={(e) => (e.currentTarget.style.color = isDarkMode ? '#94a3b8' : '#4b5563')}
                 >
                   <Icon size={20} strokeWidth={1.75} />
@@ -863,7 +863,7 @@ export const UserLayout = () => {
                   textAlign: 'center',
                   fontSize: '11px',
                   fontWeight: '500',
-                  color: isActive ? '#2196F3' : (isDarkMode ? '#94a3b8' : '#4b5563'),
+                  color: isActive ? '#1B77CF' : (isDarkMode ? '#94a3b8' : '#4b5563'),
                   textDecoration: 'none',
                   cursor: 'pointer',
                   transition: 'all 0.2s, color 0.2s',

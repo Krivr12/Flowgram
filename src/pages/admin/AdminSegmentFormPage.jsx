@@ -291,7 +291,7 @@ export const AdminSegmentFormPage = () => {
   }
 
   const isBusy      = submitting
-  const submitBg    = canSubmit && !isBusy ? '#2563eb' : isDarkMode ? 'rgba(148, 163, 184, 0.2)' : '#d1d5db'
+  const submitBg    = canSubmit && !isBusy ? '#1B77CF' : isDarkMode ? 'rgba(148, 163, 184, 0.2)' : '#d1d5db'
   const submitColor = canSubmit && !isBusy ? '#fff'    : isDarkMode ? '#64748b' : '#9ca3af'
   const submitLabel = isBusy
     ? (isEditMode ? 'Saving…' : 'Creating…')
@@ -299,11 +299,11 @@ export const AdminSegmentFormPage = () => {
 
   const fieldBorder = (name) => {
     if (errors[name])          return isDarkMode ? '#fca5a5' : '#fca5a5'
-    if (focusedField === name) return '#2563eb'
+    if (focusedField === name) return '#1B77CF'
     return isDarkMode ? 'rgba(100, 116, 139, 0.3)' : '#e2e8f0'
   }
   const fieldShadow = (name) =>
-    focusedField === name && !errors[name] ? '0 0 0 3px rgba(37, 99, 235, 0.15)' : 'none'
+    focusedField === name && !errors[name] ? '0 0 0 3px rgba(27, 119, 207, 0.15)' : 'none'
 
   const inputStyle = getInputStyle(isDarkMode)
 
@@ -427,8 +427,8 @@ export const AdminSegmentFormPage = () => {
             {assignedSpeakers.length > 0 ? (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
                 {assignedSpeakers.map((speaker) => (
-                  <div key={speaker.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', backgroundColor: isDarkMode ? 'rgba(37, 99, 235, 0.15)' : '#eff6ff', borderRadius: '9999px', border: isDarkMode ? '1px solid rgba(37, 99, 235, 0.3)' : '1px solid #bfdbfe' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '500', color: isDarkMode ? '#93c5fd' : '#1d4ed8' }}>{speaker.full_name}</span>
+                  <div key={speaker.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', backgroundColor: isDarkMode ? 'rgba(27, 119, 207, 0.15)' : '#e8f4ff', borderRadius: '9999px', border: isDarkMode ? '1px solid rgba(27, 119, 207, 0.3)' : '1px solid #b3d4f0' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '500', color: isDarkMode ? '#7fb8e6' : '#155fa3' }}>{speaker.full_name}</span>
                     <button type="button" onClick={() => handleRemoveSpeaker(speaker.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: isDarkMode ? '#fca5a5' : '#dc2626', padding: '0', display: 'flex', flexShrink: 0 }}>
                       <X size={14} />
                     </button>
@@ -442,9 +442,9 @@ export const AdminSegmentFormPage = () => {
             <button
               type="button"
               onClick={() => setShowSpeakerModal(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontSize: '13px', fontWeight: '600', color: '#2563eb', backgroundColor: isDarkMode ? 'rgba(37, 99, 235, 0.1)' : '#eff6ff', border: isDarkMode ? '1px solid rgba(37, 99, 235, 0.3)' : '1px solid #bfdbfe', borderRadius: '8px', cursor: 'pointer' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(37, 99, 235, 0.2)' : '#dbeafe'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(37, 99, 235, 0.1)' : '#eff6ff'}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontSize: '13px', fontWeight: '600', color: '#1B77CF', backgroundColor: isDarkMode ? 'rgba(27, 119, 207, 0.1)' : '#e8f4ff', border: isDarkMode ? '1px solid rgba(27, 119, 207, 0.3)' : '1px solid #b3d4f0', borderRadius: '8px', cursor: 'pointer' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(27, 119, 207, 0.2)' : '#e0f0ff'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(27, 119, 207, 0.1)' : '#e8f4ff'}
             >
               <Plus size={14} /> Add Speaker
             </button>
@@ -474,8 +474,8 @@ export const AdminSegmentFormPage = () => {
               >Cancel</button>
               <button type="submit" disabled={!canSubmit || isBusy}
                 style={{ padding: '10px 24px', fontSize: '14px', fontWeight: '600', color: submitColor, backgroundColor: submitBg, border: 'none', borderRadius: '9999px', cursor: canSubmit && !isBusy ? 'pointer' : 'not-allowed', transition: 'background-color 0.2s', minWidth: '140px' }}
-                onMouseEnter={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#1d4ed8' }}
-                onMouseLeave={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#2563eb' }}
+                onMouseEnter={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#155fa3' }}
+                onMouseLeave={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#1B77CF' }}
               >{submitLabel}</button>
             </div>
           </div>
@@ -536,7 +536,7 @@ export const AdminSegmentFormPage = () => {
             <div style={{ marginBottom: '16px' }}>
               <input type="text" placeholder="Search speakers by name…" value={speakerSearch} onChange={(e) => setSpeakerSearch(e.target.value)} autoFocus
                 style={{ width: '100%', padding: '10px 14px', fontSize: '14px', color: isDarkMode ? '#e2e8f0' : '#0f172a', backgroundColor: isDarkMode ? '#252F3E' : '#fff', border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0', borderRadius: '8px', outline: 'none', boxSizing: 'border-box' }}
-                onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                onFocus={(e) => e.target.style.borderColor = '#1B77CF'}
                 onBlur={(e) => e.target.style.borderColor = isDarkMode ? 'rgba(100, 116, 139, 0.3)' : '#e2e8f0'}
               />
             </div>

@@ -117,7 +117,7 @@ const SegmentCard = ({ segment, isConcurrent, isUserPick, onConcurrentClick, onC
             display: 'flex',
             alignItems: 'center',
             gap: '4px',
-            background: isDarkMode ? '#2563eb' : 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+            background: isDarkMode ? '#1B77CF' : 'linear-gradient(135deg, #FFA100 0%, #e89100 100%)',
             border: 'none',
             cursor: 'pointer',
             fontSize: '11px',
@@ -125,17 +125,17 @@ const SegmentCard = ({ segment, isConcurrent, isUserPick, onConcurrentClick, onC
             color: '#fff',
             padding: '6px 10px',
             borderRadius: '8px',
-            boxShadow: isDarkMode ? '0 2px 8px rgba(37, 99, 235, 0.3)' : '0 2px 8px rgba(249, 115, 22, 0.3)',
+            boxShadow: isDarkMode ? '0 2px 8px rgba(27, 119, 207, 0.3)' : '0 2px 8px rgba(249, 115, 22, 0.3)',
             transition: 'all 0.15s',
             letterSpacing: '0.02em',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-1px)'
-            e.currentTarget.style.boxShadow = isDarkMode ? '0 4px 12px rgba(37, 99, 235, 0.4)' : '0 4px 12px rgba(249, 115, 22, 0.4)'
+            e.currentTarget.style.boxShadow = isDarkMode ? '0 4px 12px rgba(27, 119, 207, 0.4)' : '0 4px 12px rgba(249, 115, 22, 0.4)'
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)'
-            e.currentTarget.style.boxShadow = isDarkMode ? '0 2px 8px rgba(37, 99, 235, 0.3)' : '0 2px 8px rgba(249, 115, 22, 0.3)'
+            e.currentTarget.style.boxShadow = isDarkMode ? '0 2px 8px rgba(27, 119, 207, 0.3)' : '0 2px 8px rgba(249, 115, 22, 0.3)'
           }}
         >
           Concurrent <ChevronRight size={13} strokeWidth={2.5} />
@@ -571,7 +571,7 @@ export const FlowPage = () => {
                         {formatTimeHeader(key)}
                       </span>
                       {isConcurrent && (
-                        <span style={{ fontSize: '11px', color: isDarkMode ? '#2563eb' : '#f97316', backgroundColor: isDarkMode ? 'rgba(37, 99, 235, 0.1)' : 'rgba(249, 115, 22, 0.1)', padding: '4px 9px', borderRadius: '6px', fontWeight: '700', letterSpacing: '0.02em', border: isDarkMode ? '1px solid rgba(37, 99, 235, 0.3)' : '1px solid rgba(249, 115, 22, 0.3)', transition: 'color 0.2s, background-color 0.2s, border-color 0.2s' }}>
+                        <span style={{ fontSize: '11px', color: isDarkMode ? '#1B77CF' : '#FFA100', backgroundColor: isDarkMode ? 'rgba(27, 119, 207, 0.1)' : 'rgba(249, 115, 22, 0.1)', padding: '4px 9px', borderRadius: '6px', fontWeight: '700', letterSpacing: '0.02em', border: isDarkMode ? '1px solid rgba(27, 119, 207, 0.3)' : '1px solid rgba(249, 115, 22, 0.3)', transition: 'color 0.2s, background-color 0.2s, border-color 0.2s' }}>
                           {segs.length} Sessions
                         </span>
                       )}

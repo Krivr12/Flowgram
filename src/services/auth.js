@@ -117,6 +117,36 @@ export const fetchUserProfileWithRetry = async (userId, maxRetries = 5, delayMs 
   return null
 }
 
+// Send password reset email
+export const sendPasswordReset = async (email) => {
+  const redirectUrl = import.meta.env.VITE_APP_ENV === 'production'
+    ? 'https://flowgram-orpin.vercel.app/auth/callback?type=recovery'
+    : `${window.location.origin}/auth/callback?type=recovery`
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: redirectUrl,
+  })
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+// Update password (used after reset link is clicked)
+export const updatePassword = async (newPassword) => {
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+  })
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
 // Verify admin role and redirect if not authorized
 export const verifyAdminRole = async (userProfile) => {
   if (userProfile?.role !== 'ADMIN') {

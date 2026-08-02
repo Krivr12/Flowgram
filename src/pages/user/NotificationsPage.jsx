@@ -94,7 +94,7 @@ export const NotificationsPage = () => {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
-              backgroundColor: isDarkMode ? '#2563eb' : '#f97316',
+              backgroundColor: isDarkMode ? '#1B77CF' : '#FFA100',
               color: '#fff',
               border: 'none',
               padding: '11px 22px',
@@ -104,8 +104,8 @@ export const NotificationsPage = () => {
               cursor: 'pointer',
               transition: 'background-color 0.15s',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = isDarkMode ? '#1d4ed8' : '#ea580c')}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = isDarkMode ? '#2563eb' : '#f97316')}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = isDarkMode ? '#155fa3' : '#e89100')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = isDarkMode ? '#1B77CF' : '#FFA100')}
           >
             Browse Events
             <ArrowRight size={15} />

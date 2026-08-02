@@ -219,7 +219,7 @@ export const AdminSpeakerFormPage = () => {
   // ── Button styles ─────────────────────────────────────────────────────────
 
   const isBusy      = submitting || uploadingImage
-  const submitBg    = canSubmit && !isBusy ? '#2563eb' : isDarkMode ? 'rgba(148, 163, 184, 0.2)' : '#d1d5db'
+  const submitBg    = canSubmit && !isBusy ? '#1B77CF' : isDarkMode ? 'rgba(148, 163, 184, 0.2)' : '#d1d5db'
   const submitColor = canSubmit && !isBusy ? '#fff'    : isDarkMode ? '#64748b' : '#9ca3af'
   const submitLabel = isBusy
     ? (isEditMode ? 'Saving…' : 'Adding…')
@@ -229,11 +229,11 @@ export const AdminSpeakerFormPage = () => {
 
   const fieldBorder = (name) => {
     if (errors[name])        return isDarkMode ? '#fca5a5' : '#fca5a5'
-    if (focusedField === name) return '#2563eb'
+    if (focusedField === name) return '#1B77CF'
     return isDarkMode ? 'rgba(100, 116, 139, 0.3)' : '#e2e8f0'
   }
   const fieldShadow = (name) =>
-    focusedField === name && !errors[name] ? '0 0 0 3px rgba(37, 99, 235, 0.15)' : 'none'
+    focusedField === name && !errors[name] ? '0 0 0 3px rgba(27, 119, 207, 0.15)' : 'none'
 
   const inputStyle = getInputStyle(isDarkMode)
 
@@ -297,8 +297,8 @@ export const AdminSpeakerFormPage = () => {
                   ) : (
                     <User size={40} color="#94a3b8" />
                   )}
-                  <div style={{ position: 'absolute', bottom: 0, right: 0, backgroundColor: isDarkMode ? 'rgba(37, 99, 235, 0.2)' : '#eff6ff', padding: '6px', borderRadius: '9999px', border: isDarkMode ? '2px solid #252F3E' : '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Camera size={14} color="#2563eb" />
+                  <div style={{ position: 'absolute', bottom: 0, right: 0, backgroundColor: isDarkMode ? 'rgba(27, 119, 207, 0.2)' : '#e8f4ff', padding: '6px', borderRadius: '9999px', border: isDarkMode ? '2px solid #252F3E' : '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Camera size={14} color="#1B77CF" />
                   </div>
                 </div>
               </label>
@@ -418,8 +418,8 @@ export const AdminSpeakerFormPage = () => {
                 type="submit"
                 disabled={!canSubmit || isBusy}
                 style={{ padding: '10px 24px', fontSize: '14px', fontWeight: '600', color: submitColor, backgroundColor: submitBg, border: 'none', borderRadius: '9999px', cursor: canSubmit && !isBusy ? 'pointer' : 'not-allowed', transition: 'background-color 0.2s', minWidth: '140px' }}
-                onMouseEnter={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#1d4ed8' }}
-                onMouseLeave={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#2563eb' }}
+                onMouseEnter={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#155fa3' }}
+                onMouseLeave={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#1B77CF' }}
               >
                 {submitLabel}
               </button>

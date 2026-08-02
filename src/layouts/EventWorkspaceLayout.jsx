@@ -65,7 +65,7 @@ export const EventWorkspaceLayout = () => {
   const inactiveColor = isDarkMode ? '#94a3b8' : '#94a3b8'
   const inactiveTextColor = isDarkMode ? '#cbd5e1' : '#64748b'
   const activeTextColor = isDarkMode ? '#e2e8f0' : '#0f172a'
-  const activeIcon = isDarkMode ? '#fbbf24' : '#f97316'
+  const activeIcon = isDarkMode ? '#fbbf24' : '#FFA100'
 
   return (
     <>

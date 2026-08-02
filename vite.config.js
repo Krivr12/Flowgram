@@ -11,19 +11,15 @@ export default defineConfig({
         name: 'Flowgram v2',
         short_name: 'Flowgram',
         description: 'Real-time event tracking for AWS User Group meetups',
-        theme_color: '#FF9800',
+        theme_color: '#FFA100',
         background_color: '#ffffff',
         display: 'standalone',
         icons: [
           {
-            src: '/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: '/icon-512.png',
+            src: '/flowgram_logo.png',
             sizes: '512x512',
             type: 'image/png',
+            purpose: 'any maskable',
           },
         ],
       },

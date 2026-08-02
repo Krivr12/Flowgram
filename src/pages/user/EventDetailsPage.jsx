@@ -236,7 +236,7 @@ export const EventDetailsPage = () => {
           style={{
             width: '100%',
             maxWidth: '480px',
-            backgroundColor: isDarkMode ? '#2563eb' : '#f97316',
+            backgroundColor: isDarkMode ? '#1B77CF' : '#FFA100',
             color: '#fff',
             border: 'none',
             padding: '15px 28px',
@@ -247,11 +247,11 @@ export const EventDetailsPage = () => {
             transition: 'background-color 0.15s, transform 0.1s',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = isDarkMode ? '#1d4ed8' : '#ea580c'
+            e.currentTarget.style.backgroundColor = isDarkMode ? '#155fa3' : '#e89100'
             e.currentTarget.style.transform = 'translateY(-1px)'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = isDarkMode ? '#2563eb' : '#f97316'
+            e.currentTarget.style.backgroundColor = isDarkMode ? '#1B77CF' : '#FFA100'
             e.currentTarget.style.transform = 'translateY(0)'
           }}
         >

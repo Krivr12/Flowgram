@@ -38,7 +38,7 @@ const getNotifMeta = (title = '', message = '') => {
     return { Icon: AlertTriangle, color: '#dc2626' }   // red
   if (/ongoing|filling/.test(text))
     return { Icon: PlayCircle,    color: '#ca8a04' }   // yellow
-  return { Icon: Info,            color: '#2563eb' }   // blue (default)
+  return { Icon: Info,            color: '#1B77CF' }   // blue (default)
 }
 
 // ─── Threshold for "show more" chevron ───────────────────────────────────────
