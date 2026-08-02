@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, AlertCircle, ArrowRight, RefreshCw } from 'lucide-react'
+import { Bell, AlertCircle, ArrowRight, RefreshCw, Trash2 } from 'lucide-react'
 import { getNotificationsByEventId } from '../../services/notifications'
 import { NotificationItem } from '../../components/NotificationItem'
 
@@ -18,6 +18,13 @@ export const NotificationsPage = () => {
   const pollIntervalRef                   = useRef(null)
 
   const selectedEventId = localStorage.getItem('selected_event_id')
+
+  // Track which notifications are cleared locally (per-event)
+  const getClearedKey = () => `flowgram_cleared_notifs_${selectedEventId}`
+  const [clearedBefore, setClearedBefore] = useState(() => {
+    const stored = localStorage.getItem(getClearedKey())
+    return stored || null
+  })
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -60,6 +67,18 @@ export const NotificationsPage = () => {
     await loadNotifications()
     setIsRefreshing(false)
   }
+
+  const handleClearAll = () => {
+    // Store current timestamp — all notifications created before this are hidden
+    const now = new Date().toISOString()
+    localStorage.setItem(getClearedKey(), now)
+    setClearedBefore(now)
+  }
+
+  // Filter out cleared notifications
+  const visibleNotifications = clearedBefore
+    ? notifications.filter(n => new Date(n.created_at) > new Date(clearedBefore))
+    : notifications
 
   // ── No event selected ────────────────────────────────────────────────────
   if (!loading && !selectedEventId) {
@@ -132,34 +151,62 @@ export const NotificationsPage = () => {
           Notifications
         </h1>
 
-        {/* Refresh button */}
-        <button
-          onClick={handleManualRefresh}
-          disabled={isRefreshing}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '36px',
-            height: '36px',
-            borderRadius: '8px',
-            border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
-            backgroundColor: isDarkMode ? '#252F3E' : '#fff',
-            cursor: isRefreshing ? 'not-allowed' : 'pointer',
-            transition: 'all 0.15s, background-color 0.2s, border-color 0.2s',
-            opacity: isRefreshing ? 0.6 : 1,
-          }}
-          onMouseEnter={(e) => !isRefreshing && (e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(100,116,139,0.1)' : '#f1f5f9')}
-          onMouseLeave={(e) => !isRefreshing && (e.currentTarget.style.backgroundColor = isDarkMode ? '#252F3E' : '#fff')}
-          title="Refresh notifications"
-          aria-label="Refresh notifications"
-        >
-          <RefreshCw
-            size={16}
-            color={isDarkMode ? '#94a3b8' : '#64748b'}
-            style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none', transition: 'color 0.2s' }}
-          />
-        </button>
+        {/* Refresh + Clear buttons */}
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {/* Clear button — only show when there are visible notifications */}
+          {visibleNotifications.length > 0 && (
+            <button
+              onClick={handleClearAll}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
+                backgroundColor: isDarkMode ? '#252F3E' : '#fff',
+                cursor: 'pointer',
+                transition: 'all 0.15s, background-color 0.2s, border-color 0.2s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(220,38,38,0.1)' : '#fef2f2'; e.currentTarget.style.borderColor = isDarkMode ? 'rgba(220,38,38,0.3)' : '#fecaca' }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isDarkMode ? '#252F3E' : '#fff'; e.currentTarget.style.borderColor = isDarkMode ? 'rgba(100,116,139,0.3)' : '#e2e8f0' }}
+              title="Clear all notifications"
+              aria-label="Clear all notifications"
+            >
+              <Trash2 size={15} color={isDarkMode ? '#fca5a5' : '#dc2626'} />
+            </button>
+          )}
+
+          {/* Refresh button */}
+          <button
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
+              backgroundColor: isDarkMode ? '#252F3E' : '#fff',
+              cursor: isRefreshing ? 'not-allowed' : 'pointer',
+              transition: 'all 0.15s, background-color 0.2s, border-color 0.2s',
+              opacity: isRefreshing ? 0.6 : 1,
+            }}
+            onMouseEnter={(e) => !isRefreshing && (e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(100,116,139,0.1)' : '#f1f5f9')}
+            onMouseLeave={(e) => !isRefreshing && (e.currentTarget.style.backgroundColor = isDarkMode ? '#252F3E' : '#fff')}
+            title="Refresh notifications"
+            aria-label="Refresh notifications"
+          >
+            <RefreshCw
+              size={16}
+              color={isDarkMode ? '#94a3b8' : '#64748b'}
+              style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none', transition: 'color 0.2s' }}
+            />
+          </button>
+        </div>
       </div>
 
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
@@ -194,7 +241,7 @@ export const NotificationsPage = () => {
       )}
 
       {/* Empty */}
-      {!loading && !error && notifications.length === 0 && (
+      {!loading && !error && visibleNotifications.length === 0 && (
         <div
           style={{
             display: 'flex',
@@ -216,9 +263,9 @@ export const NotificationsPage = () => {
       )}
 
       {/* Notification feed — card list */}
-      {!loading && notifications.length > 0 && (
+      {!loading && visibleNotifications.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {notifications.map((notif) => (
+          {visibleNotifications.map((notif) => (
             <NotificationItem key={notif.id} notification={notif} />
           ))}
         </div>

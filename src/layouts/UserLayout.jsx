@@ -12,23 +12,25 @@ import {
   Settings,
   Sun,
   Moon,
+  MoreHorizontal,
 } from 'lucide-react'
 import { getCurrentUser, getUserProfile, logout, supabase } from '../services/supabase'
 import { getEventById } from '../services/events'
 import { Toast } from '../components/Toast'
 import { ConnectModal } from '../components/ConnectModal'
+import { formatNotification } from '../components/NotificationItem'
 
 const NAVBAR_H = 64
-const NOTIFICATION_POLL_INTERVAL = 15000 // 15 seconds
+const NOTIFICATION_POLL_INTERVAL = 5000 // 5 seconds
 
 // Nav items for mobile bottom bar — Connect has no route; it opens a modal
-// Order: Events | Connect | Flow (center) | Notifications | Settings
+// Order: Events | Connect | Flow (center) | Notifications | More
 const NAV_ITEMS = [
-  { label: 'Events',        to: '/app/events',        Icon: Calendar, modal: false },
-  { label: 'Connect',       to: null,                 Icon: Users,    modal: true  },
-  { label: 'Flow',          to: '/app',               Icon: Zap,      modal: false },
-  { label: 'Notifications', to: '/app/notifications', Icon: Bell,     modal: false },
-  { label: 'Settings',      to: '/app/account',       Icon: Settings, modal: false },
+  { label: 'Events',        to: '/app/events',        Icon: Calendar,       modal: false },
+  { label: 'Connect',       to: null,                 Icon: Users,          modal: true  },
+  { label: 'Flow',          to: '/app',               Icon: Zap,            modal: false },
+  { label: 'Notifications', to: '/app/notifications', Icon: Bell,           modal: false },
+  { label: 'More',          to: '/app/more',          Icon: MoreHorizontal, modal: false },
 ]
 
 // Desktop center nav items (text only, no icons displayed)
@@ -37,7 +39,7 @@ const DESKTOP_NAV = [
   { label: 'Connect',       to: null,                 modal: true  },
   { label: 'Flow',          to: '/app' },
   { label: 'Notifications', to: '/app/notifications' },
-  { label: 'Settings',      to: '/app/account' },
+  { label: 'More',          to: '/app/more' },
 ]
 
 const getInitials = (name) => {
@@ -173,9 +175,10 @@ export const UserLayout = () => {
           // Only show toast popup if this isn't the first poll for this event
           // (avoid toasting stale notifications when switching events or on initial load)
           if (lastSeenNotifIdRef.current !== null && lastSeenNotifIdRef.current !== '__seed__') {
+            const formatted = formatNotification(latestNotif.title || 'New Announcement', latestNotif.message || '')
             setNotifToast({
-              title: latestNotif.title || 'New Announcement',
-              message: latestNotif.message || '',
+              title: formatted.title,
+              message: formatted.message,
             })
           }
 

@@ -1,6 +1,6 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Clock, MapPin, ChevronRight } from 'lucide-react'
+import { Clock, MapPin, ChevronRight, ListFilter, Zap } from 'lucide-react'
 import { getEventById } from '../../services/events'
 import { getSegmentsByEventId } from '../../services/segments'
 import { supabase, getCurrentUser } from '../../services/supabase'
@@ -40,8 +40,9 @@ const formatTimeHeader = (timeKey) => {
 // ─── Capacity & Status badge styles ───────────────────────────────────────────
 
 const CAPACITY_BADGE = {
-  VACANT:        { bg: '#dcfce7', text: '#15803d', label: 'Vacant' },
-  'FILLING IN':  { bg: '#fef3c7', text: '#b45309', label: 'Filling In' },
+  VACANT:        { bg: '#dcfce7', text: '#15803d', label: 'Open' },
+  FILLING:  { bg: '#fef3c7', text: '#b45309', label: 'Filling Up' },
+  'ALMOST FULL': { bg: '#fff7ed', text: '#c2410c', label: 'Almost Full' },
   FULL:          { bg: '#fee2e2', text: '#dc2626', label: 'Full' },
 }
 
@@ -79,9 +80,10 @@ const isSegmentOngoing = (segment) => {
 
 // ─── Segment Card (timeline) ──────────────────────────────────────────────────
 
-const SegmentCard = ({ segment, isConcurrent, isUserPick, onConcurrentClick, onCardClick, isDarkMode }) => {
+const SegmentCard = ({ segment, isConcurrent, isUserPick, onConcurrentClick, onCardClick, isDarkMode, dimmed, speakers }) => {
   const capBadge = getCapacityBadge(segment.capacity_status)
   const statusBadge = getStatusBadge(segment.segment_status)
+  const segSpeakers = speakers || []
 
   return (
     <div
@@ -94,6 +96,7 @@ const SegmentCard = ({ segment, isConcurrent, isUserPick, onConcurrentClick, onC
         cursor: 'pointer',
         transition: 'all 0.2s, background-color 0.2s, border-color 0.2s',
         position: 'relative',
+        opacity: dimmed ? 0.5 : 1,
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.boxShadow = isDarkMode ? '0 6px 20px rgba(0,0,0,0.3)' : '0 6px 20px rgba(0,0,0,0.12)'
@@ -171,6 +174,16 @@ const SegmentCard = ({ segment, isConcurrent, isUserPick, onConcurrentClick, onC
           </span>
         )}
       </div>
+
+      {/* Speakers */}
+      {segSpeakers.length > 0 && (
+        <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: isDarkMode ? '1px solid rgba(100,116,139,0.2)' : '1px solid #f1f5f9' }}>
+          <p style={{ fontSize: '12px', color: isDarkMode ? '#cbd5e1' : '#475569', margin: 0, fontWeight: '500', lineHeight: 1.5 }}>
+            {segSpeakers.slice(0, 2).map(sp => sp.full_name).join(', ')}
+            {segSpeakers.length > 2 && <span style={{ color: isDarkMode ? '#64748b' : '#94a3b8' }}> +{segSpeakers.length - 2} more</span>}
+          </p>
+        </div>
+      )}
     </div>
   )
 }
@@ -241,6 +254,28 @@ const OngoingCard = ({ segment, speakers, onCardClick, style }) => {
         {segment.title}
       </h3>
 
+      {/* ── Capacity Badge ── */}
+      {segment.capacity_status && (() => {
+        const capBadge = getCapacityBadge(segment.capacity_status)
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+            <span style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Seat Capacity:
+            </span>
+            <span style={{
+              fontSize: '11px',
+              fontWeight: '700',
+              padding: '5px 12px',
+              borderRadius: '8px',
+              backgroundColor: capBadge.bg,
+              color: capBadge.text,
+            }}>
+              {capBadge.label}
+            </span>
+          </div>
+        )
+      })()}
+
       {/* ── Speakers ── */}
       {segmentSpeakers.length > 0 && (
         <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
@@ -279,9 +314,13 @@ export const FlowPage = () => {
   const [currentUser, setCurrentUser]           = useState(null)
   const [pickedSegments, setPickedSegments]     = useState({}) // { "HH:MM": segmentId }
   const [ongoingSpeakers, setOngoingSpeakers]   = useState({}) // { segmentId: [speakers] }
+  const [allSpeakers, setAllSpeakers]           = useState({}) // { segmentId: [speakers] }
+  const [viewMode, setViewMode]                 = useState('myflow') // 'full' | 'myflow'
   const [isDarkMode, setIsDarkMode]             = useState(() =>
     document.documentElement.classList.contains('dark')
   )
+  const scrollTargetRef = useRef(null)
+  const hasScrolledRef = useRef(false)
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -299,6 +338,22 @@ export const FlowPage = () => {
     }
     init()
   }, [])
+
+  // ── Poll segments every 5s for real-time status updates ───────────────────
+  useEffect(() => {
+    const selectedEventId = localStorage.getItem('selected_event_id')
+    if (!selectedEventId) return
+
+    const pollSegments = async () => {
+      const result = await getSegmentsByEventId(selectedEventId)
+      if (result.success) {
+        setSegments(result.data || [])
+      }
+    }
+
+    const interval = setInterval(pollSegments, 3000)
+    return () => clearInterval(interval)
+  }, [event])
 
   const loadEventData = async (user) => {
     setLoading(true)
@@ -357,7 +412,19 @@ export const FlowPage = () => {
       map.get(key).push(seg)
     }
     return Array.from(map.entries())
-      .map(([key, segs]) => ({ key, segs }))
+      .map(([key, segs]) => ({
+        key,
+        // Sort concurrent segments: "15th Floor" first, then alphabetically by room
+        segs: segs.length > 1
+          ? segs.sort((a, b) => {
+              const aIs15 = (a.room_name || '').toLowerCase().includes('15th')
+              const bIs15 = (b.room_name || '').toLowerCase().includes('15th')
+              if (aIs15 && !bIs15) return -1
+              if (!aIs15 && bIs15) return 1
+              return (a.room_name || '').localeCompare(b.room_name || '')
+            })
+          : segs,
+      }))
       .sort((a, b) => a.key.localeCompare(b.key))
   }, [segments])
 
@@ -419,6 +486,32 @@ export const FlowPage = () => {
     return userOngoingSegments
   }, [segments, pickedSegments])
 
+  // ── Progress tracking ─────────────────────────────────────────────────────
+  const progress = useMemo(() => {
+    const total = segments.length
+    const done = segments.filter(s => s.segment_status === 'Finished' || s.segment_status === 'Skipped').length
+    return { done, total }
+  }, [segments])
+
+  // ── Find first non-completed time group index for auto-scroll ─────────────
+  const firstActiveGroupIndex = useMemo(() => {
+    for (let i = 0; i < timeGroups.length; i++) {
+      const { segs } = timeGroups[i]
+      const allDone = segs.every(s => s.segment_status === 'Finished' || s.segment_status === 'Skipped')
+      if (!allDone) return i
+    }
+    return -1
+  }, [timeGroups])
+
+  // ── Auto-scroll to current/next session on first load ─────────────────────
+  useEffect(() => {
+    if (hasScrolledRef.current || loading || !scrollTargetRef.current) return
+    hasScrolledRef.current = true
+    setTimeout(() => {
+      scrollTargetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 300)
+  }, [loading, firstActiveGroupIndex])
+
   // Fetch speakers for ALL ongoing segments
   useEffect(() => {
     if (ongoingSegments.length === 0) {
@@ -456,6 +549,35 @@ export const FlowPage = () => {
   const handleSegmentClick = (segment) => {
     navigate(`/app/segment/${segment.id}`)
   }
+
+  // ── Fetch speakers for ALL segments (for card display) ────────────────────
+  useEffect(() => {
+    if (segments.length === 0) { setAllSpeakers({}); return }
+    
+    let cancelled = false
+    const fetchAllSpeakers = async () => {
+      const segmentIds = segments.map(seg => seg.id)
+      const { data, error } = await supabase
+        .from('segment_speakers')
+        .select('segment_id, speaker_id, speakers(id, full_name, role, company)')
+        .in('segment_id', segmentIds)
+      
+      if (!cancelled && !error && data) {
+        const speakersBySegment = {}
+        data.forEach((r) => {
+          if (r.speakers) {
+            if (!speakersBySegment[r.segment_id]) {
+              speakersBySegment[r.segment_id] = []
+            }
+            speakersBySegment[r.segment_id].push(r.speakers)
+          }
+        })
+        setAllSpeakers(speakersBySegment)
+      }
+    }
+    fetchAllSpeakers()
+    return () => { cancelled = true }
+  }, [segments])
 
   const openPicker = (key, segs) => {
     navigate(`/app/picker/${encodeURIComponent(key)}`, {
@@ -540,12 +662,59 @@ export const FlowPage = () => {
           </div>
         )}
 
+        {/* ── Progress + View Toggle ── */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingLeft: '4px', paddingRight: '4px' }}>
+          <div>
+            <h2 style={{ fontSize: '13px', fontWeight: '800', color: isDarkMode ? '#e2e8f0' : '#0f172a', textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0, transition: 'color 0.2s' }}>
+              Schedule
+            </h2>
+            {progress.total > 0 && (
+              <p style={{ fontSize: '11px', color: isDarkMode ? '#64748b' : '#94a3b8', margin: '4px 0 0', fontWeight: '600' }}>
+                {progress.done} of {progress.total} sessions done
+              </p>
+            )}
+          </div>
+
+          {/* View toggle */}
+          <div style={{ display: 'flex', borderRadius: '8px', overflow: 'hidden', border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0' }}>
+            <button
+              onClick={() => setViewMode('myflow')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '4px',
+                padding: '6px 12px', fontSize: '11px', fontWeight: '700',
+                border: 'none', cursor: 'pointer',
+                backgroundColor: viewMode === 'myflow' ? (isDarkMode ? '#1B77CF' : '#FFA100') : (isDarkMode ? '#252F3E' : '#fff'),
+                color: viewMode === 'myflow' ? '#fff' : (isDarkMode ? '#94a3b8' : '#64748b'),
+                transition: 'all 0.15s',
+              }}
+            >
+              <Zap size={12} /> My Flow
+            </button>
+            <button
+              onClick={() => setViewMode('full')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '4px',
+                padding: '6px 12px', fontSize: '11px', fontWeight: '700',
+                border: 'none', cursor: 'pointer',
+                backgroundColor: viewMode === 'full' ? (isDarkMode ? '#1B77CF' : '#FFA100') : (isDarkMode ? '#252F3E' : '#fff'),
+                color: viewMode === 'full' ? '#fff' : (isDarkMode ? '#94a3b8' : '#64748b'),
+                transition: 'all 0.15s',
+              }}
+            >
+              <ListFilter size={12} /> All
+            </button>
+          </div>
+        </div>
+
+        {/* ── Instruction tip ── */}
+        <p style={{ fontSize: '11px', color: isDarkMode ? '#64748b' : '#94a3b8', margin: '8px 0 16px 4px', lineHeight: 1.5, fontWeight: '500' }}>
+          {viewMode === 'myflow'
+            ? 'Your personalized schedule. Tap "change" on concurrent sessions to switch rooms.'
+            : 'Full event schedule. All concurrent sessions are shown per time slot.'}
+        </p>
+
         {/* ── Timeline Feed ── */}
         <div>
-          <h2 style={{ fontSize: '13px', fontWeight: '800', color: isDarkMode ? '#e2e8f0' : '#0f172a', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px', paddingLeft: '4px', transition: 'color 0.2s' }}>
-            Schedule
-          </h2>
-
           {segments.length === 0 ? (
             <div style={{ backgroundColor: isDarkMode ? 'rgba(100, 116, 139, 0.1)' : 'rgba(30, 41, 59, 0.5)', border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '14px', padding: '40px 20px', textAlign: 'center', transition: 'background-color 0.2s, border-color 0.2s' }}>
               <p style={{ fontSize: '14px', color: isDarkMode ? '#94a3b8' : '#94a3b8', margin: 0, transition: 'color 0.2s' }}>
@@ -554,17 +723,27 @@ export const FlowPage = () => {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-              {timeGroups.map(({ key, segs }) => {
+              {timeGroups.map(({ key, segs }, groupIndex) => {
                 const isConcurrent = segs.length > 1
                 const pickedSegId = pickedSegments[key]
                 const displaySegment = pickedSegId
                   ? segs.find(s => s.id === pickedSegId) || segs[0]
                   : segs[0]
 
+                // Check if all segments in this group are done
+                const allDone = segs.every(s => s.segment_status === 'Finished' || s.segment_status === 'Skipped')
+                const isDimmed = allDone
+
+                // "My Flow" filter: in My Flow, concurrent unpicked slots show the nudge
+                // (no filtering — all time groups always visible)
+
+                // Auto-scroll ref: attach to first non-completed group
+                const isScrollTarget = groupIndex === firstActiveGroupIndex
+
                 return (
-                  <div key={key}>
+                  <div key={key} ref={isScrollTarget ? scrollTargetRef : undefined}>
                     {/* Time header */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', paddingLeft: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', paddingLeft: '4px', opacity: isDimmed ? 0.5 : 1, transition: 'opacity 0.3s' }}>
                       <span style={{ fontSize: '15px', fontWeight: '800', color: isDarkMode ? '#e2e8f0' : '#0f172a', transition: 'color 0.2s' }}>
                         {formatTimeHeader(key)}
                       </span>
@@ -576,14 +755,101 @@ export const FlowPage = () => {
                     </div>
 
                     {/* Segment card(s) */}
-                    <SegmentCard
-                      segment={displaySegment}
-                      isConcurrent={isConcurrent}
-                      isUserPick={!!pickedSegId}
-                      onConcurrentClick={() => openPicker(key, segs)}
-                      onCardClick={handleSegmentClick}
-                      isDarkMode={isDarkMode}
-                    />
+                    {viewMode === 'full' && isConcurrent ? (
+                      // "All" view: show ALL concurrent sessions
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {segs.map((seg) => (
+                          <SegmentCard
+                            key={seg.id}
+                            segment={seg}
+                            isConcurrent={false}
+                            isUserPick={pickedSegId === seg.id}
+                            onConcurrentClick={() => openPicker(key, segs)}
+                            onCardClick={handleSegmentClick}
+                            isDarkMode={isDarkMode}
+                            dimmed={isDimmed}
+                            speakers={allSpeakers[seg.id]}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      // "My Flow" view or non-concurrent: show single card
+                      <>
+                        <SegmentCard
+                          segment={displaySegment}
+                          isConcurrent={false}
+                          isUserPick={!!pickedSegId}
+                          onConcurrentClick={() => openPicker(key, segs)}
+                          onCardClick={handleSegmentClick}
+                          isDarkMode={isDarkMode}
+                          dimmed={isDimmed}
+                          speakers={allSpeakers[displaySegment.id]}
+                        />
+                        {/* Edit pick button in My Flow for concurrent slots */}
+                        {viewMode === 'myflow' && isConcurrent && pickedSegId && (
+                          <button
+                            onClick={() => openPicker(key, segs)}
+                            style={{
+                              marginTop: '6px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '5px',
+                              width: '100%',
+                              padding: '8px',
+                              borderRadius: '8px',
+                              border: 'none',
+                              backgroundColor: isDarkMode ? 'rgba(27, 119, 207, 0.1)' : 'rgba(255, 161, 0, 0.08)',
+                              color: isDarkMode ? '#1B77CF' : '#FFA100',
+                              fontSize: '12px',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(27, 119, 207, 0.2)' : 'rgba(255, 161, 0, 0.15)'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(27, 119, 207, 0.1)' : 'rgba(255, 161, 0, 0.08)'
+                            }}
+                          >
+                            Change session
+                          </button>
+                        )}
+                      </>
+                    )}
+
+                    {/* Unpicked concurrent nudge — show change button instead of dashed prompt */}
+                    {isConcurrent && !pickedSegId && viewMode === 'myflow' && (
+                      <button
+                        onClick={() => openPicker(key, segs)}
+                        style={{
+                          marginTop: '6px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '5px',
+                          width: '100%',
+                          padding: '8px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          backgroundColor: isDarkMode ? 'rgba(27, 119, 207, 0.1)' : 'rgba(255, 161, 0, 0.08)',
+                          color: isDarkMode ? '#1B77CF' : '#FFA100',
+                          fontSize: '12px',
+                          fontWeight: '700',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(27, 119, 207, 0.2)' : 'rgba(255, 161, 0, 0.15)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(27, 119, 207, 0.1)' : 'rgba(255, 161, 0, 0.08)'
+                        }}
+                      >
+                        {segs.length} sessions available — change
+                      </button>
+                    )}
                   </div>
                 )
               })}

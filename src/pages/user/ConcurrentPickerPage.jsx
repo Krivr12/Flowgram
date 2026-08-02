@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Clock, MapPin } from 'lucide-react'
 import { supabase, getCurrentUser } from '../../services/supabase'
@@ -27,9 +27,11 @@ const formatTimeHeader = (timeKey) => {
 // ─── Badge helpers ────────────────────────────────────────────────────────────
 
 const CAPACITY_BADGE = {
-  VACANT:       { bg: '#dcfce7', text: '#15803d', label: 'Vacant' },
-  'FILLING IN': { bg: '#fef3c7', text: '#b45309', label: 'Filling In' },
-  FULL:         { bg: '#fee2e2', text: '#dc2626', label: 'Full' },
+  VACANT:        { bg: '#dcfce7', text: '#15803d', label: 'Open' },
+  FILLING:       { bg: '#fef3c7', text: '#b45309', label: 'Filling Up' },
+  'FILLING IN':  { bg: '#fef3c7', text: '#b45309', label: 'Filling Up' },
+  'ALMOST FULL': { bg: '#fff7ed', text: '#c2410c', label: 'Almost Full' },
+  FULL:          { bg: '#fee2e2', text: '#dc2626', label: 'Full' },
 }
 const getCapacityBadge = (cap) => CAPACITY_BADGE[cap] ?? CAPACITY_BADGE['VACANT']
 
@@ -43,14 +45,14 @@ const getStatusBadge = (status) => STATUS_BADGE[status] ?? STATUS_BADGE['Not Sta
 
 // ─── Radio circle ─────────────────────────────────────────────────────────────
 
-const RadioCircle = ({ checked }) => (
+const RadioCircle = ({ checked, isDarkMode }) => (
   <div
     style={{
       width: '20px',
       height: '20px',
       borderRadius: '50%',
-      border: checked ? '2px solid #1B77CF' : '2px solid #cbd5e1',
-      backgroundColor: checked ? '#1B77CF' : '#fff',
+      border: checked ? '2px solid #FFA100' : (isDarkMode ? '2px solid #64748b' : '2px solid #cbd5e1'),
+      backgroundColor: checked ? '#FFA100' : (isDarkMode ? '#252F3E' : '#fff'),
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -66,7 +68,7 @@ const RadioCircle = ({ checked }) => (
 
 // ─── Picker Card ──────────────────────────────────────────────────────────────
 
-const PickerCard = ({ segment, isSelected, onSelect, onViewDetails }) => {
+const PickerCard = ({ segment, isSelected, onSelect, onViewDetails, isDarkMode }) => {
   const capBadge = getCapacityBadge(segment.capacity_status)
   const statusBadge = getStatusBadge(segment.segment_status)
 
@@ -79,28 +81,32 @@ const PickerCard = ({ segment, isSelected, onSelect, onViewDetails }) => {
         gap: '14px',
         padding: '18px',
         borderRadius: '14px',
-        border: isSelected ? '2px solid #1B77CF' : '1px solid #e2e8f0',
-        backgroundColor: isSelected ? '#e8f4ff' : '#fff',
+        border: isSelected
+          ? (isDarkMode ? '2px solid #FFA100' : '2px solid #FFA100')
+          : (isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0'),
+        backgroundColor: isSelected
+          ? (isDarkMode ? 'rgba(255, 161, 0, 0.08)' : '#fff8ed')
+          : (isDarkMode ? '#252F3E' : '#fff'),
         cursor: 'pointer',
         transition: 'all 0.18s',
         position: 'relative',
       }}
       onMouseEnter={(e) => {
         if (!isSelected) {
-          e.currentTarget.style.borderColor = '#cbd5e1'
-          e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.07)'
+          e.currentTarget.style.borderColor = isDarkMode ? 'rgba(100,116,139,0.5)' : '#cbd5e1'
+          e.currentTarget.style.boxShadow = isDarkMode ? '0 2px 12px rgba(0,0,0,0.2)' : '0 2px 12px rgba(0,0,0,0.07)'
         }
       }}
       onMouseLeave={(e) => {
         if (!isSelected) {
-          e.currentTarget.style.borderColor = '#e2e8f0'
+          e.currentTarget.style.borderColor = isDarkMode ? 'rgba(100,116,139,0.3)' : '#e2e8f0'
           e.currentTarget.style.boxShadow = 'none'
         }
       }}
     >
       {/* Radio */}
       <div style={{ paddingTop: '2px' }}>
-        <RadioCircle checked={isSelected} />
+        <RadioCircle checked={isSelected} isDarkMode={isDarkMode} />
       </div>
 
       {/* Card body */}
@@ -109,23 +115,23 @@ const PickerCard = ({ segment, isSelected, onSelect, onViewDetails }) => {
           style={{
             fontSize: '16px',
             fontWeight: '700',
-            color: '#0f172a',
+            color: isDarkMode ? '#e2e8f0' : '#0f172a',
             margin: '0 0 10px',
             lineHeight: 1.3,
-            paddingRight: '32px', // space for chevron
+            paddingRight: '32px',
           }}
         >
           {segment.title}
         </h3>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', backgroundColor: '#f8fafc', padding: '5px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', color: '#475569' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', backgroundColor: isDarkMode ? 'rgba(100,116,139,0.1)' : '#f8fafc', padding: '5px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', color: isDarkMode ? '#94a3b8' : '#475569' }}>
             <Clock size={12} />
             {formatTime(segment.start_time)}
             {segment.end_time && <> → {formatTime(segment.end_time)}</>}
           </span>
           {segment.room_name && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', backgroundColor: '#f8fafc', padding: '5px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', color: '#475569' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', backgroundColor: isDarkMode ? 'rgba(100,116,139,0.1)' : '#f8fafc', padding: '5px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', color: isDarkMode ? '#94a3b8' : '#475569' }}>
               <MapPin size={12} /> {segment.room_name}
             </span>
           )}
@@ -145,7 +151,7 @@ const PickerCard = ({ segment, isSelected, onSelect, onViewDetails }) => {
         </div>
       </div>
 
-      {/* Details chevron — tapping only this navigates to segment detail */}
+      {/* Details chevron */}
       <button
         onClick={(e) => { e.stopPropagation(); onViewDetails(segment.id) }}
         aria-label="View details"
@@ -162,17 +168,17 @@ const PickerCard = ({ segment, isSelected, onSelect, onViewDetails }) => {
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          color: '#94a3b8',
+          color: isDarkMode ? '#64748b' : '#94a3b8',
           transition: 'all 0.15s',
           padding: 0,
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = '#f1f5f9'
-          e.currentTarget.style.color = '#475569'
+          e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(100,116,139,0.1)' : '#f1f5f9'
+          e.currentTarget.style.color = isDarkMode ? '#cbd5e1' : '#475569'
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = 'transparent'
-          e.currentTarget.style.color = '#94a3b8'
+          e.currentTarget.style.color = isDarkMode ? '#64748b' : '#94a3b8'
         }}
       >
         <ChevronRight size={18} strokeWidth={2} />
@@ -184,8 +190,8 @@ const PickerCard = ({ segment, isSelected, onSelect, onViewDetails }) => {
 // ─── Main ConcurrentPickerPage ────────────────────────────────────────────────
 
 export const ConcurrentPickerPage = () => {
-  const { timeBlock } = useParams()          // "HH:MM"
-  const { state }     = useLocation()        // { segments: [...], currentPickId, eventId }
+  const { timeBlock } = useParams()
+  const { state }     = useLocation()
   const navigate      = useNavigate()
 
   const segments      = state?.segments      ?? []
@@ -194,6 +200,17 @@ export const ConcurrentPickerPage = () => {
 
   const [selectedId, setSelectedId] = useState(state?.currentPickId ?? null)
   const [saving, setSaving]         = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(() =>
+    document.documentElement.classList.contains('dark')
+  )
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
 
   const handleSave = async () => {
     if (!selectedId) return
@@ -218,14 +235,16 @@ export const ConcurrentPickerPage = () => {
     }
   }
 
+  const bg = isDarkMode ? '#1a222d' : '#f8fafc'
+
   // If state is missing (e.g. direct URL access), bail back
   if (segments.length === 0) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '12px' }}>
-        <p style={{ color: '#64748b', fontSize: '15px' }}>No sessions to display.</p>
+        <p style={{ color: isDarkMode ? '#94a3b8' : '#64748b', fontSize: '15px' }}>No sessions to display.</p>
         <button
           onClick={() => navigate('/app')}
-          style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#fff', color: '#0f172a', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+          style={{ padding: '10px 20px', borderRadius: '8px', border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0', backgroundColor: isDarkMode ? '#252F3E' : '#fff', color: isDarkMode ? '#e2e8f0' : '#0f172a', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
         >
           Back to Flow
         </button>
@@ -247,18 +266,18 @@ export const ConcurrentPickerPage = () => {
             padding: '6px 0',
             background: 'none',
             border: 'none',
-            color: '#64748b',
+            color: isDarkMode ? '#94a3b8' : '#64748b',
             fontSize: '14px',
             fontWeight: '600',
             cursor: 'pointer',
             transition: 'color 0.15s, transform 0.15s',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.color = '#0f172a'
+            e.currentTarget.style.color = isDarkMode ? '#e2e8f0' : '#0f172a'
             e.currentTarget.style.transform = 'translateX(-3px)'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.color = '#64748b'
+            e.currentTarget.style.color = isDarkMode ? '#94a3b8' : '#64748b'
             e.currentTarget.style.transform = 'translateX(0)'
           }}
         >
@@ -269,10 +288,10 @@ export const ConcurrentPickerPage = () => {
 
       {/* ── Header ── */}
       <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: '800', color: '#0f172a', margin: '0 0 6px', lineHeight: 1.3 }}>
+        <h1 style={{ fontSize: '22px', fontWeight: '800', color: isDarkMode ? '#e2e8f0' : '#0f172a', margin: '0 0 6px', lineHeight: 1.3 }}>
           Choose Your Session
         </h1>
-        <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+        <p style={{ fontSize: '13px', color: isDarkMode ? '#94a3b8' : '#64748b', margin: 0 }}>
           {segments.length} sessions at <strong>{formatTimeHeader(timeBlock)}</strong> — pick one for your itinerary.
         </p>
       </div>
@@ -286,6 +305,7 @@ export const ConcurrentPickerPage = () => {
             isSelected={selectedId === seg.id}
             onSelect={(id) => setSelectedId(id)}
             onViewDetails={(id) => navigate(`/app/segment/${id}`)}
+            isDarkMode={isDarkMode}
           />
         ))}
       </div>
@@ -298,8 +318,8 @@ export const ConcurrentPickerPage = () => {
           left: 0,
           right: 0,
           padding: '16px 24px',
-          backgroundColor: '#fff',
-          borderTop: '1px solid #e2e8f0',
+          backgroundColor: isDarkMode ? '#252F3E' : '#fff',
+          borderTop: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
           zIndex: 30,
         }}
       >
@@ -314,8 +334,8 @@ export const ConcurrentPickerPage = () => {
             padding: '14px',
             borderRadius: '12px',
             border: 'none',
-            backgroundColor: !selectedId || saving ? '#cbd5e1' : '#0f172a',
-            color: '#fff',
+            backgroundColor: !selectedId || saving ? (isDarkMode ? '#334155' : '#cbd5e1') : '#FFA100',
+            color: !selectedId || saving ? (isDarkMode ? '#64748b' : '#9ca3af') : '#fff',
             fontSize: '15px',
             fontWeight: '700',
             cursor: !selectedId || saving ? 'not-allowed' : 'pointer',
@@ -323,12 +343,12 @@ export const ConcurrentPickerPage = () => {
           }}
           onMouseEnter={(e) => {
             if (selectedId && !saving) {
-              e.currentTarget.style.backgroundColor = '#1e293b'
+              e.currentTarget.style.backgroundColor = '#e89100'
               e.currentTarget.style.transform = 'translateY(-1px)'
             }
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = !selectedId || saving ? '#cbd5e1' : '#0f172a'
+            e.currentTarget.style.backgroundColor = !selectedId || saving ? (isDarkMode ? '#334155' : '#cbd5e1') : '#FFA100'
             e.currentTarget.style.transform = 'translateY(0)'
           }}
         >

@@ -15,6 +15,7 @@ import { EventsSelectionPage } from '../pages/user/EventsSelectionPage'
 import { NotificationsPage as UserNotificationsPage } from '../pages/user/NotificationsPage'
 import { AccountPage } from '../pages/user/AccountPage'
 import { EventDetailsPage } from '../pages/user/EventDetailsPage'
+import { MorePage } from '../pages/user/MorePage'
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage'
 import { AdminEventFormPage } from '../pages/admin/AdminEventFormPage'
 import { AdminFlowPage } from '../pages/admin/AdminFlowPage'
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
       { path: 'events', element: <EventsSelectionPage /> },
       { path: 'event/:id', element: <EventDetailsPage /> },
       { path: 'notifications', element: <UserNotificationsPage /> },
+      { path: 'more', element: <MorePage /> },
       { path: 'account', element: <AccountPage /> },
     ],
   },

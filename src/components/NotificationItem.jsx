@@ -41,6 +41,50 @@ const getNotifMeta = (title = '', message = '') => {
   return { Icon: Info,            color: '#1B77CF' }   // blue (default)
 }
 
+// ─── Friendly notification text ───────────────────────────────────────────────
+// Transforms auto-generated DB trigger notifications into user-friendly text.
+// Manual admin notifications pass through unchanged.
+
+export const formatNotification = (title = '', message = '') => {
+  // Detect auto-generated session status notifications
+  // Pattern: "Session Update: <SegmentName>" + "This session is now <Status>."
+  const titleMatch = title.match(/^Session Update:\s*(.+)$/i)
+  const messageMatch = message.match(/^This session is now (.+?)\.?\s*$/i)
+
+  if (titleMatch && messageMatch) {
+    const segmentName = titleMatch[1].trim()
+    const status = messageMatch[1].trim()
+
+    switch (status.toLowerCase()) {
+      case 'ongoing':
+        return {
+          title: `${segmentName} is now live`,
+          message: 'This session has started — head over now.',
+        }
+      case 'finished':
+        return {
+          title: `${segmentName} has ended`,
+          message: 'This session is complete.',
+        }
+      case 'not started':
+        return {
+          title: `${segmentName} — status updated`,
+          message: 'This session has been moved back to upcoming.',
+        }
+      case 'skipped':
+        return {
+          title: `${segmentName} — cancelled`,
+          message: 'This session has been skipped by the organizer.',
+        }
+      default:
+        break
+    }
+  }
+
+  // Pass through non-auto notifications unchanged
+  return { title, message }
+}
+
 // ─── Threshold for "show more" chevron ───────────────────────────────────────
 const TRUNCATE_THRESHOLD = 80
 
@@ -60,8 +104,9 @@ export const NotificationItem = ({ notification }) => {
     return () => observer.disconnect()
   }, [])
 
+  const formatted = formatNotification(notification.title, notification.message)
   const { Icon, color } = getNotifMeta(notification.title, notification.message)
-  const isLong = (notification.message || '').length > TRUNCATE_THRESHOLD
+  const isLong = (formatted.message || '').length > TRUNCATE_THRESHOLD
 
   const bgColor      = isDarkMode ? '#252F3E' : '#ffffff'
   const borderColor  = isDarkMode ? 'rgba(100, 116, 139, 0.3)' : '#e2e8f0'
@@ -92,7 +137,7 @@ export const NotificationItem = ({ notification }) => {
         {/* Title + timestamp row */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '3px' }}>
           <p style={{ fontSize: '14px', fontWeight: '700', color: titleColor, margin: 0, lineHeight: 1.35 }}>
-            {notification.title}
+            {formatted.title}
           </p>
           <span style={{ fontSize: '11px', color: timeColor, fontWeight: '500', whiteSpace: 'nowrap', flexShrink: 0, paddingTop: '2px' }}>
             {formatRelativeTime(notification.created_at)}
@@ -100,7 +145,7 @@ export const NotificationItem = ({ notification }) => {
         </div>
 
         {/* Message */}
-        {notification.message && (
+        {formatted.message && (
           <div style={{ position: 'relative' }}>
             <p
               style={{
@@ -114,7 +159,7 @@ export const NotificationItem = ({ notification }) => {
                 overflow: isExpanded ? 'visible' : 'hidden',
               }}
             >
-              {notification.message}
+              {formatted.message}
             </p>
 
             {isLong && (
