@@ -151,9 +151,12 @@ export const AdminSpeakerFormPage = () => {
 
   // ── Submit ────────────────────────────────────────────────────────────────
 
+  const [successMsg, setSuccessMsg] = useState('')
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setServerError('')
+    setSuccessMsg('')
 
     const errs = validate()
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
@@ -176,14 +179,23 @@ export const AdminSpeakerFormPage = () => {
       imageUrl = upload.url
     }
 
-    const payload = { ...form, profile_picture_url: imageUrl }
+    const payload = {
+      full_name:           form.full_name.trim(),
+      role:                form.role.trim(),
+      company:             form.company.trim(),
+      event_role:          form.event_role,
+      description:         form.description.trim(),
+      linkedin_url:        form.linkedin_url.trim() || null,
+      profile_picture_url: imageUrl || null,
+    }
 
     const result = isEditMode
       ? await updateSpeaker(speakerId, payload)
       : await createSpeaker(payload)
 
     if (result.success) {
-      navigate(`/admin/events/${eventId}/speakers`)
+      setSuccessMsg(isEditMode ? 'Speaker updated!' : 'Speaker added!')
+      setTimeout(() => navigate(`/admin/events/${eventId}/speakers`), 1000)
     } else {
       setServerError(result.error || 'Something went wrong. Please try again.')
       setSubmitting(false)
@@ -269,6 +281,13 @@ export const AdminSpeakerFormPage = () => {
       {serverError && (
         <div style={{ backgroundColor: isDarkMode ? 'rgba(220, 38, 38, 0.1)' : '#fef2f2', border: isDarkMode ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid #fecaca', color: isDarkMode ? '#fca5a5' : '#dc2626', padding: '12px 16px', borderRadius: '8px', fontSize: '14px', marginBottom: '24px' }}>
           {serverError}
+        </div>
+      )}
+
+      {/* ── Success ── */}
+      {successMsg && (
+        <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #86efac', color: '#166534', padding: '12px 16px', borderRadius: '8px', fontSize: '14px', marginBottom: '24px' }}>
+          {successMsg}
         </div>
       )}
 
@@ -388,42 +407,43 @@ export const AdminSpeakerFormPage = () => {
           </div>
 
           {/* ── Actions ── */}
-          <div style={{ display: 'flex', gap: '12px', marginTop: '32px', justifyContent: 'space-between', alignItems: 'center' }}>
-            {isEditMode && (
-              <button
-                type="button"
-                onClick={() => setShowDeleteConfirm(true)}
-                disabled={deleting}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 16px', fontSize: '14px', fontWeight: '500', color: '#dc2626', backgroundColor: 'transparent', border: isDarkMode ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid #fecaca', borderRadius: '9999px', cursor: 'pointer', transition: 'background-color 0.15s', opacity: deleting ? 0.5 : 1 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(220, 38, 38, 0.1)' : '#fef2f2'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
-                <Trash2 size={14} />
-                <span style={{ display: 'none' }} className="delete-button-text">Delete Speaker</span>
-              </button>
-            )}
-
-            <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '32px' }}>
+            {/* Save + Cancel row */}
+            <div style={{ display: 'flex', gap: '10px' }}>
               <button
                 type="button"
                 onClick={handleBack}
-                style={{ padding: '10px 20px', fontSize: '14px', fontWeight: '500', color: isDarkMode ? '#cbd5e1' : '#374151', backgroundColor: 'transparent', border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0', borderRadius: '9999px', cursor: 'pointer', transition: 'background-color 0.15s' }}
+                style={{ padding: '12px 20px', fontSize: '14px', fontWeight: '500', color: isDarkMode ? '#cbd5e1' : '#374151', backgroundColor: 'transparent', border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0', borderRadius: '9999px', cursor: 'pointer', transition: 'background-color 0.15s', whiteSpace: 'nowrap' }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(100, 116, 139, 0.1)' : '#f8fafc'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
                 Cancel
               </button>
-
               <button
                 type="submit"
                 disabled={!canSubmit || isBusy}
-                style={{ padding: '10px 24px', fontSize: '14px', fontWeight: '600', color: submitColor, backgroundColor: submitBg, border: 'none', borderRadius: '9999px', cursor: canSubmit && !isBusy ? 'pointer' : 'not-allowed', transition: 'background-color 0.2s', minWidth: '140px' }}
+                style={{ flex: 1, padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: submitColor, backgroundColor: submitBg, border: 'none', borderRadius: '9999px', cursor: canSubmit && !isBusy ? 'pointer' : 'not-allowed', transition: 'background-color 0.2s', whiteSpace: 'nowrap' }}
                 onMouseEnter={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#155fa3' }}
                 onMouseLeave={(e) => { if (canSubmit && !isBusy) e.currentTarget.style.backgroundColor = '#1B77CF' }}
               >
                 {submitLabel}
               </button>
             </div>
+
+            {/* Delete — separate row */}
+            {isEditMode && (
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={deleting}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px 16px', fontSize: '13px', fontWeight: '500', color: '#dc2626', backgroundColor: 'transparent', border: isDarkMode ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid #fecaca', borderRadius: '9999px', cursor: 'pointer', transition: 'background-color 0.15s', opacity: deleting ? 0.5 : 1, width: '100%' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(220, 38, 38, 0.1)' : '#fef2f2'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <Trash2 size={14} />
+                Delete Speaker
+              </button>
+            )}
           </div>
 
         </form>

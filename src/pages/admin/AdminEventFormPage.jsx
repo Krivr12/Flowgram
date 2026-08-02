@@ -6,15 +6,20 @@ import { createEvent, updateEvent, getEventById } from '../../services/events'
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * Convert a UTC ISO timestamp from Supabase (e.g. "2026-07-12T13:00:00")
- * to the local "YYYY-MM-DDTHH:mm" string that <input type="datetime-local"> expects.
+ * Convert a timestamp from Supabase to the "YYYY-MM-DDTHH:mm" format
+ * that <input type="datetime-local"> expects (in local time).
  */
 const isoToLocalInput = (isoStr) => {
   if (!isoStr) return ''
   const d = new Date(isoStr)
-  // toISOString is always UTC; we need to shift to local time for the input value
-  const offset = d.getTimezoneOffset() * 60000
-  return new Date(d - offset).toISOString().slice(0, 16)
+  if (isNaN(d.getTime())) return ''
+  // Build local YYYY-MM-DDTHH:mm string
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day}T${hours}:${minutes}`
 }
 
 const EMPTY_FORM = {
@@ -136,21 +141,25 @@ export const AdminEventFormPage = () => {
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
+  const [successMsg, setSuccessMsg] = useState('')
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setServerError('')
+    setSuccessMsg('')
 
     const errs = validate()
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
 
     setSubmitting(true)
 
+    // Convert datetime-local values to ISO strings for Supabase
     const payload = {
       title:       form.title.trim(),
       description: form.description.trim(),
       venue:       form.venue.trim(),
-      start_date:  form.start_date,
-      end_date:    form.end_date,
+      start_date:  form.start_date ? new Date(form.start_date).toISOString() : null,
+      end_date:    form.end_date ? new Date(form.end_date).toISOString() : null,
     }
 
     const result = isEditMode
@@ -158,7 +167,8 @@ export const AdminEventFormPage = () => {
       : await createEvent(payload)
 
     if (result.success) {
-      navigate('/admin', { replace: true })
+      setSuccessMsg(isEditMode ? 'Event updated successfully!' : 'Event created successfully!')
+      setTimeout(() => navigate('/admin', { replace: true }), 1200)
     } else {
       setServerError(result.error || 'Something went wrong. Please try again.')
       setSubmitting(false)
@@ -230,6 +240,21 @@ export const AdminEventFormPage = () => {
           marginBottom: '24px',
         }}>
           {serverError}
+        </div>
+      )}
+
+      {/* ── Success banner ── */}
+      {successMsg && (
+        <div style={{
+          backgroundColor: '#f0fdf4',
+          border: '1px solid #86efac',
+          color: '#166534',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          fontSize: '14px',
+          marginBottom: '24px',
+        }}>
+          {successMsg}
         </div>
       )}
 

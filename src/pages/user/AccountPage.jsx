@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Check, AlertCircle } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { Check, AlertCircle, ArrowLeft } from 'lucide-react'
 import { getCurrentUser, getUserProfile, updateUserProfile } from '../../services/supabase'
 import { Toast } from '../../components/Toast'
 
 export const AccountPage = () => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const isAdminRoute = location.pathname.startsWith('/admin')
 
   // ── State ──
   const [profile, setProfile]               = useState(null)
@@ -141,6 +143,22 @@ export const AccountPage = () => {
       )}
 
       <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+        {/* Back link */}
+        <button
+          onClick={() => navigate(isAdminRoute ? '/admin' : '/app')}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
+            fontSize: '13px', fontWeight: '500', color: isDarkMode ? '#94a3b8' : '#64748b',
+            background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 16px',
+            transition: 'color 0.15s',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = isDarkMode ? '#cbd5e1' : '#334155')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = isDarkMode ? '#94a3b8' : '#64748b')}
+        >
+          <ArrowLeft size={15} />
+          {isAdminRoute ? 'Back to Dashboard' : 'Back to Events'}
+        </button>
+
         {/* Page header */}
         <div style={{ marginBottom: '32px' }}>
           <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: isDarkMode ? '#e2e8f0' : '#0f172a', textAlign: 'left', marginBottom: '16px', marginTop: '8px', transition: 'color 0.2s' }}>

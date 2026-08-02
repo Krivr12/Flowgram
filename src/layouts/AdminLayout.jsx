@@ -499,7 +499,7 @@ export const AdminLayout = () => {
       {/* ══════════════════════════════════════
           MOBILE BOTTOM NAV (<769px)
       ══════════════════════════════════════ */}
-      {location.pathname !== '/admin' && (
+      {location.pathname !== '/admin' && location.pathname !== '/admin/account' && (
         <nav
           className="admin-layout-mobile-bottom-nav"
           style={{
@@ -507,7 +507,7 @@ export const AdminLayout = () => {
             backgroundColor: cardBg,
             borderTop: `1px solid ${border}`,
             height: '64px', zIndex: 50,
-            display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around',
+            display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-evenly',
           }}
           aria-label="Admin mobile navigation"
         >
@@ -526,15 +526,16 @@ export const AdminLayout = () => {
                 href={itemPath}
                 onClick={(e) => { e.preventDefault(); navigate(itemPath) }}
                 style={{
-                  flex: 1, padding: '8px 0', display: 'flex', flexDirection: 'column',
+                  padding: '8px 0', display: 'flex', flexDirection: 'column',
                   alignItems: 'center', justifyContent: 'center', gap: '2px',
-                  textAlign: 'center', fontSize: '11px', fontWeight: '500',
+                  textAlign: 'center', fontSize: '10px', fontWeight: '500',
                   color: isItemActive ? '#1B77CF' : (isDarkMode ? '#94a3b8' : '#4b5563'),
                   textDecoration: 'none', cursor: 'pointer', transition: 'color 0.2s',
+                  width: '60px',
                 }}
               >
                 <Icon size={20} strokeWidth={isItemActive ? 2.25 : 1.75} style={{ color: 'currentColor' }} />
-                <span>{item.label}</span>
+                <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>
               </a>
             )
           })}

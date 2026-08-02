@@ -10,6 +10,7 @@ export const AdminDashboardPage = () => {
   const [error, setError] = useState('')
   const [menuOpen, setMenuOpen] = useState(null)
   const [deleting, setDeleting] = useState(null)
+  const [deleteConfirm, setDeleteConfirm] = useState(null) // { id, title }
   const [isDarkMode, setIsDarkMode] = useState(() =>
     document.documentElement.classList.contains('dark')
   )
@@ -31,17 +32,31 @@ export const AdminDashboardPage = () => {
     setLoading(true)
     const result = await getAllEvents()
     if (result.success) {
-      setEvents(result.data || [])
+      // Sort by start_date ascending (nearest upcoming first)
+      const sorted = (result.data || []).sort((a, b) => {
+        const dateA = a.start_date ? new Date(a.start_date).getTime() : Infinity
+        const dateB = b.start_date ? new Date(b.start_date).getTime() : Infinity
+        return dateA - dateB
+      })
+      setEvents(sorted)
     } else {
       setError(result.error)
     }
     setLoading(false)
   }
 
-  const handleDelete = async (e, eventId) => {
+  const handleDeleteRequest = (e, eventId) => {
     e.stopPropagation()
-    setDeleting(eventId)
     setMenuOpen(null)
+    const ev = events.find((x) => x.id === eventId)
+    setDeleteConfirm({ id: eventId, title: ev?.title || 'this event' })
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return
+    const eventId = deleteConfirm.id
+    setDeleteConfirm(null)
+    setDeleting(eventId)
     const result = await deleteEvent(eventId)
     if (result.success) {
       setEvents((prev) => prev.filter((ev) => ev.id !== eventId))
@@ -61,6 +76,25 @@ export const AdminDashboardPage = () => {
 
   return (
     <div>
+
+      {/* ── Delete Confirmation Modal ── */}
+      {deleteConfirm && (
+        <div
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setDeleteConfirm(null) }}
+        >
+          <div style={{ backgroundColor: isDarkMode ? '#252F3E' : '#fff', borderRadius: '14px', padding: '24px', width: '100%', maxWidth: '360px', boxShadow: '0 20px 48px rgba(0,0,0,0.18)', margin: '0 16px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', color: isDarkMode ? '#e2e8f0' : '#0f172a', margin: '0 0 8px' }}>Delete Event?</h3>
+            <p style={{ fontSize: '14px', color: isDarkMode ? '#94a3b8' : '#64748b', margin: '0 0 20px', lineHeight: '1.5' }}>
+              Are you sure you want to delete "<strong>{deleteConfirm.title}</strong>"? This cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setDeleteConfirm(null)} style={{ padding: '9px 18px', borderRadius: '8px', border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0', backgroundColor: 'transparent', color: isDarkMode ? '#cbd5e1' : '#475569', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handleDeleteConfirm} style={{ padding: '9px 18px', borderRadius: '8px', border: 'none', backgroundColor: '#dc2626', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Page Header ── */}
       <div style={{
@@ -209,7 +243,7 @@ export const AdminDashboardPage = () => {
               onEdit={() => navigate(`/admin/events/edit/${event.id}`)}
               onMenuToggle={(id) => setMenuOpen(menuOpen === id ? null : id)}
               onMenuClose={() => setMenuOpen(null)}
-              onDelete={handleDelete}
+              onDelete={handleDeleteRequest}
               formatDate={formatDate}
             />
           ))}

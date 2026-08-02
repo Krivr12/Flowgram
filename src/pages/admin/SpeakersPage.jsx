@@ -12,6 +12,7 @@ export const SpeakersPage = () => {
   const [speakers, setSpeakers] = useState([])
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
 
     useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -60,8 +61,38 @@ export const SpeakersPage = () => {
         </button>
       </div>
 
-      {/* ── Error ── */}
-      {error && (
+      {/* ── Search ── */}
+      <div style={{ marginBottom: '16px', position: 'relative' }}>
+        <input
+          type="text"
+          placeholder="Search speakers..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '10px 14px 10px 36px',
+            borderRadius: '8px',
+            border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
+            backgroundColor: isDarkMode ? '#252F3E' : '#fff',
+            color: isDarkMode ? '#e2e8f0' : '#0f172a',
+            fontSize: '14px',
+            outline: 'none',
+            boxSizing: 'border-box',
+            transition: 'border-color 0.15s',
+          }}
+          onFocus={(e) => (e.target.style.borderColor = '#1B77CF')}
+          onBlur={(e) => (e.target.style.borderColor = isDarkMode ? 'rgba(100,116,139,0.3)' : '#e2e8f0')}
+        />
+        <svg
+          style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}
+          width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+        >
+          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+      </div>
+
+      {/* ── Error ── */}      {error && (
         <div style={{ marginBottom: '16px', padding: '12px 16px', backgroundColor: isDarkMode ? 'rgba(220, 38, 38, 0.1)' : '#fef2f2', border: isDarkMode ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid #fecaca', borderRadius: '8px', fontSize: '14px', color: isDarkMode ? '#fca5a5' : '#dc2626' }}>
           {error}
         </div>
@@ -93,7 +124,9 @@ export const SpeakersPage = () => {
       {/* ── Speaker list ── */}
       {!loading && speakers.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {speakers.map((speaker) => (
+          {speakers
+            .filter((s) => !searchQuery.trim() || s.full_name?.toLowerCase().includes(searchQuery.toLowerCase()))
+            .map((speaker) => (
             <SpeakerCard
               key={speaker.id}
               speaker={speaker}
