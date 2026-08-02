@@ -49,13 +49,13 @@ export const SpeakersPage = () => {
           onClick={goToNew}
           style={{
             display: 'flex', alignItems: 'center', gap: '6px',
-            backgroundColor: '#FFA100', color: '#fff',
+            backgroundColor: isDarkMode ? '#1B77CF' : '#FFA100', color: '#fff',
             fontWeight: '600', fontSize: '14px',
             padding: '10px 20px', borderRadius: '9999px',
             border: 'none', cursor: 'pointer', flexShrink: 0,
           }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e89100'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFA100'}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? '#155fa3' : '#e89100'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? '#1B77CF' : '#FFA100'}
         >
           <Plus size={16} /> Add Speaker
         </button>
@@ -114,7 +114,7 @@ export const SpeakersPage = () => {
           <p style={{ fontSize: '14px', color: isDarkMode ? '#94a3b8' : '#64748b', margin: '0 0 24px' }}>Add the first speaker for this event.</p>
           <button
             onClick={goToNew}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FFA100', color: '#fff', fontWeight: '600', fontSize: '14px', padding: '10px 20px', borderRadius: '9999px', border: 'none', cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: isDarkMode ? '#1B77CF' : '#FFA100', color: '#fff', fontWeight: '600', fontSize: '14px', padding: '10px 20px', borderRadius: '9999px', border: 'none', cursor: 'pointer' }}
           >
             <Plus size={16} /> Add Speaker
           </button>

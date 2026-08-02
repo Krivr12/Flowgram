@@ -116,7 +116,7 @@ export const AdminDashboardPage = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            backgroundColor: '#1B77CF',
+            backgroundColor: isDarkMode ? '#1B77CF' : '#FFA100',
             color: '#fff',
             fontWeight: '600',
             fontSize: '14px',
@@ -127,8 +127,8 @@ export const AdminDashboardPage = () => {
             boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
             flexShrink: 0,
           }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#155fa3'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1B77CF'}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? '#155fa3' : '#e89100'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? '#1B77CF' : '#FFA100'}
         >
           <Plus size={16} />
           New Event
@@ -225,7 +225,7 @@ export const AdminDashboardPage = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              backgroundColor: '#FFA100',
+              backgroundColor: isDarkMode ? '#1B77CF' : '#FFA100',
               color: '#fff',
               fontWeight: '600',
               fontSize: '14px',
@@ -234,8 +234,8 @@ export const AdminDashboardPage = () => {
               border: 'none',
               cursor: 'pointer',
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e89100'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFA100'}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? '#155fa3' : '#e89100'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? '#1B77CF' : '#FFA100'}
           >
             <Plus size={16} />
             New Event
