@@ -206,15 +206,12 @@ export const AdminLayout = () => {
             Flowgram
           </Link>
           {eventName && location.pathname !== '/admin' && (
-            <>
-              <span style={{ color: '#9ca3af', fontSize: '20px', lineHeight: 1, userSelect: 'none' }}>•</span>
-              <span style={{
-                fontSize: '14px', fontWeight: '600', color: textSub,
-                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '280px',
-              }}>
-                {eventName}
-              </span>
-            </>
+            <span style={{
+              fontSize: '14px', fontWeight: '600', color: textSub,
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '280px',
+            }}>
+              {eventName}
+            </span>
           )}
         </div>
 
@@ -375,16 +372,13 @@ export const AdminLayout = () => {
         </button>
 
         {eventName && location.pathname !== '/admin' && (
-          <>
-            <span style={{ color: '#9ca3af', fontSize: '18px', lineHeight: 1, userSelect: 'none' }}>•</span>
-            <span style={{
-              fontSize: '13px', fontWeight: '600', color: textSub,
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              maxWidth: 'calc(100vw - 120px)',
-            }}>
-              {eventName}
-            </span>
-          </>
+          <span style={{
+            fontSize: '13px', fontWeight: '600', color: textSub,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            maxWidth: 'calc(100vw - 120px)',
+          }}>
+            {eventName}
+          </span>
         )}
       </header>
 
