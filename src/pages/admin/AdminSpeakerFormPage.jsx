@@ -286,7 +286,7 @@ export const AdminSpeakerFormPage = () => {
 
       {/* ── Success ── */}
       {successMsg && (
-        <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #86efac', color: '#166534', padding: '12px 16px', borderRadius: '8px', fontSize: '14px', marginBottom: '24px' }}>
+        <div style={{ backgroundColor: isDarkMode ? 'rgba(34,197,94,0.12)' : '#f0fdf4', border: isDarkMode ? '1px solid rgba(34,197,94,0.35)' : '1px solid #86efac', color: isDarkMode ? '#6ee7b7' : '#166534', padding: '12px 16px', borderRadius: '8px', fontSize: '14px', marginBottom: '24px' }}>
           {successMsg}
         </div>
       )}

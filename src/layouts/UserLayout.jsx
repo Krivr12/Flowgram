@@ -286,8 +286,8 @@ export const UserLayout = () => {
 
   if (profileLoading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#fff' }}>
-        <p style={{ color: '#cbd5e1', fontSize: '14px' }}>Loading…</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: isDarkMode ? '#1a222d' : '#fff' }}>
+        <p style={{ color: isDarkMode ? '#64748b' : '#cbd5e1', fontSize: '14px' }}>Loading…</p>
       </div>
     )
   }
@@ -375,7 +375,7 @@ export const UserLayout = () => {
             {/* Event Title — appears after logo/avatar */}
             {eventTitle && !location.pathname.includes('/events') && (
               <>
-                <span style={{ color: '#cbd5e1', fontSize: '20px', lineHeight: 1, userSelect: 'none', flexShrink: 0 }} className="user-layout-desktop-logo">
+                <span style={{ color: isDarkMode ? '#64748b' : '#cbd5e1', fontSize: '20px', lineHeight: 1, userSelect: 'none', flexShrink: 0 }} className="user-layout-desktop-logo">
                   •
                 </span>
                 <span style={{

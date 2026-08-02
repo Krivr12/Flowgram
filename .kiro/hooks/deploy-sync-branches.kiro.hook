@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Deploy (sync + push)",
+  "description": "Commits pending changes on revision-darla, fast-forwards master to match it, and pushes both branches to origin. Uses --ff-only so merge conflicts are impossible; aborts safely if the branches have diverged.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "bash scripts/deploy.sh",
+    "timeout": 180
+  }
+}

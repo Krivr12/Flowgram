@@ -204,7 +204,7 @@ export const NotificationsPage = () => {
         </style>
 
         {loading && (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+          <div style={{ textAlign: 'center', padding: '40px', color: isDarkMode ? '#94a3b8' : '#64748b' }}>
             Loading notifications...
           </div>
         )}

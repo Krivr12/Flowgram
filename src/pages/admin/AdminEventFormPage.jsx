@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { createEvent, updateEvent, getEventById } from '../../services/events'
+import { useDarkMode } from '../../services/theme'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -37,7 +38,7 @@ const EMPTY_FORM = {
 
 // ── Field component — keeps the JSX below clean ───────────────────────────────
 const Field = ({ label, error, children }) => {
-  const isDarkMode = document.documentElement.classList.contains('dark')
+  const isDarkMode = useDarkMode()
   return (
     <div>
       <label className="dark:text-slate-300" style={{
@@ -57,23 +58,18 @@ const Field = ({ label, error, children }) => {
   )
 }
 
-const getInputStyle = () => {
-  const isDarkMode = document.documentElement.classList.contains('dark')
-  return {
-    width: '100%',
-    padding: '10px 14px',
-    fontSize: '16px',
-    color: isDarkMode ? '#e2e8f0' : '#0f172a',
-    backgroundColor: isDarkMode ? '#1e293b' : '#fff',
-    border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0',
-    borderRadius: '8px',
-    outline: 'none',
-    boxSizing: 'border-box',
-    transition: 'border-color 0.15s',
-  }
-}
-
-const inputStyle = getInputStyle()
+const getInputStyle = (isDarkMode) => ({
+  width: '100%',
+  padding: '10px 14px',
+  fontSize: '16px',
+  color: isDarkMode ? '#e2e8f0' : '#0f172a',
+  backgroundColor: isDarkMode ? '#1e293b' : '#fff',
+  border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.3)' : '1px solid #e2e8f0',
+  borderRadius: '8px',
+  outline: 'none',
+  boxSizing: 'border-box',
+  transition: 'border-color 0.15s',
+})
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
@@ -90,8 +86,10 @@ export const AdminEventFormPage = () => {
   const [serverError,   setServerError]   = useState('')
   const [focusedField,  setFocusedField]  = useState(null)
 
-  // Detect dark mode from parent
-  const isDarkMode = document.documentElement.classList.contains('dark')
+  // Detect dark mode (re-renders on theme toggle)
+  const isDarkMode = useDarkMode()
+  const inputStyle = getInputStyle(isDarkMode)
+  const defaultBorder = isDarkMode ? 'rgba(100, 116, 139, 0.3)' : '#e2e8f0'
 
   // ── Load existing event in edit mode ─────────────────────────────────────
   useEffect(() => {
@@ -207,14 +205,14 @@ export const AdminEventFormPage = () => {
           gap: '6px',
           fontSize: '13px',
           fontWeight: '500',
-          color: '#64748b',
+          color: isDarkMode ? '#94a3b8' : '#64748b',
           background: 'none',
           border: 'none',
           cursor: 'pointer',
           padding: '0 0 24px',
         }}
-        onMouseEnter={(e) => e.currentTarget.style.color = '#334155'}
-        onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
+        onMouseEnter={(e) => e.currentTarget.style.color = isDarkMode ? '#e2e8f0' : '#334155'}
+        onMouseLeave={(e) => e.currentTarget.style.color = isDarkMode ? '#94a3b8' : '#64748b'}
       >
         <ArrowLeft size={15} />
         Back to Events
@@ -238,9 +236,9 @@ export const AdminEventFormPage = () => {
       {/* ── Server error banner ── */}
       {serverError && (
         <div style={{
-          backgroundColor: '#fef2f2',
-          border: '1px solid #fecaca',
-          color: '#dc2626',
+          backgroundColor: isDarkMode ? 'rgba(220,38,38,0.1)' : '#fef2f2',
+          border: isDarkMode ? '1px solid rgba(220,38,38,0.3)' : '1px solid #fecaca',
+          color: isDarkMode ? '#fca5a5' : '#dc2626',
           padding: '12px 16px',
           borderRadius: '8px',
           fontSize: '14px',
@@ -253,9 +251,9 @@ export const AdminEventFormPage = () => {
       {/* ── Success banner ── */}
       {successMsg && (
         <div style={{
-          backgroundColor: '#f0fdf4',
-          border: '1px solid #86efac',
-          color: '#166534',
+          backgroundColor: isDarkMode ? 'rgba(34,197,94,0.12)' : '#f0fdf4',
+          border: isDarkMode ? '1px solid rgba(34,197,94,0.35)' : '1px solid #86efac',
+          color: isDarkMode ? '#6ee7b7' : '#166534',
           padding: '12px 16px',
           borderRadius: '8px',
           fontSize: '14px',
@@ -290,7 +288,7 @@ export const AdminEventFormPage = () => {
                   ...inputStyle,
                   borderColor: errors.title
                     ? '#fca5a5'
-                    : focusedField === 'title' ? '#FFA100' : '#e2e8f0',
+                    : focusedField === 'title' ? '#FFA100' : defaultBorder,
                   boxShadow: focusedField === 'title' && !errors.title
                     ? '0 0 0 3px rgba(255,153,0,0.15)'
                     : 'none',
@@ -313,7 +311,7 @@ export const AdminEventFormPage = () => {
                   lineHeight: '1.6',
                   borderColor: errors.description
                     ? '#fca5a5'
-                    : focusedField === 'description' ? '#FFA100' : '#e2e8f0',
+                    : focusedField === 'description' ? '#FFA100' : defaultBorder,
                   boxShadow: focusedField === 'description' && !errors.description
                     ? '0 0 0 3px rgba(255,153,0,0.15)'
                     : 'none',
@@ -334,7 +332,7 @@ export const AdminEventFormPage = () => {
                   ...inputStyle,
                   borderColor: errors.venue
                     ? '#fca5a5'
-                    : focusedField === 'venue' ? '#FFA100' : '#e2e8f0',
+                    : focusedField === 'venue' ? '#FFA100' : defaultBorder,
                   boxShadow: focusedField === 'venue' && !errors.venue
                     ? '0 0 0 3px rgba(255,153,0,0.15)'
                     : 'none',
@@ -356,7 +354,7 @@ export const AdminEventFormPage = () => {
                       ...inputStyle,
                       borderColor: errors.start_date
                         ? '#fca5a5'
-                        : focusedField === 'start_date' ? '#FFA100' : '#e2e8f0',
+                        : focusedField === 'start_date' ? '#FFA100' : defaultBorder,
                       boxShadow: focusedField === 'start_date' && !errors.start_date
                         ? '0 0 0 3px rgba(255,153,0,0.15)'
                         : 'none',
@@ -379,7 +377,7 @@ export const AdminEventFormPage = () => {
                       ...inputStyle,
                       borderColor: errors.end_date
                         ? '#fca5a5'
-                        : focusedField === 'end_date' ? '#FFA100' : '#e2e8f0',
+                        : focusedField === 'end_date' ? '#FFA100' : defaultBorder,
                       boxShadow: focusedField === 'end_date' && !errors.end_date
                         ? '0 0 0 3px rgba(255,153,0,0.15)'
                         : 'none',
@@ -413,14 +411,14 @@ export const AdminEventFormPage = () => {
                 padding: '10px 20px',
                 fontSize: '14px',
                 fontWeight: '500',
-                color: '#374151',
+                color: isDarkMode ? '#cbd5e1' : '#374151',
                 backgroundColor: 'transparent',
-                border: '1px solid #e2e8f0',
+                border: `1px solid ${defaultBorder}`,
                 borderRadius: '9999px',
                 cursor: 'pointer',
                 transition: 'background-color 0.15s',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(100,116,139,0.1)' : '#f8fafc'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               Cancel

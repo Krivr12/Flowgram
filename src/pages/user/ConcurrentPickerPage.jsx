@@ -33,7 +33,19 @@ const CAPACITY_BADGE = {
   'ALMOST FULL': { bg: '#fff7ed', text: '#c2410c', label: 'Almost Full' },
   FULL:          { bg: '#fee2e2', text: '#dc2626', label: 'Full' },
 }
-const getCapacityBadge = (cap) => CAPACITY_BADGE[cap] ?? CAPACITY_BADGE['VACANT']
+
+const CAPACITY_BADGE_DARK = {
+  VACANT:        { bg: 'rgba(34,197,94,0.15)',  text: '#6ee7b7', label: 'Open' },
+  FILLING:       { bg: 'rgba(251,191,36,0.15)', text: '#fcd34d', label: 'Filling Up' },
+  'FILLING IN':  { bg: 'rgba(251,191,36,0.15)', text: '#fcd34d', label: 'Filling Up' },
+  'ALMOST FULL': { bg: 'rgba(249,115,22,0.15)', text: '#fdba74', label: 'Almost Full' },
+  FULL:          { bg: 'rgba(239,68,68,0.15)',  text: '#fca5a5', label: 'Full' },
+}
+
+const getCapacityBadge = (cap, isDarkMode) => {
+  const map = isDarkMode ? CAPACITY_BADGE_DARK : CAPACITY_BADGE
+  return map[cap] ?? map['VACANT']
+}
 
 const STATUS_BADGE = {
   'Not Started': { bg: '#f1f5f9', text: '#334155' },
@@ -41,7 +53,18 @@ const STATUS_BADGE = {
   Finished:      { bg: '#dcfce7', text: '#166534' },
   Skipped:       { bg: '#fee2e2', text: '#991b1b' },
 }
-const getStatusBadge = (status) => STATUS_BADGE[status] ?? STATUS_BADGE['Not Started']
+
+const STATUS_BADGE_DARK = {
+  'Not Started': { bg: 'rgba(100,116,139,0.2)', text: '#cbd5e1' },
+  Ongoing:       { bg: 'rgba(251,191,36,0.15)', text: '#fcd34d' },
+  Finished:      { bg: 'rgba(34,197,94,0.15)',  text: '#6ee7b7' },
+  Skipped:       { bg: 'rgba(239,68,68,0.15)',  text: '#fca5a5' },
+}
+
+const getStatusBadge = (status, isDarkMode) => {
+  const map = isDarkMode ? STATUS_BADGE_DARK : STATUS_BADGE
+  return map[status] ?? map['Not Started']
+}
 
 // ─── Radio circle ─────────────────────────────────────────────────────────────
 
@@ -69,8 +92,8 @@ const RadioCircle = ({ checked, isDarkMode }) => (
 // ─── Picker Card ──────────────────────────────────────────────────────────────
 
 const PickerCard = ({ segment, isSelected, onSelect, onViewDetails, isDarkMode }) => {
-  const capBadge = getCapacityBadge(segment.capacity_status)
-  const statusBadge = getStatusBadge(segment.segment_status)
+  const capBadge = getCapacityBadge(segment.capacity_status, isDarkMode)
+  const statusBadge = getStatusBadge(segment.segment_status, isDarkMode)
 
   return (
     <div

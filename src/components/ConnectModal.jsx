@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import QRCode from 'react-qr-code'
 import { getCurrentUser, getUserProfile } from '../services/supabase'
 import { ExternalLink, QrCode, UserCircle, ArrowRight, Copy, Check, X } from 'lucide-react'
+import { useDarkMode } from '../services/theme'
 
 export const ConnectModal = ({ onClose }) => {
   const navigate = useNavigate()
+  const isDarkMode = useDarkMode()
 
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -78,10 +80,10 @@ export const ConnectModal = ({ onClose }) => {
         style={{
           width: '100%',
           maxWidth: '380px',
-          backgroundColor: '#fff',
+          backgroundColor: isDarkMode ? '#252F3E' : '#fff',
           borderRadius: '24px',
           boxShadow: '0 24px 80px rgba(0,0,0,0.2)',
-          border: '1px solid #e2e8f0',
+          border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
@@ -156,17 +158,17 @@ export const ConnectModal = ({ onClose }) => {
           {/* Has LinkedIn → show QR + URL */}
           {!loading && hasLinkedIn && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-              <p style={{ fontSize: '13px', color: '#64748b', textAlign: 'center', margin: 0, lineHeight: '1.5' }}>
+              <p style={{ fontSize: '13px', color: isDarkMode ? '#94a3b8' : '#64748b', textAlign: 'center', margin: 0, lineHeight: '1.5' }}>
                 Point a camera at the QR code to open your LinkedIn profile.
               </p>
 
-              {/* QR Code */}
+              {/* QR Code — always light so scanners read it reliably */}
               <div
                 style={{
                   padding: '16px',
                   backgroundColor: '#fff',
                   borderRadius: '16px',
-                  border: '1px solid #e2e8f0',
+                  border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                   display: 'inline-block',
                 }}
@@ -185,7 +187,7 @@ export const ConnectModal = ({ onClose }) => {
                 <p style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 6px' }}>
                   LinkedIn URL
                 </p>
-                <div style={{ display: 'flex', border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden', backgroundColor: '#f8fafc' }}>
+                <div style={{ display: 'flex', border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden', backgroundColor: isDarkMode ? 'rgba(100,116,139,0.1)' : '#f8fafc' }}>
                   <input
                     readOnly
                     value={profile.linkedin_url}
@@ -195,7 +197,7 @@ export const ConnectModal = ({ onClose }) => {
                       border: 'none',
                       backgroundColor: 'transparent',
                       fontSize: '12px',
-                      color: '#475569',
+                      color: isDarkMode ? '#cbd5e1' : '#475569',
                       outline: 'none',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -210,17 +212,19 @@ export const ConnectModal = ({ onClose }) => {
                       flexShrink: 0,
                       padding: '10px 12px',
                       border: 'none',
-                      borderLeft: '1px solid #e2e8f0',
-                      backgroundColor: copied ? '#f0fdf4' : '#fff',
+                      borderLeft: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
+                      backgroundColor: copied
+                        ? (isDarkMode ? 'rgba(34,197,94,0.15)' : '#f0fdf4')
+                        : (isDarkMode ? '#334155' : '#fff'),
                       cursor: 'pointer',
-                      color: copied ? '#16a34a' : '#64748b',
+                      color: copied ? '#16a34a' : (isDarkMode ? '#94a3b8' : '#64748b'),
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       transition: 'background-color 0.15s, color 0.15s',
                     }}
-                    onMouseEnter={(e) => { if (!copied) e.currentTarget.style.backgroundColor = '#f1f5f9' }}
-                    onMouseLeave={(e) => { if (!copied) e.currentTarget.style.backgroundColor = '#fff' }}
+                    onMouseEnter={(e) => { if (!copied) e.currentTarget.style.backgroundColor = isDarkMode ? '#475569' : '#f1f5f9' }}
+                    onMouseLeave={(e) => { if (!copied) e.currentTarget.style.backgroundColor = isDarkMode ? '#334155' : '#fff' }}
                     aria-label="Copy LinkedIn URL"
                   >
                     {copied ? <Check size={14} /> : <Copy size={14} />}
@@ -260,7 +264,7 @@ export const ConnectModal = ({ onClose }) => {
                   width: '56px',
                   height: '56px',
                   borderRadius: '14px',
-                  backgroundColor: '#f1f5f9',
+                  backgroundColor: isDarkMode ? 'rgba(100,116,139,0.2)' : '#f1f5f9',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -270,10 +274,10 @@ export const ConnectModal = ({ onClose }) => {
               </div>
 
               <div>
-                <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: '0 0 6px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '700', color: isDarkMode ? '#e2e8f0' : '#0f172a', margin: '0 0 6px' }}>
                   No LinkedIn link yet
                 </h3>
-                <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.55', margin: 0, maxWidth: '280px' }}>
+                <p style={{ fontSize: '13px', color: isDarkMode ? '#94a3b8' : '#64748b', lineHeight: '1.55', margin: 0, maxWidth: '280px' }}>
                   Add a LinkedIn URL to your profile to generate your personal networking QR code.
                 </p>
               </div>

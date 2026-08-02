@@ -139,9 +139,9 @@ export const AdminDashboardPage = () => {
       {error && (
         <div style={{
           marginBottom: '24px',
-          backgroundColor: '#fef2f2',
-          border: '1px solid #fecaca',
-          color: '#dc2626',
+          backgroundColor: isDarkMode ? 'rgba(220,38,38,0.1)' : '#fef2f2',
+          border: isDarkMode ? '1px solid rgba(220,38,38,0.3)' : '1px solid #fecaca',
+          color: isDarkMode ? '#fca5a5' : '#dc2626',
           padding: '12px 16px',
           borderRadius: '8px',
           fontSize: '14px',
@@ -154,9 +154,9 @@ export const AdminDashboardPage = () => {
       {successMsg && (
         <div style={{
           marginBottom: '24px',
-          backgroundColor: '#f0fdf4',
-          border: '1px solid #86efac',
-          color: '#166534',
+          backgroundColor: isDarkMode ? 'rgba(34,197,94,0.12)' : '#f0fdf4',
+          border: isDarkMode ? '1px solid rgba(34,197,94,0.35)' : '1px solid #86efac',
+          color: isDarkMode ? '#6ee7b7' : '#166534',
           padding: '12px 16px',
           borderRadius: '8px',
           fontSize: '14px',
@@ -174,18 +174,18 @@ export const AdminDashboardPage = () => {
         }}>
           {[1, 2, 3].map((i) => (
             <div key={i} style={{
-              backgroundColor: '#ffffff',
+              backgroundColor: isDarkMode ? '#252F3E' : '#ffffff',
               borderRadius: '12px',
-              border: '1px solid #f3f4f6',
+              border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #f3f4f6',
               boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
               padding: '20px',
               display: 'flex',
               flexDirection: 'column',
               gap: '10px',
             }}>
-              <div style={{ height: '18px', backgroundColor: '#f1f5f9', borderRadius: '6px', width: '65%' }} />
-              <div style={{ height: '14px', backgroundColor: '#f1f5f9', borderRadius: '6px', width: '50%' }} />
-              <div style={{ height: '14px', backgroundColor: '#f1f5f9', borderRadius: '6px', width: '60%' }} />
+              {['65%', '50%', '60%'].map((w, idx) => (
+                <div key={idx} style={{ height: idx === 0 ? '18px' : '14px', backgroundColor: isDarkMode ? 'rgba(100,116,139,0.2)' : '#f1f5f9', borderRadius: '6px', width: w }} />
+              ))}
             </div>
           ))}
         </div>
@@ -205,7 +205,7 @@ export const AdminDashboardPage = () => {
             width: '56px',
             height: '56px',
             borderRadius: '12px',
-            backgroundColor: '#f1f5f9',
+            backgroundColor: isDarkMode ? 'rgba(100,116,139,0.2)' : '#f1f5f9',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

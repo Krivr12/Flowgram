@@ -41,12 +41,24 @@ const formatTimeHeader = (timeKey) => {
 
 const CAPACITY_BADGE = {
   VACANT:        { bg: '#dcfce7', text: '#15803d', label: 'Open' },
-  FILLING:  { bg: '#fef3c7', text: '#b45309', label: 'Filling Up' },
+  FILLING:       { bg: '#fef3c7', text: '#b45309', label: 'Filling Up' },
+  'FILLING IN':  { bg: '#fef3c7', text: '#b45309', label: 'Filling Up' },
   'ALMOST FULL': { bg: '#fff7ed', text: '#c2410c', label: 'Almost Full' },
   FULL:          { bg: '#fee2e2', text: '#dc2626', label: 'Full' },
 }
 
-const getCapacityBadge = (cap) => CAPACITY_BADGE[cap] ?? CAPACITY_BADGE['VACANT']
+const CAPACITY_BADGE_DARK = {
+  VACANT:        { bg: 'rgba(34,197,94,0.15)',  text: '#6ee7b7', label: 'Open' },
+  FILLING:       { bg: 'rgba(251,191,36,0.15)', text: '#fcd34d', label: 'Filling Up' },
+  'FILLING IN':  { bg: 'rgba(251,191,36,0.15)', text: '#fcd34d', label: 'Filling Up' },
+  'ALMOST FULL': { bg: 'rgba(249,115,22,0.15)', text: '#fdba74', label: 'Almost Full' },
+  FULL:          { bg: 'rgba(239,68,68,0.15)',  text: '#fca5a5', label: 'Full' },
+}
+
+const getCapacityBadge = (cap, isDarkMode) => {
+  const map = isDarkMode ? CAPACITY_BADGE_DARK : CAPACITY_BADGE
+  return map[cap] ?? map['VACANT']
+}
 
 const STATUS_BADGE = {
   'Not Started': { bg: '#f1f5f9', text: '#334155' },
@@ -55,7 +67,17 @@ const STATUS_BADGE = {
   Skipped:       { bg: '#fee2e2', text: '#991b1b' },
 }
 
-const getStatusBadge = (status) => STATUS_BADGE[status] ?? STATUS_BADGE['Not Started']
+const STATUS_BADGE_DARK = {
+  'Not Started': { bg: 'rgba(100,116,139,0.2)',  text: '#cbd5e1' },
+  Ongoing:       { bg: 'rgba(251,191,36,0.15)',  text: '#fcd34d' },
+  Finished:      { bg: 'rgba(34,197,94,0.15)',   text: '#6ee7b7' },
+  Skipped:       { bg: 'rgba(239,68,68,0.15)',   text: '#fca5a5' },
+}
+
+const getStatusBadge = (status, isDarkMode) => {
+  const map = isDarkMode ? STATUS_BADGE_DARK : STATUS_BADGE
+  return map[status] ?? map['Not Started']
+}
 
 // ─── Determine if segment is ongoing ──────────────────────────────────────────
 // Priority: Explicit admin-set "Ongoing" status takes absolute control
@@ -81,8 +103,8 @@ const isSegmentOngoing = (segment) => {
 // ─── Segment Card (timeline) ──────────────────────────────────────────────────
 
 const SegmentCard = ({ segment, isConcurrent, isUserPick, onConcurrentClick, onCardClick, isDarkMode, dimmed, speakers }) => {
-  const capBadge = getCapacityBadge(segment.capacity_status)
-  const statusBadge = getStatusBadge(segment.segment_status)
+  const capBadge = getCapacityBadge(segment.capacity_status, isDarkMode)
+  const statusBadge = getStatusBadge(segment.segment_status, isDarkMode)
   const segSpeakers = speakers || []
 
   return (
@@ -255,8 +277,9 @@ const OngoingCard = ({ segment, speakers, onCardClick, style }) => {
       </h3>
 
       {/* ── Capacity Badge ── */}
+      {/* Card is always dark, so keep the light (high-contrast) badge palette */}
       {segment.capacity_status && (() => {
-        const capBadge = getCapacityBadge(segment.capacity_status)
+        const capBadge = getCapacityBadge(segment.capacity_status, false)
         return (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
             <span style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -284,12 +307,12 @@ const OngoingCard = ({ segment, speakers, onCardClick, style }) => {
               <p key={sp.id} style={{ fontSize: '13px', color: '#e2e8f0', margin: 0, fontWeight: '500' }}>
                 {sp.full_name}
                 {sp.role && (
-                  <span style={{ color: '#64748b', fontWeight: '400' }}> · {sp.role}</span>
+                  <span style={{ color: '#94a3b8', fontWeight: '400' }}> · {sp.role}</span>
                 )}
               </p>
             ))}
             {remainingCount > 0 && (
-              <p style={{ fontSize: '12px', color: '#475569', margin: '2px 0 0', fontStyle: 'italic' }}>
+              <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0 0', fontStyle: 'italic' }}>
                 +{remainingCount} more
               </p>
             )}

@@ -47,11 +47,12 @@
   - Finished: green (`#dcfce7` bg, `#22c55e` dot)
   - Skipped: red (`#fee2e2` bg, `#ef4444` dot)
 
-### Capacity Pills
-- Row of tappable pills, one active at a time
+### Capacity Pills / Badges
+- Row of tappable pills (admin) or a single read-only badge (attendee)
 - Active: colored background (green/yellow/orange/red), white text
 - Inactive: white background, gray border, gray text
-- Labels: Open, Filling Up, Almost Full, Full
+- Labels: **Open, Filling Up, Almost Full, Full** — never show the raw enum
+- On the attendee side the badge is prefixed with a "Seat Capacity:" label
 
 ### Toasts
 - Fixed position: `top: 16px; left: 16px; right: 16px`, centered, max-width 400px
@@ -75,6 +76,32 @@
 - Each item: fixed 60px width, icon (20px) + label (10px font)
 - Active: `#1B77CF` color
 - Hidden on dashboard (`/admin`) and account (`/admin/account`) pages
+
+## Dark Mode Palette
+
+| Token | Light | Dark |
+|-------|-------|------|
+| Page background | `#f8fafc` | `#1a222d` |
+| Card surface | `#ffffff` | `#252F3E` |
+| Raised surface (dropdown) | `#ffffff` | `#334155` |
+| Border | `#e2e8f0` | `rgba(100,116,139,0.3)` |
+| Heading text | `#0f172a` | `#e2e8f0` |
+| Body text | `#475569` | `#cbd5e1` |
+| Muted text | `#64748b` | `#94a3b8` |
+| Hover surface | `#f8fafc` | `rgba(100,116,139,0.1)` |
+
+Semantic banners and badges in dark mode use a translucent tint plus light text rather
+than the light-mode pastel fills:
+
+| Meaning | Light bg / text | Dark bg / text |
+|---------|-----------------|----------------|
+| Success | `#f0fdf4` / `#166534` | `rgba(34,197,94,0.15)` / `#6ee7b7` |
+| Warning | `#fef3c7` / `#b45309` | `rgba(251,191,36,0.15)` / `#fcd34d` |
+| Error | `#fef2f2` / `#dc2626` | `rgba(220,38,38,0.1)` / `#fca5a5` |
+| Neutral | `#f1f5f9` / `#334155` | `rgba(100,116,139,0.2)` / `#cbd5e1` |
+
+Brand orange/blue stay the same in both themes. White text on a saturated brand button
+is correct in both themes and needs no conditional.
 
 ## Layout Rules
 

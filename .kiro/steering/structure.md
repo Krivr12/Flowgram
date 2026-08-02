@@ -18,7 +18,11 @@ src/
 │   └── EventWorkspaceLayout.jsx  # Nested admin layout for event-specific pages
 ├── pages/                    # Page-level components (one per route)
 │   ├── public/               # Unauthenticated pages (landing, auth callback)
-│   ├── user/                 # Attendee pages (flow, events, account, etc.)
+│   ├── user/                 # Attendee pages
+│   │   ├── FlowPage.jsx      # CORE feature — personalized schedule
+│   │   ├── ConcurrentPickerPage.jsx  # Pick one session per time slot
+│   │   ├── MorePage.jsx      # Quick links + featured speakers
+│   │   └── ...               # Events, notifications, account, details
 │   └── admin/                # Admin pages (dashboard, forms, flow control)
 ├── routes/
 │   └── router.jsx            # All route definitions (createBrowserRouter)
@@ -30,8 +34,15 @@ src/
     ├── speakers.js           # Speaker CRUD
     ├── notifications.js      # Notification CRUD + segment status update
     ├── s3UploadService.js    # S3 image upload for speaker photos
-    └── theme.js              # Theme utilities
+    └── theme.js              # Theme helpers + `useDarkMode()` hook
 ```
+
+## User Navigation (bottom nav / desktop nav)
+
+`Events | Connect (modal) | Flow (center) | Notifications | More`
+
+`Flow` is the core surface. `Settings` lives in the avatar sidebar / desktop dropdown,
+not the bottom nav.
 
 ## Architecture Patterns
 
@@ -42,7 +53,17 @@ src/
 - **Component exports:** Named exports (not default) for all components, layouts, and pages.
 - **Routing:** Flat route config in `router.jsx` using `createBrowserRouter`. Four top-level route groups: public, `/app` (user), `/admin`, `/reset-password`.
 - **State management:** Local component state via `useState`/`useEffect`. No global state library — selected event stored in `localStorage`.
-- **Dark mode:** Toggled by adding/removing `dark` class on `document.documentElement`. Preference persisted in `localStorage`. Observed via MutationObserver in components.
+- **Dark mode:** Toggled by adding/removing `dark` class on `document.documentElement`.
+  `UserLayout` and `AdminLayout` **own** the class (they add/remove it and persist the
+  preference). Every other component **observes** it via the `useDarkMode()` hook from
+  `services/theme.js` — do not hand-roll a MutationObserver, and never read
+  `classList.contains('dark')` once at render time (it won't re-render on toggle).
+  Note: both layouts remove the class on unmount, so public/auth pages are always light.
+- **Theme-aware styles:** Inline styles use `isDarkMode ? dark : light` ternaries. For
+  badge/status color maps, define a parallel `*_DARK` map with translucent backgrounds
+  (`rgba(...,0.15)`) and light text, then select via a `getX(value, isDarkMode)` helper.
+  Exception: elements on permanently-dark surfaces (the "Happening Now" gradient card,
+  the QR code container) intentionally keep fixed colors.
 - **Mobile-first:** All pages and components are designed for mobile viewports first. Layouts stack vertically on small screens and expand to multi-column on desktop (768px+). Touch-friendly tap targets (min 44px), bottom navigation on mobile, and compact spacing are the defaults.
 - **Confirmation modals:** All destructive actions (delete) and important state changes (skip, revert, event status) require confirmation via modal.
 - **Success feedback:** All CRUD operations show a success message (green banner) before navigating away.

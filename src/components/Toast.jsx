@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Bell, CheckCircle, AlertCircle, X } from 'lucide-react'
+import { useDarkMode } from '../services/theme'
 
 /**
  * Toast — supports three display modes:
@@ -13,6 +14,8 @@ import { Bell, CheckCircle, AlertCircle, X } from 'lucide-react'
  *     Used by existing action feedback (save, update, delete, etc.)
  */
 export const Toast = ({ type = 'success', title, message, onClose, duration = 5000 }) => {
+  const isDarkMode = useDarkMode()
+
   useEffect(() => {
     if (duration && duration > 0) {
       const timer = setTimeout(onClose, duration)
@@ -45,15 +48,15 @@ export const Toast = ({ type = 'success', title, message, onClose, duration = 50
 
         <div
           style={{
-            backgroundColor: '#fff',
-            border: '1px solid #e2e8f0',
+            backgroundColor: isDarkMode ? '#252F3E' : '#fff',
+            border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
             borderLeft: '4px solid #FFA100',
             borderRadius: '12px',
             padding: '14px 16px',
             display: 'flex',
             alignItems: 'flex-start',
             gap: '12px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+            boxShadow: isDarkMode ? '0 8px 24px rgba(0,0,0,0.4)' : '0 8px 24px rgba(0,0,0,0.12)',
             width: '100%',
             maxWidth: '400px',
             pointerEvents: 'auto',
@@ -65,7 +68,7 @@ export const Toast = ({ type = 'success', title, message, onClose, duration = 50
               width: '36px',
               height: '36px',
               borderRadius: '8px',
-              backgroundColor: '#fff7ed',
+              backgroundColor: isDarkMode ? 'rgba(255,161,0,0.15)' : '#fff7ed',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -82,7 +85,7 @@ export const Toast = ({ type = 'success', title, message, onClose, duration = 50
                 style={{
                   fontSize: '14px',
                   fontWeight: '700',
-                  color: '#0f172a',
+                  color: isDarkMode ? '#e2e8f0' : '#0f172a',
                   margin: '0 0 4px',
                   lineHeight: '1.3',
                   wordBreak: 'break-word',
@@ -95,7 +98,7 @@ export const Toast = ({ type = 'success', title, message, onClose, duration = 50
               <p
                 style={{
                   fontSize: '13px',
-                  color: '#475569',
+                  color: isDarkMode ? '#94a3b8' : '#475569',
                   margin: 0,
                   lineHeight: '1.5',
                   wordBreak: 'break-word',
@@ -131,7 +134,7 @@ export const Toast = ({ type = 'success', title, message, onClose, duration = 50
               flexShrink: 0,
               transition: 'color 0.15s',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = '#475569')}
+            onMouseEnter={(e) => (e.currentTarget.style.color = isDarkMode ? '#cbd5e1' : '#475569')}
             onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
             aria-label="Dismiss notification"
           >
@@ -144,9 +147,15 @@ export const Toast = ({ type = 'success', title, message, onClose, duration = 50
 
   // ── Success / Error variant ───────────────────────────────────────────────
   const isSuccess = type === 'success'
-  const bgColor     = isSuccess ? '#dcfce7' : '#fee2e2'
-  const borderColor = isSuccess ? '#86efac' : '#fca5a5'
-  const textColor   = isSuccess ? '#166534' : '#991b1b'
+  const bgColor     = isDarkMode
+    ? (isSuccess ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)')
+    : (isSuccess ? '#dcfce7' : '#fee2e2')
+  const borderColor = isDarkMode
+    ? (isSuccess ? 'rgba(34,197,94,0.35)' : 'rgba(239,68,68,0.35)')
+    : (isSuccess ? '#86efac' : '#fca5a5')
+  const textColor   = isDarkMode
+    ? (isSuccess ? '#6ee7b7' : '#fca5a5')
+    : (isSuccess ? '#166534' : '#991b1b')
   const iconColor   = isSuccess ? '#22c55e' : '#ef4444'
 
   return (

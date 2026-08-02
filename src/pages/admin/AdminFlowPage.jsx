@@ -4,6 +4,7 @@ import { getSegmentsByEventId, updateSegment } from '../../services/segments'
 import { updateSegmentStatus } from '../../services/notifications'
 import { getEventById, updateEvent } from '../../services/events'
 import { Clock, MapPin, Play, CheckCircle, MoreHorizontal } from 'lucide-react'
+import { useDarkMode } from '../../services/theme'
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
@@ -41,6 +42,18 @@ const STATUS_STYLE = {
   Finished:      { bg: '#dcfce7', text: '#166534', dot: '#22c55e', label: 'Finished' },
   Skipped:       { bg: '#fee2e2', text: '#991b1b', dot: '#ef4444', label: 'Skipped' },
   'Not Started': { bg: '#f1f5f9', text: '#334155', dot: '#94a3b8', label: 'Not Started' },
+}
+
+const STATUS_STYLE_DARK = {
+  Ongoing:       { bg: 'rgba(251,191,36,0.15)', text: '#fcd34d', dot: '#f59e0b', label: 'Ongoing' },
+  Finished:      { bg: 'rgba(34,197,94,0.15)',  text: '#6ee7b7', dot: '#22c55e', label: 'Finished' },
+  Skipped:       { bg: 'rgba(239,68,68,0.15)',  text: '#fca5a5', dot: '#ef4444', label: 'Skipped' },
+  'Not Started': { bg: 'rgba(100,116,139,0.2)', text: '#cbd5e1', dot: '#94a3b8', label: 'Not Started' },
+}
+
+const getStatusStyle = (status, isDarkMode) => {
+  const map = isDarkMode ? STATUS_STYLE_DARK : STATUS_STYLE
+  return map[status] ?? map['Not Started']
 }
 
 // ─── Capacity config ──────────────────────────────────────────────────────────
@@ -106,18 +119,19 @@ const groupSegmentsByStartTime = (segments) => {
 // ─── Confirm Modal ────────────────────────────────────────────────────────────
 
 const ConfirmModal = ({ isOpen, title, message, onCancel, onConfirm }) => {
+  const isDarkMode = useDarkMode()
   if (!isOpen) return null
   return (
     <div
       style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
       onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel() }}
     >
-      <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', width: '100%', maxWidth: '340px', boxShadow: '0 20px 48px rgba(0,0,0,0.18)', margin: '0 16px' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: '0 0 8px' }}>{title}</h3>
-        <p style={{ fontSize: '14px', color: '#64748b', margin: '0 0 20px', lineHeight: '1.5' }}>{message}</p>
+      <div style={{ backgroundColor: isDarkMode ? '#252F3E' : '#fff', borderRadius: '14px', padding: '24px', width: '100%', maxWidth: '340px', boxShadow: '0 20px 48px rgba(0,0,0,0.18)', margin: '0 16px' }}>
+        <h3 style={{ fontSize: '16px', fontWeight: '700', color: isDarkMode ? '#e2e8f0' : '#0f172a', margin: '0 0 8px' }}>{title}</h3>
+        <p style={{ fontSize: '14px', color: isDarkMode ? '#94a3b8' : '#64748b', margin: '0 0 20px', lineHeight: '1.5' }}>{message}</p>
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-          <button onClick={onCancel} style={{ padding: '9px 18px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#fff', color: '#475569', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Cancel</button>
-          <button onClick={onConfirm} style={{ padding: '9px 18px', borderRadius: '8px', border: 'none', backgroundColor: '#252F3E', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Confirm</button>
+          <button onClick={onCancel} style={{ padding: '9px 18px', borderRadius: '8px', border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0', backgroundColor: 'transparent', color: isDarkMode ? '#cbd5e1' : '#475569', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Cancel</button>
+          <button onClick={onConfirm} style={{ padding: '9px 18px', borderRadius: '8px', border: 'none', backgroundColor: isDarkMode ? '#1B77CF' : '#252F3E', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Confirm</button>
         </div>
       </div>
     </div>
@@ -126,7 +140,7 @@ const ConfirmModal = ({ isOpen, title, message, onCancel, onConfirm }) => {
 
 // ─── Capacity Pills ───────────────────────────────────────────────────────────
 
-const CapacityPills = ({ value, onChange, disabled }) => (
+const CapacityPills = ({ value, onChange, disabled, isDarkMode }) => (
   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
     {CAPACITY_OPTIONS.map((opt) => {
       const isActive = opt === value
@@ -138,9 +152,9 @@ const CapacityPills = ({ value, onChange, disabled }) => (
           disabled={disabled}
           style={{
             padding: '5px 10px', borderRadius: '6px',
-            border: isActive ? 'none' : '1px solid #e2e8f0',
-            backgroundColor: isActive ? style.activeBg : '#fff',
-            color: isActive ? '#fff' : '#64748b',
+            border: isActive ? 'none' : (isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0'),
+            backgroundColor: isActive ? style.activeBg : (isDarkMode ? 'rgba(100,116,139,0.1)' : '#fff'),
+            color: isActive ? '#fff' : (isDarkMode ? '#94a3b8' : '#64748b'),
             fontSize: '11px', fontWeight: '600',
             cursor: disabled ? 'not-allowed' : 'pointer',
             opacity: disabled ? 0.5 : 1,
@@ -159,7 +173,7 @@ const CapacityPills = ({ value, onChange, disabled }) => (
 const SegmentCard = ({ segment, onStatusChange, onCapacityChange, isUpdating, isDarkMode }) => {
   const [showOverflow, setShowOverflow] = useState(false)
   const status = segment.segment_status || 'Not Started'
-  const statusStyle = STATUS_STYLE[status]
+  const statusStyle = getStatusStyle(status, isDarkMode)
   const nextAction = getNextAction(status)
   const isCompleted = status === 'Finished' || status === 'Skipped'
 
@@ -212,6 +226,7 @@ const SegmentCard = ({ segment, onStatusChange, onCapacityChange, isUpdating, is
             value={segment.capacity_status || 'VACANT'}
             onChange={(val) => onCapacityChange(segment.id, val)}
             disabled={isUpdating}
+            isDarkMode={isDarkMode}
           />
         </div>
       )}
@@ -256,12 +271,14 @@ const SegmentCard = ({ segment, onStatusChange, onCapacityChange, isUpdating, is
               <div style={{ position: 'fixed', inset: 0, zIndex: 10 }} onClick={() => setShowOverflow(false)} />
               <div style={{
                 position: 'absolute', bottom: 'calc(100% + 6px)', right: 0, zIndex: 20,
-                backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px',
+                backgroundColor: isDarkMode ? '#334155' : '#fff',
+                border: isDarkMode ? '1px solid rgba(100,116,139,0.3)' : '1px solid #e2e8f0',
+                borderRadius: '8px',
                 boxShadow: '0 8px 24px rgba(0,0,0,0.12)', overflow: 'hidden', minWidth: '150px',
               }}>
                 <p style={{ fontSize: '10px', fontWeight: '700', color: '#94a3b8', padding: '8px 14px 4px', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Set status</p>
                 {['Not Started', 'Ongoing', 'Finished', 'Skipped'].filter(s => s !== status).map((opt) => {
-                  const optStyle = STATUS_STYLE[opt]
+                  const optStyle = getStatusStyle(opt, isDarkMode)
                   const isDestructive = opt === 'Skipped'
                   return (
                     <button
@@ -270,10 +287,14 @@ const SegmentCard = ({ segment, onStatusChange, onCapacityChange, isUpdating, is
                       style={{
                         width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
                         padding: '9px 14px', border: 'none', backgroundColor: 'transparent',
-                        color: isDestructive ? '#991b1b' : '#334155',
+                        color: isDestructive
+                          ? (isDarkMode ? '#fca5a5' : '#991b1b')
+                          : (isDarkMode ? '#cbd5e1' : '#334155'),
                         fontSize: '13px', fontWeight: '500', cursor: 'pointer', textAlign: 'left',
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = isDestructive ? '#fef2f2' : '#f8fafc')}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = isDestructive
+                        ? (isDarkMode ? 'rgba(220,38,38,0.15)' : '#fef2f2')
+                        : (isDarkMode ? '#475569' : '#f8fafc'))}
                       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                     >
                       <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: optStyle.dot, flexShrink: 0 }} />
@@ -444,9 +465,9 @@ export const AdminFlowPage = () => {
 
       {/* Error */}
       {error && (
-        <div style={{ backgroundColor: '#fee2e2', border: '1px solid #fca5a5', color: '#991b1b', padding: '12px 16px', borderRadius: '8px', fontSize: '13px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ backgroundColor: isDarkMode ? 'rgba(220,38,38,0.1)' : '#fee2e2', border: isDarkMode ? '1px solid rgba(220,38,38,0.3)' : '1px solid #fca5a5', color: isDarkMode ? '#fca5a5' : '#991b1b', padding: '12px 16px', borderRadius: '8px', fontSize: '13px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           {error}
-          <button onClick={() => setError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#991b1b', fontSize: '16px' }}>×</button>
+          <button onClick={() => setError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: isDarkMode ? '#fca5a5' : '#991b1b', fontSize: '16px' }}>×</button>
         </div>
       )}
 
@@ -492,7 +513,7 @@ export const AdminFlowPage = () => {
                 <option key={opt} value={opt} style={{ backgroundColor: '#1e2a3a', color: '#e2e8f0' }}>{EVENT_STATUS_LABEL[opt]}</option>
               ))}
             </select>
-            {updatingEventStatus && <span style={{ fontSize: '11px', color: '#64748b' }}>Saving…</span>}
+            {updatingEventStatus && <span style={{ fontSize: '11px', color: '#94a3b8' }}>Saving…</span>}
           </div>
         </div>
       )}
