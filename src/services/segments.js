@@ -99,12 +99,14 @@ export const deleteSegment = async (segmentId) => {
 export const addSpeakerToSegment = async (segmentId, speakerId) => {
   const { data, error } = await supabase
     .from('segment_speakers')
-    .upsert([{ segment_id: segmentId, speaker_id: speakerId }], {
-      onConflict: 'segment_id,speaker_id',
-    })
+    .insert([{ segment_id: segmentId, speaker_id: speakerId }])
     .select()
 
   if (error) {
+    // Ignore duplicate key — speaker is already assigned
+    if (error.code === '23505') {
+      return { success: true, data: null }
+    }
     console.error('Error adding speaker to segment:', error.message)
     return { success: false, error: error.message }
   }
