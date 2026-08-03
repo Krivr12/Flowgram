@@ -99,7 +99,9 @@ export const deleteSegment = async (segmentId) => {
 export const addSpeakerToSegment = async (segmentId, speakerId) => {
   const { data, error } = await supabase
     .from('segment_speakers')
-    .insert([{ segment_id: segmentId, speaker_id: speakerId }])
+    .upsert([{ segment_id: segmentId, speaker_id: speakerId }], {
+      onConflict: 'segment_id,speaker_id',
+    })
     .select()
 
   if (error) {
@@ -107,7 +109,7 @@ export const addSpeakerToSegment = async (segmentId, speakerId) => {
     return { success: false, error: error.message }
   }
 
-  return { success: true, data: data[0] }
+  return { success: true, data: data?.[0] }
 }
 
 // Remove speaker from segment

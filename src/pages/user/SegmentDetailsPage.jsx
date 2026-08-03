@@ -135,7 +135,7 @@ const SpeakerModal = ({ speaker, onClose, isDarkMode }) => {
             >
               About
             </p>
-            <p style={{ fontSize: '15px', color: isDarkMode ? '#cbd5e1' : '#475569', lineHeight: 1.75, margin: 0, transition: 'color 0.2s' }}>
+            <p style={{ fontSize: '15px', color: isDarkMode ? '#cbd5e1' : '#475569', lineHeight: 1.75, margin: 0, transition: 'color 0.2s', whiteSpace: 'pre-wrap' }}>
               {speaker.description}
             </p>
           </div>
@@ -371,7 +371,7 @@ export const SegmentDetailsPage = () => {
 
         {/* Description */}
         {segment.description && (
-          <p style={{ fontSize: '15px', color: isDarkMode ? '#cbd5e1' : '#475569', lineHeight: 1.75, margin: 0, transition: 'color 0.2s' }}>
+          <p style={{ fontSize: '15px', color: isDarkMode ? '#cbd5e1' : '#475569', lineHeight: 1.75, margin: 0, transition: 'color 0.2s', whiteSpace: 'pre-wrap' }}>
             {segment.description}
           </p>
         )}
