@@ -157,7 +157,7 @@ export const AdminSegmentFormPage = () => {
           end_time:        convertToDatetimeLocal(segResult.data.end_time),
           capacity_status: segResult.data.capacity_status || 'VACANT',
         }
-        setInitialValues(mapped)
+        setInitialValues({ ...mapped, speakers: segResult.data.speakers || [] })
         setForm(mapped)
         setAssignedSpeakers(segResult.data.speakers || [])
       } else {
