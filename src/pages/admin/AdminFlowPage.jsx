@@ -5,35 +5,7 @@ import { updateSegmentStatus } from '../../services/notifications'
 import { getEventById, updateEvent } from '../../services/events'
 import { Clock, MapPin, Play, CheckCircle, MoreHorizontal } from 'lucide-react'
 import { useDarkMode } from '../../services/theme'
-
-// ─── Formatters ───────────────────────────────────────────────────────────────
-
-const formatTime = (timeStr) => {
-  if (!timeStr) return ''
-  return new Date(timeStr).toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-    timeZone: 'UTC',
-  })
-}
-
-const formatDate = (dateStr) => {
-  if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
-const formatDateTime = (dateStr) => {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
-    ' · ' +
-    d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
-}
+import { formatTime, formatDateTime } from '../../utils/dateUtils'
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
