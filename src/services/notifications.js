@@ -1,11 +1,17 @@
 import { supabase } from './supabase'
 
 // Get all notifications for an event
-export const getNotificationsByEventId = async (eventId) => {
+// Query optimization: can optionally limit columns for polling
+export const getNotificationsByEventId = async (eventId, columnsOnly = false) => {
   try {
+    // For polling/checking purposes, fetch minimal columns
+    const selectColumns = columnsOnly 
+      ? 'id, title, message, created_at'
+      : '*'
+    
     const { data, error } = await supabase
       .from('notifications')
-      .select('*')
+      .select(selectColumns)
       .eq('event_id', eventId)
       .order('created_at', { ascending: false })
 

@@ -103,13 +103,19 @@ export const AdminLayout = () => {
   }, [eventId, location.pathname])
 
   // ── Notification polling for red dot ──────────────────────────────────────
+  // Query optimization: select only needed columns
+  // Smart polling: pause when page is hidden
   const pollNotifications = useCallback(async () => {
     const eid = eventId
     if (!eid) return
+    
+    // Smart polling: skip if page is hidden
+    if (document.hidden) return
+    
     try {
       const { data, error } = await supabase
         .from('notifications')
-        .select('id')
+        .select('id, created_at')
         .eq('event_id', eid)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -130,7 +136,30 @@ export const AdminLayout = () => {
     setHasNewNotif(false)
     pollNotifications()
     notifPollRef.current = setInterval(pollNotifications, 15000)
-    return () => { if (notifPollRef.current) clearInterval(notifPollRef.current) }
+    
+    // Smart polling: pause/resume based on page visibility
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Pause polling when page hidden
+        if (notifPollRef.current) {
+          clearInterval(notifPollRef.current)
+          notifPollRef.current = null
+        }
+      } else {
+        // Resume polling when page visible
+        pollNotifications()
+        if (!notifPollRef.current) {
+          notifPollRef.current = setInterval(pollNotifications, 15000)
+        }
+      }
+    }
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    return () => { 
+      if (notifPollRef.current) clearInterval(notifPollRef.current)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [eventId, pollNotifications])
 
   // Clear red dot when visiting notifications page

@@ -1,10 +1,11 @@
 import { supabase } from './supabase'
 
 // Get all segments for an event, ordered chronologically by start_time
+// Query optimization: fetch only needed columns for polling queries
 export const getSegmentsByEventId = async (eventId) => {
   const { data, error } = await supabase
     .from('segments')
-    .select('*')
+    .select('id, title, event_id, start_time, end_time, room_name, segment_status, capacity_status')
     .eq('event_id', eventId)
     .order('start_time', { ascending: true })
 

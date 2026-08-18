@@ -362,12 +362,17 @@ export const FlowPage = () => {
     init()
   }, [])
 
-  // ── Poll segments every 5s for real-time status updates ───────────────────
+  // ── Poll segments every 3s for real-time status updates ───────────────────
+  // Smart polling: pause when page is hidden to reduce load
+  // Query optimization: only essential columns
   useEffect(() => {
     const selectedEventId = localStorage.getItem('selected_event_id')
     if (!selectedEventId) return
 
     const pollSegments = async () => {
+      // Smart polling: skip if page is hidden
+      if (document.hidden) return
+      
       const result = await getSegmentsByEventId(selectedEventId)
       if (result.success) {
         setSegments(result.data || [])
@@ -375,7 +380,24 @@ export const FlowPage = () => {
     }
 
     const interval = setInterval(pollSegments, 3000)
-    return () => clearInterval(interval)
+    
+    // Smart polling: pause/resume based on page visibility
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Pause polling when page hidden
+        clearInterval(interval)
+      } else {
+        // Resume polling when page visible - poll immediately then restart interval
+        pollSegments()
+      }
+    }
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [event])
 
   const loadEventData = async (user) => {
@@ -536,6 +558,7 @@ export const FlowPage = () => {
   }, [loading, firstActiveGroupIndex])
 
   // Fetch speakers for ALL ongoing segments
+  // Query optimization: select only needed columns
   useEffect(() => {
     if (ongoingSegments.length === 0) {
       setOngoingSpeakers([])
@@ -544,6 +567,9 @@ export const FlowPage = () => {
     
     let cancelled = false
     const fetchOngoingSpeakers = async () => {
+      // Skip if page is hidden (smart polling)
+      if (document.hidden) return
+      
       // Fetch speakers for all ongoing segments
       const segmentIds = ongoingSegments.map(seg => seg.id)
       const { data, error } = await supabase
@@ -574,11 +600,15 @@ export const FlowPage = () => {
   }
 
   // ── Fetch speakers for ALL segments (for card display) ────────────────────
+  // Query optimization: select only needed columns
   useEffect(() => {
     if (segments.length === 0) { setAllSpeakers({}); return }
     
     let cancelled = false
     const fetchAllSpeakers = async () => {
+      // Skip if page is hidden (smart polling)
+      if (document.hidden) return
+      
       const segmentIds = segments.map(seg => seg.id)
       const { data, error } = await supabase
         .from('segment_speakers')

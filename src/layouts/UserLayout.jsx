@@ -143,17 +143,24 @@ export const UserLayout = () => {
   }, [])
 
   // ── Server-side filtered polling for notifications ───────────────────────
-  // Replaces Realtime WebSocket with HTTP polling every 15 seconds
+  // Replaces Realtime WebSocket with HTTP polling every 5 seconds
+  // Now with smart polling (pauses when page hidden) and optimized queries
 
   const fetchNotifications = useCallback(async () => {
     const selectedEventId = localStorage.getItem('selected_event_id')
     if (!selectedEventId) return
 
+    // Smart polling: skip if page is hidden (user switched tabs/minimized)
+    if (document.hidden) {
+      return
+    }
+
     try {
       // Fetch latest notifications for the selected event
+      // Query optimization: select only needed columns instead of '*'
       const { data, error } = await supabase
         .from('notifications')
-        .select('*')
+        .select('id, title, message, created_at')
         .eq('event_id', selectedEventId)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -212,12 +219,42 @@ export const UserLayout = () => {
 
     // Then set up polling
     notifPollIntervalRef.current = setInterval(fetchNotifications, NOTIFICATION_POLL_INTERVAL)
+
+    // Smart polling: pause/resume based on page visibility
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Page hidden - clear interval to pause polling
+        if (notifPollIntervalRef.current) {
+          clearInterval(notifPollIntervalRef.current)
+          notifPollIntervalRef.current = null
+        }
+      } else {
+        // Page visible again - resume polling
+        // Fetch immediately when returning
+        fetchNotifications()
+        // Restart interval if not already running
+        if (!notifPollIntervalRef.current) {
+          notifPollIntervalRef.current = setInterval(fetchNotifications, NOTIFICATION_POLL_INTERVAL)
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    // Return cleanup function that also removes the event listener
+    return () => {
+      if (notifPollIntervalRef.current) {
+        clearInterval(notifPollIntervalRef.current)
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [fetchNotifications])
 
   // Subscribe on mount
   useEffect(() => {
-    setupNotificationPolling()
+    const cleanup = setupNotificationPolling()
     return () => {
+      if (cleanup) cleanup()
       if (notifPollIntervalRef.current) {
         clearInterval(notifPollIntervalRef.current)
       }
@@ -226,18 +263,23 @@ export const UserLayout = () => {
 
   // Re-setup polling when the user navigates (covers switching events on /app/events)
   useEffect(() => {
-    setupNotificationPolling()
+    const cleanup = setupNotificationPolling()
     // Clear red dot when visiting notifications page
     if (location.pathname === '/app/notifications') {
       setHasNewNotif(false)
       localStorage.setItem('flowgram_has_new_notif', 'false')
     }
+    return cleanup
   }, [location.pathname, setupNotificationPolling])
 
   // Setup polling when localStorage changes from another tab
   useEffect(() => {
     const onStorage = (e) => {
-      if (e.key === 'selected_event_id') setupNotificationPolling()
+      if (e.key === 'selected_event_id') {
+        const cleanup = setupNotificationPolling()
+        // Store cleanup for later if needed
+        return cleanup
+      }
     }
     window.addEventListener('storage', onStorage)
     return () => window.removeEventListener('storage', onStorage)

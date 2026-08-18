@@ -37,18 +37,44 @@ export const NotificationsPage = () => {
   useEffect(() => {
     loadNotifications()
     pollIntervalRef.current = setInterval(loadNotifications, NOTIFICATION_POLL_INTERVAL)
+    
+    // Smart polling: pause/resume based on page visibility
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Pause polling when page hidden
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current)
+          pollIntervalRef.current = null
+        }
+      } else {
+        // Resume polling when page visible
+        loadNotifications()
+        if (!pollIntervalRef.current) {
+          pollIntervalRef.current = setInterval(loadNotifications, NOTIFICATION_POLL_INTERVAL)
+        }
+      }
+    }
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
     return () => {
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadNotifications = async () => {
     setError('')
+    
+    // Smart polling: skip if page is hidden
+    if (document.hidden) return
+    
     const eventId = localStorage.getItem('selected_event_id')
     if (!eventId) { setLoading(false); return }
 
     try {
-      const result = await getNotificationsByEventId(eventId)
+      // Query optimization: use columnsOnly flag for essential columns
+      const result = await getNotificationsByEventId(eventId, true)
       if (result.success) {
         setNotifications(result.data || [])
       } else {

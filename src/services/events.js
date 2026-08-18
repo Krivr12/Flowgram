@@ -1,10 +1,11 @@
 import { supabase } from './supabase'
 
 // Get all events (nearest start_date first)
+// Query optimization: select only needed columns
 export const getAllEvents = async () => {
   const { data, error } = await supabase
     .from('events')
-    .select('*')
+    .select('id, title, description, venue, start_date, end_date, event_status, created_by, created_at')
     .order('start_date', { ascending: true })
 
   if (error) {
@@ -16,10 +17,11 @@ export const getAllEvents = async () => {
 }
 
 // Get single event
+// Query optimization: select only needed columns
 export const getEventById = async (eventId) => {
   const { data, error } = await supabase
     .from('events')
-    .select('*')
+    .select('id, title, description, venue, start_date, end_date, event_status, created_by, created_at')
     .eq('id', eventId)
     .single()
 
