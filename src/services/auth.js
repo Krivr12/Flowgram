@@ -82,7 +82,7 @@ export const signinWithGoogle = async () => {
   if (appEnv === 'development') {
     redirectUrl = 'http://localhost:5173/auth/callback'
   } else if (appEnv === 'production') {
-    redirectUrl = 'https://flowgram-orpin.vercel.app/auth/callback'
+    redirectUrl = 'https://awscd26.awsug.ph/auth/callback'
   }
 
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -120,7 +120,7 @@ export const fetchUserProfileWithRetry = async (userId, maxRetries = 5, delayMs 
 // Send password reset email
 export const sendPasswordReset = async (email) => {
   const redirectUrl = import.meta.env.VITE_APP_ENV === 'production'
-    ? 'https://flowgram-orpin.vercel.app/auth/callback?type=recovery'
+    ? 'https://awscd26.awsug.ph/auth/callback?type=recovery'
     : `${window.location.origin}/auth/callback?type=recovery`
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
